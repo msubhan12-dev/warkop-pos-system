@@ -1,0 +1,146 @@
+=====================================================
+WARKOP OS - LOGIN CREDENTIALS
+=====================================================
+
+📍 URL LOGIN:
+http://localhost/warkop
+
+=====================================================
+👤 AKUN DEFAULT (SEMUA PASSWORD: password)
+=====================================================
+
+1. OWNER/ADMIN
+   Username: admin
+   Password: password
+   Email: admin@warkop.local
+   Akses: Dashboard analytics, manage semua
+
+2. KASIR
+   Username: kasir1
+   Password: password
+   Email: kasir@warkop.local
+   Akses: POS system, input order, payment
+
+3. DAPUR
+   Username: dapur1
+   Password: password
+   Email: dapur@warkop.local
+   Akses: Kitchen display, update status masakan
+
+4. PELAYAN
+   Username: pelayan1
+   Password: password
+   Email: pelayan@warkop.local
+   Akses: POS system (sama kayak kasir)
+
+=====================================================
+🔑 CARA LOGIN:
+=====================================================
+
+1. Buka browser: http://localhost/warkop
+2. Masukkan username (contoh: admin)
+3. Masukkan password: password
+4. Klik "Masuk"
+5. Otomatis redirect ke halaman sesuai role
+
+=====================================================
+📱 HALAMAN SETELAH LOGIN:
+=====================================================
+
+• admin → http://localhost/warkop/admin/
+  (Dashboard owner dengan charts & analytics)
+
+• kasir1 → http://localhost/warkop/kasir/
+  (POS system untuk input order)
+
+• dapur1 → http://localhost/warkop/dapur/
+  (Kitchen display realtime dengan SSE)
+
+• pelayan1 → http://localhost/warkop/kasir/
+  (POS system, sama kayak kasir)
+
+=====================================================
+🔐 GANTI PASSWORD:
+=====================================================
+
+Setelah login, buka:
+http://localhost/warkop/admin/change_password.php
+
+Atau klik menu "Ganti Password" di sidebar
+
+Form isi:
+- Password Lama: password
+- Password Baru: password_baru_lo
+- Konfirmasi: password_baru_lo
+
+=====================================================
+🍽️ CUSTOMER (TANPA LOGIN):
+=====================================================
+
+Customer TIDAK perlu login!
+
+URL Menu Customer:
+http://localhost/warkop/customer/menu.php
+
+Dengan Meja (QR Code):
+http://localhost/warkop/customer/menu.php?table=A1
+
+Customer tinggal:
+1. Pilih menu
+2. Add to cart
+3. Checkout (isi nama & phone)
+4. Pesan masuk ke sistem
+
+=====================================================
+📊 DATA TESTING:
+=====================================================
+
+DATABASE: warkop_db
+TABLES: 10 meja (A1-A5, B1-B5)
+MENUS: 20 menu default
+CATEGORIES: 5 kategori (Kopi, Non Kopi, Makanan Berat, Ringan, Dessert)
+
+=====================================================
+💡 TIPS:
+=====================================================
+
+1. Login sebagai admin dulu untuk lihat dashboard
+2. Buka tab baru, login sebagai dapur (kitchen display)
+3. Buka tab baru lagi, akses customer menu
+4. Buat order dari customer → lihat notif realtime di dapur!
+5. Test SSE notification dengan order baru
+
+=====================================================
+🐛 TROUBLESHOOTING:
+=====================================================
+
+❌ "Username atau password salah"
+→ Pastikan username: admin (lowercase)
+→ Pastikan password: password (lowercase)
+→ Clear browser cache
+
+❌ Database connection error
+→ Pastikan MySQL running di XAMPP
+→ Database warkop_db sudah diimport
+
+❌ Blank page
+→ Cek PHP error di XAMPP log
+→ Pastikan semua file ada
+
+=====================================================
+📞 BANTUAN:
+=====================================================
+
+Baca INSTALL.txt untuk instalasi
+Baca README.md untuk dokumentasi lengkap
+Baca SSE_REALTIME.md untuk fitur realtime
+
+=====================================================
+
+INTINYA:
+Username: admin
+Password: password
+
+GAMPANG KAN? 😎
+
+=====================================================

@@ -1,0 +1,125 @@
+=====================================================
+WARKOP OS - INSTALASI CEPAT
+Low Budget / Full Free Starter Plan
+=====================================================
+
+📦 REQUIREMENT:
+- XAMPP (Apache + MySQL + PHP 7.4+)
+- Browser Modern
+
+=====================================================
+🚀 LANGKAH INSTALASI:
+=====================================================
+
+1. COPY PROJECT
+   Pastikan folder warkop sudah ada di:
+   /Applications/XAMPP/xamppfiles/htdocs/warkop
+
+2. START XAMPP
+   - Buka XAMPP Control Panel
+   - Start Apache
+   - Start MySQL
+
+3. IMPORT DATABASE
+   a. Buka browser: http://localhost/phpmyadmin
+   b. Klik "New" untuk buat database baru
+   c. Nama database: warkop_db
+   d. Klik tab "Import"
+   e. Choose file: database/warkop.sql
+   f. Klik "Go"
+
+4. AKSES APLIKASI
+   Buka browser: http://localhost/warkop
+
+=====================================================
+👤 LOGIN CREDENTIALS:
+=====================================================
+
+OWNER/ADMIN:
+Username: admin
+Password: password
+
+KASIR:
+Username: kasir1
+Password: password
+
+DAPUR:
+Username: dapur1
+Password: password
+
+PELAYAN:
+Username: pelayan1
+Password: password
+
+=====================================================
+📱 HALAMAN AKSES:
+=====================================================
+
+1. LOGIN & DASHBOARD
+   http://localhost/warkop
+
+2. QR MENU CUSTOMER
+   http://localhost/warkop/customer/menu.php
+   http://localhost/warkop/customer/menu.php?table=A1
+
+3. POS KASIR
+   http://localhost/warkop/kasir/
+
+4. KITCHEN DISPLAY
+   http://localhost/warkop/dapur/
+
+5. DASHBOARD OWNER
+   http://localhost/warkop/admin/
+
+=====================================================
+⚙️ KONFIGURASI (OPSIONAL):
+=====================================================
+
+Jika database setting berbeda, edit:
+config/database.php
+
+define('DB_HOST', 'localhost');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('DB_NAME', 'warkop_db');
+
+=====================================================
+🐛 TROUBLESHOOTING:
+=====================================================
+
+1. Database connection error?
+   - Pastikan MySQL running di XAMPP
+   - Cek username/password di config/database.php
+   - Pastikan database warkop_db sudah dibuat
+
+2. Blank page?
+   - Cek error log di XAMPP
+   - Pastikan PHP 7.4+ terinstall
+   - Cek permissions folder
+
+3. Upload image gagal?
+   - chmod 777 uploads/ (Mac/Linux)
+   - Atau setting permissions via Finder
+
+=====================================================
+✅ TEST SISTEM:
+=====================================================
+
+1. Login sebagai admin
+2. Lihat dashboard (should show stats)
+3. Buka QR menu customer di tab baru
+4. Pesan beberapa menu
+5. Login sebagai kasir di tab lain
+6. Buat order baru
+7. Login sebagai dapur di tab lain
+8. Lihat order masuk ke kitchen display
+
+=====================================================
+📞 BANTUAN:
+=====================================================
+
+Baca README.md untuk dokumentasi lengkap
+Semua fitur sudah siap pakai!
+
+Good luck! 🚀
+=====================================================
