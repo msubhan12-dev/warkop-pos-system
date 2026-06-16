@@ -279,7 +279,7 @@ define('APP_URL', 'https://yourdomain.com/warkop');
 
 Jika ada pertanyaan atau butuh bantuan:
 - **GitHub Issues**: [Create Issue]
-- **Email**: support@warkop.local
+- **Telegram**: @whyouseeme
 - **Docs**: Baca file README.md ini
 
 ## 📄 License
