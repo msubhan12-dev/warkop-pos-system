@@ -43,6 +43,7 @@ $activeOrders = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>POS Kasir - <?= APP_NAME ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -61,35 +62,93 @@ $activeOrders = $stmt->fetchAll();
         }
     </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-40">
-        <div class="flex items-center justify-between px-4 py-3">
-            <div class="flex items-center space-x-3">
-                <i class="fas fa-cash-register text-2xl text-green-600"></i>
-                <div>
-                    <h1 class="text-lg font-bold text-gray-800">POS Kasir</h1>
-                    <p class="text-xs text-gray-500"><?= $user['full_name'] ?></p>
-                </div>
+<body class="bg-gray-50 overflow-hidden">
+    <div class="flex min-h-screen">
+        <!-- Desktop Sidebar Menu (Sticky, Left) -->
+        <aside class="hidden md:flex flex-col w-64 bg-stone-900 text-white fixed h-screen z-50 border-r border-stone-850">
+            <!-- Sidebar Brand -->
+            <div class="flex items-center space-x-2.5 px-6 py-5 border-b border-stone-850">
+                <img src="https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0" alt="Logo" class="w-9 h-9 rounded-full object-cover">
+                <span class="font-extrabold text-lg text-white font-outfit tracking-tight"><?= APP_NAME ?></span>
             </div>
-            <div class="flex items-center space-x-3">
-                <button onclick="showActiveOrders()" class="relative text-gray-600 hover:text-gray-800">
-                    <i class="fas fa-list text-xl"></i>
-                    <?php if (!empty($activeOrders)): ?>
-                    <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                        <?= count($activeOrders) ?>
-                    </span>
-                    <?php endif; ?>
-                </button>
-                <a href="../admin/logout.php" class="text-gray-600 hover:text-gray-800">
-                    <i class="fas fa-sign-out-alt text-xl"></i>
+            
+            <!-- Sidebar Navigation Links -->
+            <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+                <a href="index.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-chart-line w-5 text-lg"></i>
+                    <span class="font-outfit text-sm">Dashboard</span>
                 </a>
-            </div>
-        </div>
-    </header>
+                <a href="pos.php" class="flex items-center space-x-3 p-3 bg-emerald-700 text-white font-bold rounded-xl shadow-md transition duration-200">
+                    <i class="fas fa-cash-register w-5 text-lg"></i>
+                    <span class="font-outfit text-sm">POS Kasir</span>
+                </a>
+                <a href="kitchen.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-fire w-5 text-lg text-orange-400"></i>
+                    <span class="font-outfit text-sm">Dapur</span>
+                </a>
+                <a href="orders.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-receipt w-5 text-lg text-blue-400"></i>
+                    <span class="font-outfit text-sm">Pesanan</span>
+                </a>
+                <a href="menu.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-leaf w-5 text-lg text-lime-400"></i>
+                    <span class="font-outfit text-sm">Menu Herbal</span>
+                </a>
+                <a href="tables.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-chair w-5 text-lg text-purple-400"></i>
+                    <span class="font-outfit text-sm">Meja</span>
+                </a>
+                <a href="reports.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-file-alt w-5 text-lg text-teal-400"></i>
+                    <span class="font-outfit text-sm">Laporan</span>
+                </a>
+                <a href="users.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-users w-5 text-lg text-indigo-450"></i>
+                    <span class="font-outfit text-sm">Karyawan</span>
+                </a>
+                <a href="change_password.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-key w-5 text-lg text-amber-405"></i>
+                    <span class="font-outfit text-sm">Ganti Password</span>
+                </a>
+                <hr class="border-stone-800 my-4">
+                <a href="logout.php" class="flex items-center space-x-3 p-3 hover:bg-red-950/40 text-red-400 hover:text-red-300 rounded-xl transition duration-200">
+                    <i class="fas fa-sign-out-alt w-5 text-lg"></i>
+                    <span class="font-outfit text-sm">Logout</span>
+                </a>
+            </nav>
+        </aside>
 
-    <!-- Main Content -->
-    <div class="flex flex-col lg:flex-row h-screen">
+        <!-- Main Wrapper -->
+        <div class="flex-1 md:ml-64 flex flex-col h-screen overflow-hidden">
+            <!-- Top Header -->
+            <header class="bg-white shadow-sm border-b border-stone-200 sticky top-0 z-40">
+                <div class="flex items-center justify-between px-4 py-3">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-cash-register text-2xl text-emerald-600 md:hidden"></i>
+                        <div>
+                            <h1 class="text-lg font-extrabold font-outfit text-stone-850">POS Kasir</h1>
+                            <p class="text-xs text-stone-500 font-medium"><?= $user['full_name'] ?></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3.5">
+                        <button onclick="showActiveOrders()" class="relative text-stone-500 hover:text-emerald-600 bg-stone-100 hover:bg-emerald-50 p-2.5 rounded-full flex items-center justify-center transition" title="Pesanan Aktif">
+                            <i class="fas fa-list text-lg"></i>
+                            <?php if (!empty($activeOrders)): ?>
+                            <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                                <?= count($activeOrders) ?>
+                            </span>
+                            <?php endif; ?>
+                        </button>
+                        <!-- Mobile-only logout link (since it is in sidebar now) -->
+                        <a href="logout.php" class="md:hidden text-stone-500 hover:text-red-600 bg-stone-100 hover:bg-red-50 p-2.5 rounded-full flex items-center justify-center transition" title="Logout">
+                            <i class="fas fa-sign-out-alt text-lg"></i>
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+    <div class="flex flex-col lg:flex-row flex-1 overflow-hidden">
         <!-- Menu Section (Left/Top) -->
         <div class="flex-1 overflow-hidden flex flex-col">
             <!-- Search & Category -->
@@ -97,7 +156,7 @@ $activeOrders = $stmt->fetchAll();
                 <input 
                     type="text" 
                     id="searchMenu"
-                    placeholder="Cari menu..."
+                    placeholder="Cari obat herbal, madu, suplemen..."
                     class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 mb-3"
                     onkeyup="searchMenu()"
                 >
@@ -124,8 +183,8 @@ $activeOrders = $stmt->fetchAll();
                         data-name="<?= strtolower($menu['name']) ?>"
                         data-category="<?= $menu['category_id'] ?>"
                     >
-                        <div class="bg-gradient-to-br from-green-400 to-blue-500 rounded-lg h-20 flex items-center justify-center mb-2">
-                            <i class="fas fa-utensils text-white text-2xl"></i>
+                        <div class="bg-emerald-50 text-emerald-700 rounded-xl h-24 flex items-center justify-center mb-3">
+                            <i class="fas fa-leaf text-3xl"></i>
                         </div>
                         <h3 class="font-bold text-sm text-gray-800 mb-1 line-clamp-2"><?= $menu['name'] ?></h3>
                         <p class="text-green-600 font-bold text-sm"><?= formatRupiah($menu['price']) ?></p>
@@ -136,7 +195,7 @@ $activeOrders = $stmt->fetchAll();
         </div>
 
         <!-- Order Section (Right/Bottom) -->
-        <div class="w-full lg:w-96 bg-white border-t lg:border-t-0 lg:border-l shadow-lg flex flex-col" style="max-height: 50vh; lg:max-height: 100vh;">
+        <div class="w-full lg:w-96 bg-white border-t lg:border-t-0 lg:border-l shadow-lg flex flex-col pb-32 sm:pb-0 max-h-[50vh] lg:max-h-none">
             <!-- Order Header -->
             <div class="p-4 border-b bg-green-50">
                 <h2 class="font-bold text-lg mb-3">Pesanan Baru</h2>
@@ -177,11 +236,11 @@ $activeOrders = $stmt->fetchAll();
             <!-- Order Footer -->
             <div class="p-4 border-t bg-gray-50">
                 <div class="space-y-2 mb-4">
-                    <div class="flex justify-between text-gray-600">
+                    <div class="flex justify-between text-gray-600" style="display: none;">
                         <span>Subtotal</span>
                         <span id="subtotal">Rp 0</span>
                     </div>
-                    <div class="flex justify-between text-gray-600">
+                    <div class="flex justify-between text-gray-600" style="display: none;">
                         <span>Pajak (10%)</span>
                         <span id="tax">Rp 0</span>
                     </div>
@@ -256,7 +315,7 @@ $activeOrders = $stmt->fetchAll();
     </div>
 
     <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-30">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-30 md:hidden">
         <div class="flex justify-around items-center py-2">
             <a href="index.php" class="flex flex-col items-center text-gray-600 hover:text-slate-700 py-2 px-3">
                 <i class="fas fa-home text-lg"></i>
@@ -493,5 +552,7 @@ $activeOrders = $stmt->fetchAll();
             setTimeout(() => notification.remove(), 3000);
         }
     </script>
+        </div>
+    </div>
 </body>
 </html>

@@ -48,7 +48,7 @@ $stmt = $db->query("SELECT * FROM users WHERE is_active = 1 ORDER BY role, full_
 $users = $stmt->fetchAll();
 include '../includes/header.php';
 ?>
-<main class="p-4 pb-20">
+<main class="p-4 pb-32 sm:pb-24">
     <div class="bg-white rounded-xl shadow-sm p-4">
         <div class="flex justify-between items-center mb-4">
             <h2 class="font-bold text-lg">Daftar Karyawan</h2>

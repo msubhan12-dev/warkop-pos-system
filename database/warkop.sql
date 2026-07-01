@@ -155,6 +155,11 @@ CREATE TABLE `payments` (
   `paid_amount` decimal(10,2) NOT NULL,
   `change_amount` decimal(10,2) DEFAULT 0.00,
   `transaction_id` varchar(100) DEFAULT NULL COMMENT 'for digital payment',
+  `proof_of_payment` varchar(255) DEFAULT NULL COMMENT 'path to proof image (QRIS)',
+  `verification_status` enum('pending','verified','rejected') DEFAULT 'pending' COMMENT 'for QRIS verification',
+  `verified_by` int(11) DEFAULT NULL COMMENT 'admin user_id',
+  `verified_at` timestamp NULL DEFAULT NULL,
+  `verification_notes` text COMMENT 'admin notes on verification',
   `status` enum('pending','success','failed') DEFAULT 'pending',
   `paid_at` timestamp NULL DEFAULT NULL,
   `created_by` int(11) DEFAULT NULL COMMENT 'user_id kasir',
@@ -163,8 +168,11 @@ CREATE TABLE `payments` (
   KEY `idx_order` (`order_id`),
   KEY `idx_status` (`status`),
   KEY `idx_payment_method` (`payment_method`),
+  KEY `idx_verification_status` (`verification_status`),
+  KEY `idx_verified_by` (`verified_by`),
   KEY `idx_created_by` (`created_by`),
   CONSTRAINT `fk_payment_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_payment_verifier` FOREIGN KEY (`verified_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_payment_creator` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

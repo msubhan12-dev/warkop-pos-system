@@ -10,9 +10,14 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Application settings
-define('APP_NAME', 'WARKOP OS');
+define('APP_NAME', 'ARRAHMANHERB');
 define('APP_VERSION', '1.0.0');
-define('APP_URL', 'http://localhost/warkop');
+
+// For localhost development
+// define('APP_URL', 'http://localhost/warkop');
+
+// For network access (ganti 10.143.149.22 dengan IP Mac lo)
+define('APP_URL', 'http://10.143.149.22/warkop');
 
 // Timezone
 date_default_timezone_set('Asia/Jakarta');
@@ -27,8 +32,8 @@ define('BASE_URL', APP_URL);
 define('ASSETS_URL', BASE_URL . '/assets');
 define('UPLOADS_URL', BASE_URL . '/uploads');
 
-// Tax configuration (PPN 10%)
-define('TAX_RATE', 0.10);
+// Tax configuration (PPN 0%)
+define('TAX_RATE', 0.00);
 
 // Order settings
 define('ORDER_PREFIX', 'ORD');

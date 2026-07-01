@@ -1,5 +1,5 @@
     <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-30">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-30 md:hidden">
         <div class="flex justify-around items-center py-2">
             <a href="index.php" class="flex flex-col items-center <?= basename($_SERVER['PHP_SELF']) == 'index.php' ? 'text-slate-700' : 'text-gray-600 hover:text-slate-700' ?> py-2 px-3">
                 <i class="fas fa-home text-lg"></i>

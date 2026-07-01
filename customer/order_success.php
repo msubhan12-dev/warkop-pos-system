@@ -36,6 +36,7 @@ $items = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Pesanan Berhasil - <?= APP_NAME ?></title>
     <script src="https://cdn.tailwindcss.com"></script>

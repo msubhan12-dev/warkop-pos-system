@@ -214,9 +214,7 @@ function uploadImage($file, $folder = 'menu') {
         mkdir($targetDir, 0755, true);
     }
     
-    $fileName = time() . '_' . basename($file['name']);
-    $targetFile = $targetDir . $fileName;
-    $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+    $imageFileType = strtolower(pathinfo(basename($file['name']), PATHINFO_EXTENSION));
     
     // Check if image file is actual image
     $check = getimagesize($file['tmp_name']);
@@ -234,6 +232,10 @@ function uploadImage($file, $folder = 'menu') {
     if (!in_array($imageFileType, $allowedTypes)) {
         return ['success' => false, 'message' => 'Format file tidak didukung'];
     }
+    
+    // Generate secure randomized filename
+    $fileName = md5(uniqid(rand(), true)) . '.' . $imageFileType;
+    $targetFile = $targetDir . $fileName;
     
     // Upload file
     if (move_uploaded_file($file['tmp_name'], $targetFile)) {
@@ -288,10 +290,10 @@ function getTodayStats() {
     ");
     $stats['orders'] = $stmt->fetch()['count'];
     
-    // Total revenue today
+    // Total revenue today - count confirmed or completed orders
     $stmt = $db->query("
         SELECT COALESCE(SUM(total), 0) as total FROM orders 
-        WHERE DATE(created_at) = CURDATE() AND status = 'completed'
+        WHERE DATE(created_at) = CURDATE() AND status IN ('confirmed', 'cooking', 'ready', 'served', 'completed')
     ");
     $stats['revenue'] = $stmt->fetch()['total'];
     
@@ -310,4 +312,21 @@ function getTodayStats() {
     $stats['available_tables'] = $stmt->fetch()['count'];
     
     return $stats;
+}
+
+/**
+ * Get payment details with verification info
+ */
+function getPaymentDetails($orderId) {
+    $db = getDB();
+    $stmt = $db->prepare("
+        SELECT p.*, u.full_name as verified_by_name
+        FROM payments p
+        LEFT JOIN users u ON p.verified_by = u.id
+        WHERE p.order_id = ?
+        ORDER BY p.created_at DESC
+        LIMIT 1
+    ");
+    $stmt->execute([$orderId]);
+    return $stmt->fetch();
 }

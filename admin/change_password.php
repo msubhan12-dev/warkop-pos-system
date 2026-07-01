@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 include '../includes/header.php';
 ?>
-<main class="p-4 pb-20 max-w-md mx-auto">
+<main class="p-4 pb-32 sm:pb-24 max-w-md mx-auto">
         <div class="bg-white rounded-xl shadow-sm p-6">
             <div class="text-center mb-6">
                 <div class="inline-block bg-slate-100 rounded-full p-4 mb-3">

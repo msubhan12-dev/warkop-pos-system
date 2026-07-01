@@ -8,7 +8,7 @@ $stmt = $db->query("SELECT DATE(created_at) as date, COUNT(*) as orders, SUM(tot
 $dailyReport = $stmt->fetchAll();
 include '../includes/header.php';
 ?>
-<main class="p-4 pb-20">
+<main class="p-4 pb-32 sm:pb-24">
     <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
         <h2 class="font-bold text-lg mb-4">Laporan Harian</h2>
         <div class="space-y-3">

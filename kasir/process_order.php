@@ -13,6 +13,9 @@ $input = json_decode(file_get_contents('php://input'), true);
 $items = $input['items'] ?? [];
 $customerName = clean($input['customer_name'] ?? '');
 $tableId = $input['table_id'] ?? null;
+$paymentAction = clean($input['payment_action'] ?? 'pay_later');
+$paymentMethod = clean($input['payment_method'] ?? 'cash');
+$paidAmount = (float)($input['paid_amount'] ?? 0.0);
 
 // Validation
 if (empty($items)) {
@@ -46,6 +49,7 @@ try {
     
     // Generate order number
     $orderNumber = generateOrderNumber();
+    $orderStatus = ($paymentAction === 'pay_now') ? 'completed' : 'confirmed';
     
     // Create order
     $stmt = $db->prepare("
@@ -53,13 +57,14 @@ try {
             order_number, table_id, customer_name,
             order_type, status, subtotal, tax, total,
             created_by
-        ) VALUES (?, ?, ?, ?, 'confirmed', ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([
         $orderNumber,
         $tableId,
         $customerName,
         $tableId ? 'dine_in' : 'take_away',
+        $orderStatus,
         $subtotal,
         $tax,
         $total,
@@ -68,7 +73,7 @@ try {
     
     $orderId = $db->lastInsertId();
     
-    // Create order items and kitchen tickets
+    // Create order items
     foreach ($items as $item) {
         $itemSubtotal = $item['price'] * $item['quantity'];
         
@@ -86,34 +91,29 @@ try {
             $item['quantity'],
             $itemSubtotal
         ]);
-        
-        $orderItemId = $db->lastInsertId();
-        
-        // Kitchen ticket
-        $ticketNumber = generateTicketNumber();
-        $stmt = $db->prepare("
-            INSERT INTO kitchen_tickets (
-                order_id, order_item_id, ticket_number, table_number,
-                menu_name, quantity, status
-            ) VALUES (?, ?, ?, ?, ?, ?, 'new')
-        ");
-        $stmt->execute([
-            $orderId,
-            $orderItemId,
-            $ticketNumber,
-            $tableNumber,
-            $item['name'],
-            $item['quantity']
-        ]);
     }
     
-    // Create payment record (pending)
-    $stmt = $db->prepare("
-        INSERT INTO payments (
-            order_id, payment_method, amount, paid_amount, status, created_by
-        ) VALUES (?, 'cash', ?, 0, 'pending', ?)
-    ");
-    $stmt->execute([$orderId, $total, $_SESSION['user_id']]);
+    // Create payment record
+    if ($paymentAction === 'pay_now') {
+        $paymentStatus = 'success';
+        $actualPaidAmount = ($paymentMethod === 'cash') ? $paidAmount : $total;
+        $changeAmount = ($paymentMethod === 'cash') ? max(0.0, $paidAmount - $total) : 0.0;
+        
+        $stmt = $db->prepare("
+            INSERT INTO payments (
+                order_id, payment_method, amount, paid_amount, change_amount, status, paid_at, created_by
+            ) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)
+        ");
+        $stmt->execute([$orderId, $paymentMethod, $total, $actualPaidAmount, $changeAmount, $paymentStatus, $_SESSION['user_id']]);
+    } else {
+        $paymentStatus = 'pending';
+        $stmt = $db->prepare("
+            INSERT INTO payments (
+                order_id, payment_method, amount, paid_amount, status, created_by
+            ) VALUES (?, ?, ?, 0, ?, ?)
+        ");
+        $stmt->execute([$orderId, $paymentMethod, $total, $paymentStatus, $_SESSION['user_id']]);
+    }
     
     // Update table status if dine in
     if ($tableId) {

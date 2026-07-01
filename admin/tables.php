@@ -18,7 +18,7 @@ $stmt = $db->query("SELECT * FROM tables WHERE is_active = 1 ORDER BY table_numb
 $tables = $stmt->fetchAll();
 include '../includes/header.php';
 ?>
-<main class="p-4 pb-20">
+<main class="p-4 pb-32 sm:pb-24">
     <div class="bg-white rounded-xl shadow-sm p-4">
         <h2 class="font-bold text-lg mb-4">Daftar Meja</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">

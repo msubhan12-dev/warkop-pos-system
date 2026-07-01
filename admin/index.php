@@ -72,143 +72,223 @@ $paymentMethods = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Dashboard Owner - <?= APP_NAME ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .font-outfit {
+            font-family: 'Outfit', sans-serif;
         }
     </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Mobile Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-40">
-        <div class="flex items-center justify-between px-4 py-3">
-            <div class="flex items-center space-x-3">
-                <i class="fas fa-coffee text-2xl text-purple-600"></i>
-                <div>
-                    <h1 class="text-lg font-bold text-gray-800">Dashboard Owner</h1>
-                    <p class="text-xs text-gray-500"><?= $user['full_name'] ?></p>
-                </div>
+<body class="bg-stone-100 text-stone-900">
+    
+    <div class="flex min-h-screen">
+        <!-- Desktop Sidebar Menu (Sticky, Left) -->
+        <aside class="hidden md:flex flex-col w-64 bg-stone-900 text-white fixed h-screen z-30 border-r border-stone-850">
+            <!-- Sidebar Brand -->
+            <div class="flex items-center space-x-2.5 px-6 py-5 border-b border-stone-850">
+                <img src="https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0" alt="Logo" class="w-9 h-9 rounded-full object-cover">
+                <span class="font-extrabold text-lg text-white font-outfit tracking-tight"><?= APP_NAME ?></span>
             </div>
-            <button onclick="toggleMenu()" class="text-gray-600 hover:text-gray-800">
-                <i class="fas fa-bars text-2xl"></i>
-            </button>
-        </div>
-    </header>
-
-    <!-- Sidebar Menu (Mobile) -->
-    <div id="sidebar" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
-        <div class="absolute right-0 top-0 bottom-0 w-64 bg-white shadow-lg">
-            <div class="p-4 border-b">
-                <div class="flex items-center justify-between">
-                    <h2 class="font-bold text-lg">Menu</h2>
-                    <button onclick="toggleMenu()" class="text-gray-600">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-            </div>
-            <nav class="p-4 space-y-2">
-                <a href="index.php" class="flex items-center space-x-3 p-3 bg-slate-50 text-slate-700 rounded-lg">
-                    <i class="fas fa-chart-line w-5"></i>
-                    <span>Dashboard</span>
+            
+            <!-- Sidebar Navigation Links -->
+            <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+                <a href="index.php" class="flex items-center space-x-3 p-3 bg-emerald-700 text-white font-bold rounded-xl shadow-md transition duration-200">
+                    <i class="fas fa-chart-line w-5 text-lg"></i>
+                    <span class="font-outfit text-sm">Dashboard</span>
                 </a>
-                <a href="pos.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                    <i class="fas fa-cash-register w-5"></i>
-                    <span>POS Kasir</span>
+                <a href="pos.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-cash-register w-5 text-lg text-emerald-450"></i>
+                    <span class="font-outfit text-sm">POS Kasir</span>
                 </a>
-                <a href="kitchen.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                    <i class="fas fa-fire w-5"></i>
-                    <span>Dapur</span>
+                <a href="kitchen.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-fire w-5 text-lg text-orange-400"></i>
+                    <span class="font-outfit text-sm">Dapur</span>
                 </a>
-                <a href="orders.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                    <i class="fas fa-receipt w-5"></i>
-                    <span>Pesanan</span>
+                <a href="orders.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-receipt w-5 text-lg text-blue-400"></i>
+                    <span class="font-outfit text-sm">Pesanan</span>
                 </a>
-                <a href="menu.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                    <i class="fas fa-utensils w-5"></i>
-                    <span>Menu</span>
+                <a href="menu.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-leaf w-5 text-lg text-lime-400"></i>
+                    <span class="font-outfit text-sm">Menu Herbal</span>
                 </a>
-                <a href="tables.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                    <i class="fas fa-chair w-5"></i>
-                    <span>Meja</span>
+                <a href="tables.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-chair w-5 text-lg text-purple-400"></i>
+                    <span class="font-outfit text-sm">Meja</span>
                 </a>
-                <a href="reports.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                    <i class="fas fa-file-alt w-5"></i>
-                    <span>Laporan</span>
+                <a href="reports.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-file-alt w-5 text-lg text-teal-400"></i>
+                    <span class="font-outfit text-sm">Laporan</span>
                 </a>
-                <a href="users.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                    <i class="fas fa-users w-5"></i>
-                    <span>Karyawan</span>
+                <a href="users.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-users w-5 text-lg text-indigo-450"></i>
+                    <span class="font-outfit text-sm">Karyawan</span>
                 </a>
-                <a href="change_password.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                    <i class="fas fa-key w-5"></i>
-                    <span>Ganti Password</span>
+                <a href="change_password.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
+                    <i class="fas fa-key w-5 text-lg text-amber-405"></i>
+                    <span class="font-outfit text-sm">Ganti Password</span>
                 </a>
-                <hr class="my-2">
-                <a href="logout.php" class="flex items-center space-x-3 p-3 hover:bg-red-50 text-red-600 rounded-lg">
-                    <i class="fas fa-sign-out-alt w-5"></i>
-                    <span>Logout</span>
+                <hr class="border-stone-800 my-4">
+                <a href="logout.php" class="flex items-center space-x-3 p-3 hover:bg-red-950/40 text-red-400 hover:text-red-300 rounded-xl transition duration-200">
+                    <i class="fas fa-sign-out-alt w-5 text-lg"></i>
+                    <span class="font-outfit text-sm">Logout</span>
                 </a>
             </nav>
-        </div>
-    </div>
+        </aside>
 
-    <!-- Main Content -->
-    <main class="p-4 pb-20">
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <!-- Total Orders -->
-            <div class="bg-white rounded-xl shadow-sm p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="bg-blue-100 p-2 rounded-lg">
-                        <i class="fas fa-shopping-cart text-blue-600"></i>
-                    </div>
-                    <span class="text-xs text-gray-500">Hari Ini</span>
+        <!-- Main View Area -->
+        <div class="flex-1 md:ml-64 flex flex-col min-h-screen">
+            <!-- Desktop Topbar Header -->
+            <header class="hidden md:flex justify-between items-center px-8 py-5 bg-white border-b border-stone-200">
+                <div>
+                    <h2 class="text-2xl font-bold text-stone-850 font-outfit">Dashboard Owner</h2>
+                    <p class="text-xs text-stone-400 font-medium mt-0.5">Pantau laporan transaksi dan performa toko herbal secara real-time</p>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800"><?= $stats['orders'] ?></h3>
-                <p class="text-sm text-gray-600">Total Pesanan</p>
+                <div class="flex items-center space-x-3.5">
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-stone-800 leading-tight"><?= $user['full_name'] ?></p>
+                        <p class="text-[10px] text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full font-extrabold uppercase tracking-wider inline-block mt-0.5"><?= $_SESSION['user_role'] ?></p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-base font-outfit shadow-sm">
+                        <?= strtoupper(substr($user['full_name'], 0, 2)) ?>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Mobile Header (Mobile only) -->
+            <header class="md:hidden bg-white shadow-sm sticky top-0 z-40">
+                <div class="flex items-center justify-between px-4 py-3">
+                    <div class="flex items-center space-x-3">
+                        <img src="https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0" alt="Logo" class="w-8 h-8 rounded-full object-cover">
+                        <div>
+                            <h1 class="text-lg font-bold text-gray-800">Dashboard Owner</h1>
+                            <p class="text-xs text-gray-500"><?= $user['full_name'] ?></p>
+                        </div>
+                    </div>
+                    <button onclick="toggleMenu()" class="text-gray-600 hover:text-gray-800">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Mobile Slide Menu -->
+            <div id="sidebar" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
+                <div class="absolute right-0 top-0 bottom-0 w-64 bg-white shadow-lg">
+                    <div class="p-4 border-b">
+                        <div class="flex items-center justify-between">
+                            <h2 class="font-bold text-lg">Menu</h2>
+                            <button onclick="toggleMenu()" class="text-gray-600">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <nav class="p-4 space-y-2">
+                        <a href="index.php" class="flex items-center space-x-3 p-3 bg-slate-50 text-slate-700 rounded-lg">
+                            <i class="fas fa-chart-line w-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="pos.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
+                            <i class="fas fa-cash-register w-5"></i>
+                            <span>POS Kasir</span>
+                        </a>
+                        <a href="kitchen.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
+                            <i class="fas fa-fire w-5"></i>
+                            <span>Dapur</span>
+                        </a>
+                        <a href="orders.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
+                            <i class="fas fa-receipt w-5"></i>
+                            <span>Pesanan</span>
+                        </a>
+                        <a href="menu.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
+                            <i class="fas fa-leaf w-5"></i>
+                            <span>Menu</span>
+                        </a>
+                        <a href="tables.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
+                            <i class="fas fa-chair w-5"></i>
+                            <span>Meja</span>
+                        </a>
+                        <a href="reports.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
+                            <i class="fas fa-file-alt w-5"></i>
+                            <span>Laporan</span>
+                        </a>
+                        <a href="users.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
+                            <i class="fas fa-users w-5"></i>
+                            <span>Karyawan</span>
+                        </a>
+                        <a href="change_password.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
+                            <i class="fas fa-key w-5"></i>
+                            <span>Ganti Password</span>
+                        </a>
+                        <hr class="my-2">
+                        <a href="logout.php" class="flex items-center space-x-3 p-3 hover:bg-red-50 text-red-600 rounded-lg">
+                            <i class="fas fa-sign-out-alt w-5"></i>
+                            <span>Logout</span>
+                        </a>
+                    </nav>
+                </div>
             </div>
 
-            <!-- Revenue -->
-            <div class="bg-white rounded-xl shadow-sm p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="bg-green-100 p-2 rounded-lg">
-                        <i class="fas fa-money-bill-wave text-green-600"></i>
+            <!-- Dashboard Content Container -->
+            <main class="p-6 pb-24 md:pb-6">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <!-- Total Orders -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition duration-300 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-stone-400 font-bold uppercase tracking-wider">Total Pesanan</p>
+                            <h3 class="text-3xl font-black text-stone-800 font-outfit mt-1.5"><?= $stats['orders'] ?></h3>
+                            <p class="text-xs text-stone-400 font-medium mt-1">Hari Ini</p>
+                        </div>
+                        <div class="bg-blue-50 text-blue-600 w-12 h-12 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
                     </div>
-                    <span class="text-xs text-gray-500">Hari Ini</span>
-                </div>
-                <h3 class="text-lg font-bold text-gray-800"><?= formatRupiah($stats['revenue']) ?></h3>
-                <p class="text-sm text-gray-600">Pendapatan</p>
-            </div>
 
-            <!-- Active Orders -->
-            <div class="bg-white rounded-xl shadow-sm p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="bg-orange-100 p-2 rounded-lg">
-                        <i class="fas fa-clock text-orange-600"></i>
+                    <!-- Revenue -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition duration-300 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-stone-400 font-bold uppercase tracking-wider">Pendapatan</p>
+                            <h3 class="text-2xl font-black text-emerald-600 font-outfit mt-1.5"><?= formatRupiah($stats['revenue']) ?></h3>
+                            <p class="text-xs text-stone-400 font-medium mt-1">Hari Ini</p>
+                        </div>
+                        <div class="bg-emerald-50 text-emerald-600 w-12 h-12 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
                     </div>
-                    <span class="text-xs text-gray-500">Aktif</span>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-800"><?= $stats['active_orders'] ?></h3>
-                <p class="text-sm text-gray-600">Pesanan Aktif</p>
-            </div>
 
-            <!-- Available Tables -->
-            <div class="bg-white rounded-xl shadow-sm p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="bg-purple-100 p-2 rounded-lg">
-                        <i class="fas fa-chair text-purple-600"></i>
+                    <!-- Active Orders -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition duration-300 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-stone-400 font-bold uppercase tracking-wider">Pesanan Aktif</p>
+                            <h3 class="text-3xl font-black text-stone-850 font-outfit mt-1.5"><?= $stats['active_orders'] ?></h3>
+                            <p class="text-xs text-stone-400 font-medium mt-1">Dapur / Kasir</p>
+                        </div>
+                        <div class="bg-amber-50 text-amber-600 w-12 h-12 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fas fa-clock"></i>
+                        </div>
                     </div>
-                    <span class="text-xs text-gray-500">Status</span>
+
+                    <!-- Available Tables -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition duration-300 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-stone-400 font-bold uppercase tracking-wider">Meja Tersedia</p>
+                            <h3 class="text-3xl font-black text-stone-850 font-outfit mt-1.5"><?= $stats['available_tables'] ?></h3>
+                            <p class="text-xs text-stone-400 font-medium mt-1">Status Meja</p>
+                        </div>
+                        <div class="bg-purple-50 text-purple-600 w-12 h-12 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fas fa-chair"></i>
+                        </div>
+                    </div>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800"><?= $stats['available_tables'] ?></h3>
-                <p class="text-sm text-gray-600">Meja Tersedia</p>
-            </div>
-        </div>
 
         <!-- Charts Row -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
@@ -300,10 +380,12 @@ $paymentMethods = $stmt->fetchAll();
                 <?php endif; ?>
             </div>
         </div>
-    </main>
+            </main>
+        </div> <!-- Close Main View Area -->
+    </div> <!-- Close flex min-h-screen -->
 
     <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-30">
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-30">
         <div class="flex justify-around items-center py-2">
             <a href="index.php" class="flex flex-col items-center text-slate-700 py-2 px-3">
                 <i class="fas fa-home text-lg"></i>
