@@ -13,11 +13,10 @@ if (session_status() === PHP_SESSION_NONE) {
 define('APP_NAME', 'ARRAHMANHERB');
 define('APP_VERSION', '1.0.0');
 
-// For localhost development
-// define('APP_URL', 'http://localhost/warkop');
-
-// For network access (ganti 10.143.149.22 dengan IP Mac lo)
-define('APP_URL', 'http://10.143.149.22/warkop');
+// Dynamically determine the APP_URL based on how the user accesses the site
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+define('APP_URL', $protocol . "://" . $host . '/warkop');
 
 // Timezone
 date_default_timezone_set('Asia/Jakarta');
