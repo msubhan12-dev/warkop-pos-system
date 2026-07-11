@@ -67,457 +67,271 @@ $stmt = $db->query("
 ");
 $paymentMethods = $stmt->fetchAll();
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="icon" href="https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Dashboard Owner - <?= APP_NAME ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-        .font-outfit {
-            font-family: 'Outfit', sans-serif;
-        }
-    </style>
-</head>
-<body class="bg-stone-100 text-stone-900">
-    
-    <div class="flex min-h-screen">
-        <!-- Desktop Sidebar Menu (Sticky, Left) -->
-        <aside class="hidden md:flex flex-col w-64 bg-stone-900 text-white fixed h-screen z-30 border-r border-stone-850">
-            <!-- Sidebar Brand -->
-            <div class="flex items-center space-x-2.5 px-6 py-5 border-b border-stone-850">
-                <img src="https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0" alt="Logo" class="w-9 h-9 rounded-full object-cover">
-                <span class="font-extrabold text-lg text-white font-outfit tracking-tight"><?= APP_NAME ?></span>
-            </div>
-            
-            <!-- Sidebar Navigation Links -->
-            <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-                <a href="index.php" class="flex items-center space-x-3 p-3 bg-emerald-700 text-white font-bold rounded-xl shadow-md transition duration-200">
-                    <i class="fas fa-chart-line w-5 text-lg"></i>
-                    <span class="font-outfit text-sm">Dashboard</span>
-                </a>
-                <a href="pos.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-cash-register w-5 text-lg text-emerald-450"></i>
-                    <span class="font-outfit text-sm">POS Kasir</span>
-                </a>
-                <a href="kitchen.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-fire w-5 text-lg text-orange-400"></i>
-                    <span class="font-outfit text-sm">Dapur</span>
-                </a>
-                <a href="orders.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-receipt w-5 text-lg text-blue-400"></i>
-                    <span class="font-outfit text-sm">Pesanan</span>
-                </a>
-                <a href="menu.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-leaf w-5 text-lg text-lime-400"></i>
-                    <span class="font-outfit text-sm">Menu Herbal</span>
-                </a>
-                <a href="tables.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-chair w-5 text-lg text-purple-400"></i>
-                    <span class="font-outfit text-sm">Meja</span>
-                </a>
-                <a href="reports.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-file-alt w-5 text-lg text-teal-400"></i>
-                    <span class="font-outfit text-sm">Laporan</span>
-                </a>
-                <a href="users.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-users w-5 text-lg text-indigo-450"></i>
-                    <span class="font-outfit text-sm">Karyawan</span>
-                </a>
-                <a href="change_password.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-key w-5 text-lg text-amber-405"></i>
-                    <span class="font-outfit text-sm">Ganti Password</span>
-                </a>
-                <hr class="border-stone-800 my-4">
-                <a href="logout.php" class="flex items-center space-x-3 p-3 hover:bg-red-950/40 text-red-400 hover:text-red-300 rounded-xl transition duration-200">
-                    <i class="fas fa-sign-out-alt w-5 text-lg"></i>
-                    <span class="font-outfit text-sm">Logout</span>
-                </a>
-            </nav>
-        </aside>
-
-        <!-- Main View Area -->
-        <div class="flex-1 md:ml-64 flex flex-col min-h-screen">
-            <!-- Desktop Topbar Header -->
-            <header class="hidden md:flex justify-between items-center px-8 py-5 bg-white border-b border-stone-200">
-                <div>
-                    <h2 class="text-2xl font-bold text-stone-850 font-outfit">Dashboard Owner</h2>
-                    <p class="text-xs text-stone-400 font-medium mt-0.5">Pantau laporan transaksi dan performa toko herbal secara real-time</p>
+<?php
+$pageTitle = 'Dashboard Owner';
+include '../includes/header.php';
+?>
+            <div class="p-6 pb-24 md:pb-6 max-w-7xl mx-auto w-full">
+                <!-- Header Info -->
+                <div class="mb-6">
+                    <h2 class="text-2xl font-extrabold text-slate-800 font-outfit">Ringkasan Hari Ini</h2>
+                    <p class="text-xs text-slate-500 font-medium mt-1">Pantau laporan transaksi dan performa kedai secara real-time</p>
                 </div>
-                <div class="flex items-center space-x-3.5">
-                    <div class="text-right">
-                        <p class="text-sm font-bold text-stone-800 leading-tight"><?= $user['full_name'] ?></p>
-                        <p class="text-[10px] text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full font-extrabold uppercase tracking-wider inline-block mt-0.5"><?= $_SESSION['user_role'] ?></p>
-                    </div>
-                    <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-base font-outfit shadow-sm">
-                        <?= strtoupper(substr($user['full_name'], 0, 2)) ?>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Mobile Header (Mobile only) -->
-            <header class="md:hidden bg-white shadow-sm sticky top-0 z-40">
-                <div class="flex items-center justify-between px-4 py-3">
-                    <div class="flex items-center space-x-3">
-                        <img src="https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0" alt="Logo" class="w-8 h-8 rounded-full object-cover">
-                        <div>
-                            <h1 class="text-lg font-bold text-gray-800">Dashboard Owner</h1>
-                            <p class="text-xs text-gray-500"><?= $user['full_name'] ?></p>
-                        </div>
-                    </div>
-                    <button onclick="toggleMenu()" class="text-gray-600 hover:text-gray-800">
-                        <i class="fas fa-bars text-2xl"></i>
-                    </button>
-                </div>
-            </header>
-
-            <!-- Mobile Slide Menu -->
-            <div id="sidebar" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
-                <div class="absolute right-0 top-0 bottom-0 w-64 bg-white shadow-lg">
-                    <div class="p-4 border-b">
-                        <div class="flex items-center justify-between">
-                            <h2 class="font-bold text-lg">Menu</h2>
-                            <button onclick="toggleMenu()" class="text-gray-600">
-                                <i class="fas fa-times text-xl"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <nav class="p-4 space-y-2">
-                        <a href="index.php" class="flex items-center space-x-3 p-3 bg-slate-50 text-slate-700 rounded-lg">
-                            <i class="fas fa-chart-line w-5"></i>
-                            <span>Dashboard</span>
-                        </a>
-                        <a href="pos.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                            <i class="fas fa-cash-register w-5"></i>
-                            <span>POS Kasir</span>
-                        </a>
-                        <a href="kitchen.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                            <i class="fas fa-fire w-5"></i>
-                            <span>Dapur</span>
-                        </a>
-                        <a href="orders.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                            <i class="fas fa-receipt w-5"></i>
-                            <span>Pesanan</span>
-                        </a>
-                        <a href="menu.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                            <i class="fas fa-leaf w-5"></i>
-                            <span>Menu</span>
-                        </a>
-                        <a href="tables.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                            <i class="fas fa-chair w-5"></i>
-                            <span>Meja</span>
-                        </a>
-                        <a href="reports.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                            <i class="fas fa-file-alt w-5"></i>
-                            <span>Laporan</span>
-                        </a>
-                        <a href="users.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                            <i class="fas fa-users w-5"></i>
-                            <span>Karyawan</span>
-                        </a>
-                        <a href="change_password.php" class="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg text-gray-700">
-                            <i class="fas fa-key w-5"></i>
-                            <span>Ganti Password</span>
-                        </a>
-                        <hr class="my-2">
-                        <a href="logout.php" class="flex items-center space-x-3 p-3 hover:bg-red-50 text-red-600 rounded-lg">
-                            <i class="fas fa-sign-out-alt w-5"></i>
-                            <span>Logout</span>
-                        </a>
-                    </nav>
-                </div>
-            </div>
-
-            <!-- Dashboard Content Container -->
-            <main class="p-6 pb-24 md:pb-6">
                 <!-- Stats Cards -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
                     <!-- Total Orders -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition duration-300 flex items-center justify-between">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-5 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition duration-300 flex items-center justify-between group">
                         <div>
-                            <p class="text-xs text-stone-400 font-bold uppercase tracking-wider">Total Pesanan</p>
-                            <h3 class="text-3xl font-black text-stone-800 font-outfit mt-1.5"><?= $stats['orders'] ?></h3>
-                            <p class="text-xs text-stone-400 font-medium mt-1">Hari Ini</p>
+                            <p class="text-[10px] sm:text-xs text-slate-400 font-extrabold uppercase tracking-wider mb-1">Total Pesanan</p>
+                            <h3 class="text-3xl sm:text-4xl font-black text-slate-800 font-outfit"><?= $stats['orders'] ?></h3>
+                            <p class="text-[10px] sm:text-xs text-emerald-500 font-bold mt-1.5 flex items-center"><i class="fas fa-calendar-day mr-1.5"></i>Hari Ini</p>
                         </div>
-                        <div class="bg-blue-50 text-blue-600 w-12 h-12 rounded-xl flex items-center justify-center text-xl">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-inner group-hover:scale-110 transition-transform">
                             <i class="fas fa-shopping-cart"></i>
                         </div>
                     </div>
 
                     <!-- Revenue -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition duration-300 flex items-center justify-between">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-5 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition duration-300 flex items-center justify-between group">
                         <div>
-                            <p class="text-xs text-stone-400 font-bold uppercase tracking-wider">Pendapatan</p>
-                            <h3 class="text-2xl font-black text-emerald-600 font-outfit mt-1.5"><?= formatRupiah($stats['revenue']) ?></h3>
-                            <p class="text-xs text-stone-400 font-medium mt-1">Hari Ini</p>
+                            <p class="text-[10px] sm:text-xs text-slate-400 font-extrabold uppercase tracking-wider mb-1">Pendapatan</p>
+                            <h3 class="text-2xl sm:text-3xl font-black text-emerald-600 font-outfit"><?= formatRupiah($stats['revenue']) ?></h3>
+                            <p class="text-[10px] sm:text-xs text-emerald-500 font-bold mt-1.5 flex items-center"><i class="fas fa-calendar-day mr-1.5"></i>Hari Ini</p>
                         </div>
-                        <div class="bg-emerald-50 text-emerald-600 w-12 h-12 rounded-xl flex items-center justify-center text-xl">
+                        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-inner group-hover:scale-110 transition-transform">
                             <i class="fas fa-money-bill-wave"></i>
                         </div>
                     </div>
 
                     <!-- Active Orders -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition duration-300 flex items-center justify-between">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-5 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition duration-300 flex items-center justify-between group">
                         <div>
-                            <p class="text-xs text-stone-400 font-bold uppercase tracking-wider">Pesanan Aktif</p>
-                            <h3 class="text-3xl font-black text-stone-850 font-outfit mt-1.5"><?= $stats['active_orders'] ?></h3>
-                            <p class="text-xs text-stone-400 font-medium mt-1">Dapur / Kasir</p>
+                            <p class="text-[10px] sm:text-xs text-slate-400 font-extrabold uppercase tracking-wider mb-1">Pesanan Aktif</p>
+                            <h3 class="text-3xl sm:text-4xl font-black text-slate-850 font-outfit"><?= $stats['active_orders'] ?></h3>
+                            <p class="text-[10px] sm:text-xs text-amber-500 font-bold mt-1.5 flex items-center"><i class="fas fa-fire mr-1.5"></i>Dapur / Kasir</p>
                         </div>
-                        <div class="bg-amber-50 text-amber-600 w-12 h-12 rounded-xl flex items-center justify-center text-xl">
+                        <div class="bg-gradient-to-br from-amber-50 to-amber-100 text-amber-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-inner group-hover:scale-110 transition-transform">
                             <i class="fas fa-clock"></i>
                         </div>
                     </div>
 
                     <!-- Available Tables -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition duration-300 flex items-center justify-between">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-5 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition duration-300 flex items-center justify-between group">
                         <div>
-                            <p class="text-xs text-stone-400 font-bold uppercase tracking-wider">Meja Tersedia</p>
-                            <h3 class="text-3xl font-black text-stone-850 font-outfit mt-1.5"><?= $stats['available_tables'] ?></h3>
-                            <p class="text-xs text-stone-400 font-medium mt-1">Status Meja</p>
+                            <p class="text-[10px] sm:text-xs text-slate-400 font-extrabold uppercase tracking-wider mb-1">Meja Tersedia</p>
+                            <h3 class="text-3xl sm:text-4xl font-black text-slate-850 font-outfit"><?= $stats['available_tables'] ?></h3>
+                            <p class="text-[10px] sm:text-xs text-purple-500 font-bold mt-1.5 flex items-center"><i class="fas fa-info-circle mr-1.5"></i>Status Meja</p>
                         </div>
-                        <div class="bg-purple-50 text-purple-600 w-12 h-12 rounded-xl flex items-center justify-center text-xl">
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 text-purple-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-inner group-hover:scale-110 transition-transform">
                             <i class="fas fa-chair"></i>
                         </div>
                     </div>
                 </div>
 
         <!-- Charts Row -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
             <!-- Hourly Sales Chart -->
-            <div class="bg-white rounded-xl shadow-sm p-4">
-                <h3 class="font-bold text-gray-800 mb-4 flex items-center">
-                    <i class="fas fa-chart-line mr-2 text-blue-600"></i>
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-5 sm:p-7">
+                <h3 class="font-extrabold text-slate-800 mb-5 flex items-center text-lg font-outfit tracking-tight">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center mr-3 text-blue-600"><i class="fas fa-chart-line"></i></div>
                     Penjualan Per Jam
                 </h3>
-                <canvas id="hourlySalesChart" class="w-full" style="max-height: 250px;"></canvas>
+                <canvas id="hourlySalesChart" class="w-full" style="max-height: 280px;"></canvas>
             </div>
 
             <!-- Payment Method Chart -->
-            <div class="bg-white rounded-xl shadow-sm p-4">
-                <h3 class="font-bold text-gray-800 mb-4 flex items-center">
-                    <i class="fas fa-wallet mr-2 text-green-600"></i>
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-5 sm:p-7">
+                <h3 class="font-extrabold text-slate-800 mb-5 flex items-center text-lg font-outfit tracking-tight">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center mr-3 text-emerald-600"><i class="fas fa-wallet"></i></div>
                     Metode Pembayaran
                 </h3>
-                <canvas id="paymentMethodChart" class="w-full" style="max-height: 250px;"></canvas>
+                <canvas id="paymentMethodChart" class="w-full" style="max-height: 280px;"></canvas>
             </div>
         </div>
 
-        <!-- Top Menus -->
-        <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
-            <h3 class="font-bold text-gray-800 mb-4 flex items-center">
-                <i class="fas fa-fire mr-2 text-red-600"></i>
-                Menu Terlaris Hari Ini
-            </h3>
-            <div class="space-y-3">
-                <?php if (empty($topMenus)): ?>
-                    <p class="text-gray-500 text-center py-4">Belum ada data</p>
-                <?php else: ?>
-                    <?php foreach ($topMenus as $index => $menu): ?>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <div class="bg-gradient-to-br from-purple-500 to-pink-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
-                                <?= $index + 1 ?>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <!-- Top Menus -->
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-5 sm:p-7">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="font-extrabold text-slate-800 flex items-center text-lg font-outfit tracking-tight">
+                        <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center mr-3 text-red-500"><i class="fas fa-fire"></i></div>
+                        Top Menu Hari Ini
+                    </h3>
+                </div>
+                
+                <div class="space-y-3">
+                    <?php if (empty($topMenus)): ?>
+                        <div class="flex flex-col items-center justify-center py-8 text-slate-400">
+                            <i class="fas fa-box-open text-4xl mb-3 text-slate-200"></i>
+                            <p class="font-medium text-sm">Belum ada data penjualan</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($topMenus as $index => $menu): ?>
+                        <div class="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100 rounded-2xl border border-transparent hover:border-slate-200 transition duration-300">
+                            <div class="flex items-center space-x-4">
+                                <div class="bg-gradient-to-br from-amber-400 to-orange-500 text-white w-9 h-9 rounded-xl flex items-center justify-center font-black shadow-inner">
+                                    <?= $index + 1 ?>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-800 font-outfit leading-snug"><?= $menu['name'] ?></p>
+                                    <p class="text-[11px] font-semibold text-slate-500 mt-0.5"><span class="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded mr-1"><?= $menu['category'] ?></span> <?= $menu['qty'] ?> porsi</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="font-semibold text-gray-800"><?= $menu['name'] ?></p>
-                                <p class="text-xs text-gray-500"><?= $menu['category'] ?> • <?= $menu['qty'] ?> porsi</p>
+                            <div class="text-right pl-3 border-l border-slate-200">
+                                <p class="font-extrabold text-emerald-600 text-sm"><?= formatRupiah($menu['revenue']) ?></p>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <p class="font-bold text-green-600"><?= formatRupiah($menu['revenue']) ?></p>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
             </div>
-        </div>
 
-        <!-- Recent Orders -->
-        <div class="bg-white rounded-xl shadow-sm p-4">
-            <h3 class="font-bold text-gray-800 mb-4 flex items-center">
-                <i class="fas fa-receipt mr-2 text-blue-600"></i>
-                Pesanan Terbaru
-            </h3>
-            <div class="space-y-3">
-                <?php if (empty($recentOrders)): ?>
-                    <p class="text-gray-500 text-center py-4">Tidak ada pesanan aktif</p>
-                <?php else: ?>
-                    <?php foreach ($recentOrders as $order): ?>
-                    <div class="border rounded-lg p-3">
-                        <div class="flex items-center justify-between mb-2">
-                            <div>
-                                <p class="font-semibold text-gray-800"><?= $order['order_number'] ?></p>
-                                <p class="text-xs text-gray-500">
-                                    <?php if ($order['table_number']): ?>
-                                        Meja <?= $order['table_number'] ?>
-                                    <?php else: ?>
-                                        Take Away
-                                    <?php endif; ?>
-                                    • <?= timeAgo($order['created_at']) ?>
-                                </p>
+            <!-- Recent Orders -->
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-5 sm:p-7">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="font-extrabold text-slate-800 flex items-center text-lg font-outfit tracking-tight">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center mr-3 text-emerald-600"><i class="fas fa-receipt"></i></div>
+                        Pesanan Terbaru
+                    </h3>
+                    <a href="orders.php" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors">Lihat Semua</a>
+                </div>
+                
+                <div class="space-y-3">
+                    <?php if (empty($recentOrders)): ?>
+                        <div class="flex flex-col items-center justify-center py-8 text-slate-400">
+                            <i class="fas fa-check-circle text-4xl mb-3 text-slate-200"></i>
+                            <p class="font-medium text-sm">Semua pesanan sudah selesai</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($recentOrders as $order): ?>
+                        <div class="border border-slate-100 hover:border-emerald-200 rounded-2xl p-4 bg-white hover:shadow-md transition duration-300">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <p class="font-bold text-slate-800 font-outfit mb-0.5"><?= $order['order_number'] ?></p>
+                                    <p class="text-[11px] font-semibold text-slate-500 flex items-center">
+                                        <i class="fas fa-clock mr-1.5 text-slate-400"></i><?= timeAgo($order['created_at']) ?>
+                                    </p>
+                                </div>
+                                <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg shadow-sm border uppercase tracking-wider <?= getStatusBadge($order['status']) ?>">
+                                    <?= getStatusText($order['status']) ?>
+                                </span>
                             </div>
-                            <span class="px-3 py-1 text-xs font-semibold rounded-full <?= getStatusBadge($order['status']) ?>">
-                                <?= getStatusText($order['status']) ?>
-                            </span>
+                            <div class="flex items-center justify-between pt-3 border-t border-dashed border-slate-100">
+                                <span class="text-[11px] font-semibold text-slate-500 flex items-center bg-slate-50 px-2 py-1 rounded-md">
+                                    <i class="fas <?= $order['table_number'] ? 'fa-chair text-purple-400' : 'fa-shopping-bag text-amber-400' ?> mr-1.5"></i>
+                                    <?= $order['table_number'] ? 'Meja '.$order['table_number'] : 'Take Away' ?>
+                                </span>
+                                <span class="font-extrabold text-emerald-600 font-outfit"><?= formatRupiah($order['total']) ?></span>
+                            </div>
                         </div>
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-gray-600">
-                                <i class="fas fa-user mr-1"></i><?= $order['kasir_name'] ?? '-' ?>
-                            </span>
-                            <span class="font-bold text-gray-800"><?= formatRupiah($order['total']) ?></span>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
             </main>
         </div> <!-- Close Main View Area -->
     </div> <!-- Close flex min-h-screen -->
 
-    <!-- Bottom Navigation -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-30">
-        <div class="flex justify-around items-center py-2">
-            <a href="index.php" class="flex flex-col items-center text-slate-700 py-2 px-3">
-                <i class="fas fa-home text-lg"></i>
-                <span class="text-xs mt-1">Home</span>
-            </a>
-            <a href="pos.php" class="flex flex-col items-center text-gray-600 hover:text-slate-700 py-2 px-3">
-                <i class="fas fa-cash-register text-lg"></i>
-                <span class="text-xs mt-1">POS</span>
-            </a>
-            <a href="kitchen.php" class="flex flex-col items-center text-gray-600 hover:text-slate-700 py-2 px-3">
-                <i class="fas fa-fire text-lg"></i>
-                <span class="text-xs mt-1">Dapur</span>
-            </a>
-            <a href="orders.php" class="flex flex-col items-center text-gray-600 hover:text-slate-700 py-2 px-3">
-                <i class="fas fa-receipt text-lg"></i>
-                <span class="text-xs mt-1">Orders</span>
-            </a>
-            <a href="menu.php" class="flex flex-col items-center text-gray-600 hover:text-slate-700 py-2 px-3">
-                <i class="fas fa-utensils text-lg"></i>
-                <span class="text-xs mt-1">Menu</span>
-            </a>
-        </div>
-    </nav>
-
     <script>
-        // Toggle sidebar menu
-        function toggleMenu() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('hidden');
+        // Format Rupiah
+        const formatRupiah = (number) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(number);
+        };
+
+        // Initialize Hourly Sales Chart
+        const hourlyCtx = document.getElementById('hourlySalesChart');
+        if (hourlyCtx) {
+            new Chart(hourlyCtx, {
+                type: 'line',
+                data: {
+                    labels: <?= json_encode(array_map(function($h) { return sprintf("%02d:00", $h['hour']); }, $hourlySales)) ?>,
+                    datasets: [{
+                        label: 'Pendapatan (Rp)',
+                        data: <?= json_encode(array_column($hourlySales, 'revenue')) ?>,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#10b981',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Rp ' + context.parsed.y.toLocaleString('id-ID');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) return (value / 1000000) + 'M';
+                                    if (value >= 1000) return (value / 1000) + 'K';
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
-        // Close sidebar when clicking outside
-        document.getElementById('sidebar')?.addEventListener('click', function(e) {
-            if (e.target === this) {
-                toggleMenu();
-            }
-        });
-
-        // Hourly Sales Chart
-        const hourlySalesData = <?= json_encode($hourlySales) ?>;
-        const hourLabels = Array.from({length: 24}, (_, i) => i + ':00');
-        const hourRevenue = new Array(24).fill(0);
-        
-        hourlySalesData.forEach(item => {
-            hourRevenue[item.hour] = parseFloat(item.revenue);
-        });
-
-        const ctxHourly = document.getElementById('hourlySalesChart');
-        new Chart(ctxHourly, {
-            type: 'line',
-            data: {
-                labels: hourLabels,
-                datasets: [{
-                    label: 'Pendapatan (Rp)',
-                    data: hourRevenue,
-                    borderColor: 'rgb(99, 102, 241)',
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+        // Initialize Payment Method Chart
+        const paymentCtx = document.getElementById('paymentMethodChart');
+        if (paymentCtx) {
+            new Chart(paymentCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: <?= json_encode(array_map('strtoupper', array_column($paymentMethods, 'payment_method'))) ?>,
+                    datasets: [{
+                        data: <?= json_encode(array_column($paymentMethods, 'total')) ?>,
+                        backgroundColor: [
+                            '#10b981', // emerald-500
+                            '#3b82f6', // blue-500
+                            '#f59e0b', // amber-500
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return 'Rp ' + value.toLocaleString('id-ID');
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': Rp ' + context.parsed.toLocaleString('id-ID');
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
 
-        // Payment Method Chart
-        const paymentData = <?= json_encode($paymentMethods) ?>;
-        const paymentLabels = paymentData.map(p => {
-            const labels = {
-                'cash': 'Tunai',
-                'qris': 'QRIS',
-                'transfer': 'Transfer',
-                'card': 'Kartu'
-            };
-            return labels[p.payment_method] || p.payment_method;
-        });
-        const paymentValues = paymentData.map(p => parseFloat(p.total));
-
-        const ctxPayment = document.getElementById('paymentMethodChart');
-        new Chart(ctxPayment, {
-            type: 'doughnut',
-            data: {
-                labels: paymentLabels,
-                datasets: [{
-                    data: paymentValues,
-                    backgroundColor: [
-                        'rgb(34, 197, 94)',
-                        'rgb(59, 130, 246)',
-                        'rgb(168, 85, 247)',
-                        'rgb(249, 115, 22)'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': Rp ' + context.parsed.toLocaleString('id-ID');
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Auto refresh every 30 seconds
+        // Auto refresh every 60 seconds
         setInterval(() => {
             location.reload();
-        }, 30000);
+        }, 60000);
     </script>
-</body>
-</html>
+<?php include '../includes/footer.php'; ?>

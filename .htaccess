@@ -4,13 +4,19 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
-    # Force HTTPS in production (uncomment when ready)
-    # RewriteCond %{HTTPS} off
-    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-    
     # Remove trailing slashes
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+    # Redirect external .php requests to extensionless URLs (only GET requests to protect POSTs)
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+    RewriteRule ^(.*)\.php$ /$1 [R=301,L]
+
+    # Resolve extensionless URLs internally to .php files
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}\.php -f
+    RewriteRule ^(.*)$ $1.php [L]
 </IfModule>
 
 # Security Headers

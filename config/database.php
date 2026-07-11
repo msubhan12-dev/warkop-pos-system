@@ -29,6 +29,7 @@ class Database {
             
             $this->conn = new PDO($dsn, DB_USER, DB_PASS, $options);
             $this->conn->exec("SET AUTOCOMMIT=1");
+            $this->conn->exec("SET time_zone = '+07:00'"); // Force WIB (Jakarta Time)
         } catch (PDOException $e) {
             die("Connection failed: " . $e->getMessage());
         }

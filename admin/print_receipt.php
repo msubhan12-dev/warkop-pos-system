@@ -184,7 +184,7 @@ $payment = getPaymentDetails($orderId);
         <!-- Header -->
         <div class="header">
             <h1><?= APP_NAME ?></h1>
-            <p>Sistem Kasir Terpadu</p>
+            <p>Struk Pembelian di ArrahmanHerb</p>
         </div>
         
         <!-- Order Info -->
@@ -203,12 +203,23 @@ $payment = getPaymentDetails($orderId);
             </div>
             <?php if ($order['table_number']): ?>
             <div class="info-row">
-                <span class="info-label">Nomor Meja:</span>
+                <span class="info-label">Layanan:</span>
                 <span>Meja <?= $order['table_number'] ?></span>
             </div>
+            <?php elseif ($order['order_type'] === 'delivery'): ?>
+            <div class="info-row">
+                <span class="info-label">Layanan:</span>
+                <span>Pesan Antar</span>
+            </div>
+            <?php if (!empty($order['delivery_address'])): ?>
+            <div class="info-row" style="margin-top: 1mm;">
+                <span class="info-label">Alamat:</span>
+                <span style="font-size: 7.5pt; max-width: 60%; text-align: right;"><?= nl2br(htmlspecialchars($order['delivery_address'])) ?></span>
+            </div>
+            <?php endif; ?>
             <?php else: ?>
             <div class="info-row">
-                <span class="info-label">Tipe:</span>
+                <span class="info-label">Layanan:</span>
                 <span>Take Away</span>
             </div>
             <?php endif; ?>
@@ -277,18 +288,166 @@ $payment = getPaymentDetails($orderId);
         </div>
     </div>
     
+    <!-- Action Buttons (Hidden when printing) -->
+    <style>
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 58mm;
+            padding: 0 10px;
+        }
+        .btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .btn-standard {
+            background: #10b981;
+            color: white;
+        }
+        .btn-thermer {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-close {
+            background: #ef4444;
+            color: white;
+        }
+        @media print {
+            .action-buttons { display: none; }
+        }
+    </style>
+
+    <?php
+    // Generate plain text receipt for Thermal Apps
+    $rawText = "      " . APP_NAME . "\n";
+    $rawText .= "      Sistem Kasir Terpadu\n";
+    $rawText .= "================================\n";
+    $rawText .= "No. Pesanan: " . $order['order_number'] . "\n";
+    $rawText .= "Tanggal: " . date('d/m/Y H:i', strtotime($order['created_at'])) . "\n";
+    $rawText .= "Pelanggan: " . $order['customer_name'] . "\n";
+    if ($order['table_number']) $rawText .= "Nomor Meja: Meja " . $order['table_number'] . "\n";
+    else $rawText .= "Tipe: Take Away\n";
+    $rawText .= "================================\n";
+    foreach($items as $item) {
+        $rawText .= $item['menu_name'] . "\n";
+        $qtyPrice = $item['quantity'] . "x " . number_format($item['price'],0,',','.');
+        $subtotal = number_format($item['subtotal'],0,',','.');
+        $rawText .= str_pad($qtyPrice, 16, " ") . str_pad($subtotal, 16, " ", STR_PAD_LEFT) . "\n";
+    }
+    $rawText .= "================================\n";
+    $rawText .= str_pad("TOTAL:", 16, " ") . str_pad("Rp " . number_format($order['total'],0,',','.'), 16, " ", STR_PAD_LEFT) . "\n";
+    
+    if ($payment) {
+        $method = $payment['payment_method'] === 'qris' ? 'QRIS' : ($payment['payment_method'] === 'transfer' ? 'TRANSFER' : 'TUNAI');
+        $rawText .= "Metode: " . $method . "\n";
+        if ($payment['payment_method'] === 'cash') {
+            $rawText .= "Bayar: " . number_format($payment['paid_amount'],0,',','.') . "\n";
+            $rawText .= "Kembali: " . number_format($payment['change_amount'],0,',','.') . "\n";
+        }
+        $status = $payment['status'] === 'success' ? 'LUNAS / PAID' : 'BELUM BAYAR';
+        $rawText .= "\n*** " . $status . " ***\n";
+    }
+    
+    $rawText .= "--------------------------------\n";
+    $rawText .= "         Terima Kasih!          \n";
+    $rawText .= "       Selamat Menikmati        \n";
+    $rawText .= "\n\n\n";
+    ?>
+
+    <div class="action-buttons">
+        <button class="btn btn-thermer" onclick="printThermer()">
+            <svg style="width:16px;height:16px" viewBox="0 0 24 24"><path fill="currentColor" d="M17.75,3C17.75,3 17.75,4.5 17.75,4.5C17.75,4.5 19.5,4.5 19.5,4.5C19.5,4.5 19.5,21 19.5,21C19.5,21 4.5,21 4.5,21C4.5,21 4.5,4.5 4.5,4.5C4.5,4.5 6.25,4.5 6.25,4.5C6.25,4.5 6.25,3 6.25,3C6.25,3 3,3 3,3C3,3 3,22.5 3,22.5C3,22.5 21,22.5 21,22.5C21,22.5 21,3 21,3C21,3 17.75,3 17.75,3M8,11.5L9.5,13L13,9.5L14.5,11L9.5,16L6.5,13L8,11.5M10.5,3H13.5V6H10.5V3Z" /></svg>
+            Kirim ke Thermer / RawBT (HP Android)
+        </button>
+        <button class="btn btn-serial" onclick="printWebSerial()" style="background: #8b5cf6; color: white;">
+            <svg style="width:16px;height:16px" viewBox="0 0 24 24"><path fill="currentColor" d="M7,15H9C9,16.08 10.37,17 12,17C13.63,17 15,16.08 15,15C15,13.9 13.96,13.5 11.76,12.97C9.64,12.44 7,11.78 7,9C7,7.21 8.47,5.69 10.5,5.18V3H13.5V5.18C15.53,5.69 17,7.21 17,9H15C15,7.92 13.63,7 12,7C10.37,7 9,7.92 9,9C9,10.1 10.04,10.5 12.24,11.03C14.36,11.56 17,12.22 17,15C17,16.79 15.53,18.31 13.5,18.82V21H10.5V18.82C8.47,18.31 7,16.79 7,15Z" /></svg>
+            Direct Bluetooth Laptop (Web Serial)
+        </button>
+        <button class="btn btn-standard" onclick="window.print()">
+            <svg style="width:16px;height:16px" viewBox="0 0 24 24"><path fill="currentColor" d="M18,3H6V7H18V3M19,12A1,1 0 0,1 18,11A1,1 0 0,1 19,10A1,1 0 0,1 20,11A1,1 0 0,1 19,12M16,19H8V14H16V19M19,8H5A3,3 0 0,0 2,11V17H6V21H18V17H22V11A3,3 0 0,0 19,8Z" /></svg>
+            Print Standar (Browser)
+        </button>
+        <button class="btn btn-close" onclick="window.close()">Tutup Jendela</button>
+    </div>
+    
     <script>
-        // Trigger print immediately on load
-        window.onload = function() {
-            setTimeout(() => {
-                window.print();
-            }, 300);
-        };
+        const rawReceiptText = <?= json_encode($rawText) ?>;
+
+        function printThermer() {
+            if (navigator.share) {
+                // Gunakan fitur Share bawaan Android agar user bisa pilih aplikasi Thermer
+                navigator.share({
+                    title: 'Struk Pesanan',
+                    text: rawReceiptText,
+                }).catch(err => {
+                    console.log('Share dibatalkan atau gagal', err);
+                });
+            } else {
+                // Fallback jika browser sangat jadul: Copy ke clipboard
+                navigator.clipboard.writeText(rawReceiptText).then(() => {
+                    alert('Teks struk berhasil dicopy! Silakan buka aplikasi Thermer dan paste di sana.');
+                }).catch(err => {
+                    alert('Gagal menyalin teks. Browser tidak mendukung.');
+                });
+            }
+        }
         
-        // Auto close tab after print prompt finishes
-        window.onafterprint = function() {
-            window.close();
-        };
+        async function printWebSerial() {
+            if (!('serial' in navigator)) {
+                alert('Maaf, Web Serial API tidak didukung di browser ini. Gunakan Google Chrome atau Microsoft Edge di Laptop/PC.');
+                return;
+            }
+            
+            try {
+                let port;
+                // Cek apakah browser sudah pernah diberi izin ke port Bluetooth ini sebelumnya
+                const ports = await navigator.serial.getPorts();
+                
+                if (ports.length > 0) {
+                    // Langsung pakai port yang sudah tersimpan otomatis (Tanpa Popup)
+                    port = ports[0]; 
+                } else {
+                    // Jika baru pertama kali, minta izin (Muncul Popup Chrome)
+                    port = await navigator.serial.requestPort();
+                }
+                
+                // Buka koneksi port
+                await port.open({ baudRate: 9600 });
+                
+                const writer = port.writable.getWriter();
+                const encoder = new TextEncoder();
+                
+                // ESC/POS Commands
+                const initCmd = new Uint8Array([0x1B, 0x40]); // ESC @ (Initialize)
+                const cutCmd = new Uint8Array([0x1D, 0x56, 0x41, 0x10]); // GS V A (Cut)
+                
+                // Tulis ke printer
+                await writer.write(initCmd);
+                await writer.write(encoder.encode(rawReceiptText));
+                await writer.write(cutCmd);
+                
+                writer.releaseLock();
+                await port.close();
+                
+                console.log('Berhasil mencetak via Bluetooth Laptop!');
+            } catch (err) {
+                console.error(err);
+                if (err.name !== 'NotFoundError') {
+                    alert('Gagal ngeprint: ' + err.message + '\n\nPastikan printer sudah terhubung via Bluetooth ke Laptop, dan pilih port yang bertuliskan "Standard Serial over Bluetooth link".');
+                }
+            }
+        }
     </script>
 </body>
 </html>

@@ -12,7 +12,8 @@ $input = json_decode(file_get_contents('php://input'), true);
 
 $items = $input['items'] ?? [];
 $customerName = clean($input['customer_name'] ?? '');
-$tableId = $input['table_id'] ?? null;
+$tableIdInput = $input['table_id'] ?? null;
+$deliveryAddress = clean($input['delivery_address'] ?? '');
 $paymentAction = clean($input['payment_action'] ?? 'pay_later');
 $paymentMethod = clean($input['payment_method'] ?? 'cash');
 $paidAmount = (float)($input['paid_amount'] ?? 0.0);
@@ -38,9 +39,16 @@ try {
     $tax = calculateTax($subtotal);
     $total = $subtotal + $tax;
     
-    // Get table number if exists
+    // Handle order type and table id
+    $tableId = null;
     $tableNumber = null;
-    if ($tableId) {
+    $orderType = 'take_away';
+    
+    if ($tableIdInput === 'delivery') {
+        $orderType = 'delivery';
+    } elseif ($tableIdInput) {
+        $tableId = $tableIdInput;
+        $orderType = 'dine_in';
         $stmt = $db->prepare("SELECT table_number FROM tables WHERE id = ?");
         $stmt->execute([$tableId]);
         $table = $stmt->fetch();
@@ -54,16 +62,17 @@ try {
     // Create order
     $stmt = $db->prepare("
         INSERT INTO orders (
-            order_number, table_id, customer_name,
+            order_number, table_id, customer_name, delivery_address,
             order_type, status, subtotal, tax, total,
             created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([
         $orderNumber,
         $tableId,
         $customerName,
-        $tableId ? 'dine_in' : 'take_away',
+        $deliveryAddress,
+        $orderType,
         $orderStatus,
         $subtotal,
         $tax,

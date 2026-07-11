@@ -1,37 +1,23 @@
 <?php
 require_once '../config/config.php';
-requireRole(['owner']);
-
-header('Content-Type: application/json');
+requireRole(['admin', 'owner', 'kasir']);
 
 $db = getDB();
+$since = $_GET['since'] ?? date('Y-m-d H:i:s', time() - 30);
 
-// Count new tickets
-$stmt = $db->query("
-    SELECT COUNT(*) as count
-    FROM kitchen_tickets
-    WHERE status = 'new'
+$stmt = $db->prepare("
+    SELECT o.id, o.order_number, o.customer_name, o.status, o.payment_method, o.proof_of_payment, o.total, t.table_number
+    FROM orders o
+    LEFT JOIN tables t ON o.table_id = t.id
+    WHERE (o.created_at > ? OR o.updated_at > ?) 
+    AND o.status IN ('pending', 'processing')
 ");
-$result = $stmt->fetch();
+$stmt->execute([$since, $since]);
+$orders = $stmt->fetchAll();
 
-// Get latest order info
-$stmt = $db->query("
-    SELECT 
-        kt.ticket_number,
-        kt.menu_name,
-        kt.table_number,
-        o.customer_name
-    FROM kitchen_tickets kt
-    JOIN orders o ON kt.order_id = o.id
-    WHERE kt.status = 'new'
-    ORDER BY kt.created_at DESC
-    LIMIT 1
-");
-$latestOrder = $stmt->fetch();
-
-sendJSON([
+echo json_encode([
     'success' => true,
-    'new_ticket_count' => (int)$result['count'],
-    'cooking_count' => (int)$db->query("SELECT COUNT(*) FROM kitchen_tickets WHERE status = 'cooking'")->fetch()['count'],
-    'latest_order' => $latestOrder
+    'timestamp' => date('Y-m-d H:i:s'),
+    'new_orders' => count($orders),
+    'orders' => $orders
 ]);

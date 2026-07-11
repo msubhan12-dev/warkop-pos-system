@@ -16,7 +16,10 @@ define('APP_VERSION', '1.0.0');
 // Dynamically determine the APP_URL based on how the user accesses the site
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-define('APP_URL', $protocol . "://" . $host . '/warkop');
+$scriptPath = dirname($_SERVER['SCRIPT_NAME']);
+$basePath = str_replace(array('/admin', '/customer', '/config', '/includes'), '', $scriptPath);
+if ($basePath == '/' || $basePath == '\\') $basePath = '';
+define('APP_URL', $protocol . "://" . $host . $basePath);
 
 // Timezone
 date_default_timezone_set('Asia/Jakarta');
@@ -63,7 +66,7 @@ function checkSessionTimeout() {
     if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > SESSION_TIMEOUT)) {
         session_unset();
         session_destroy();
-        header('Location: ' . BASE_URL . '/index.php?timeout=1');
+        header('Location: ' . BASE_URL . '/login.php?timeout=1');
         exit;
     }
     $_SESSION['LAST_ACTIVITY'] = time();
@@ -72,7 +75,7 @@ function checkSessionTimeout() {
 // Check if user is logged in
 function requireLogin() {
     if (!isset($_SESSION['user_id'])) {
-        header('Location: ' . BASE_URL . '/index.php');
+        header('Location: ' . BASE_URL . '/login.php');
         exit;
     }
     checkSessionTimeout();

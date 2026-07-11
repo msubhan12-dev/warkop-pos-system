@@ -38,156 +38,87 @@ $stmt = $db->query("
 ");
 $activeOrders = $stmt->fetchAll();
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="icon" href="https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>POS Kasir - <?= APP_NAME ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
-        .category-tabs {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-        }
-        .category-tabs::-webkit-scrollbar {
-            display: none;
-        }
-    </style>
-</head>
-<body class="bg-gray-50 overflow-hidden">
-    <div class="flex min-h-screen">
-        <!-- Desktop Sidebar Menu (Sticky, Left) -->
-        <aside class="hidden md:flex flex-col w-64 bg-stone-900 text-white fixed h-screen z-50 border-r border-stone-850">
-            <!-- Sidebar Brand -->
-            <div class="flex items-center space-x-2.5 px-6 py-5 border-b border-stone-850">
-                <img src="https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0" alt="Logo" class="w-9 h-9 rounded-full object-cover">
-                <span class="font-extrabold text-lg text-white font-outfit tracking-tight"><?= APP_NAME ?></span>
-            </div>
-            
-            <!-- Sidebar Navigation Links -->
-            <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-                <a href="index.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-chart-line w-5 text-lg"></i>
-                    <span class="font-outfit text-sm">Dashboard</span>
-                </a>
-                <a href="pos.php" class="flex items-center space-x-3 p-3 bg-emerald-700 text-white font-bold rounded-xl shadow-md transition duration-200">
-                    <i class="fas fa-cash-register w-5 text-lg"></i>
-                    <span class="font-outfit text-sm">POS Kasir</span>
-                </a>
-                <a href="kitchen.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-fire w-5 text-lg text-orange-400"></i>
-                    <span class="font-outfit text-sm">Dapur</span>
-                </a>
-                <a href="orders.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-receipt w-5 text-lg text-blue-400"></i>
-                    <span class="font-outfit text-sm">Pesanan</span>
-                </a>
-                <a href="menu.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-leaf w-5 text-lg text-lime-400"></i>
-                    <span class="font-outfit text-sm">Menu Herbal</span>
-                </a>
-                <a href="tables.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-chair w-5 text-lg text-purple-400"></i>
-                    <span class="font-outfit text-sm">Meja</span>
-                </a>
-                <a href="reports.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-file-alt w-5 text-lg text-teal-400"></i>
-                    <span class="font-outfit text-sm">Laporan</span>
-                </a>
-                <a href="users.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-users w-5 text-lg text-indigo-450"></i>
-                    <span class="font-outfit text-sm">Karyawan</span>
-                </a>
-                <a href="change_password.php" class="flex items-center space-x-3 p-3 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl transition duration-200">
-                    <i class="fas fa-key w-5 text-lg text-amber-405"></i>
-                    <span class="font-outfit text-sm">Ganti Password</span>
-                </a>
-                <hr class="border-stone-800 my-4">
-                <a href="logout.php" class="flex items-center space-x-3 p-3 hover:bg-red-950/40 text-red-400 hover:text-red-300 rounded-xl transition duration-200">
-                    <i class="fas fa-sign-out-alt w-5 text-lg"></i>
-                    <span class="font-outfit text-sm">Logout</span>
-                </a>
-            </nav>
-        </aside>
-
+<?php
+$pageTitle = 'POS Kasir';
+include '../includes/header.php';
+?>
         <!-- Main Wrapper -->
-        <div class="flex-1 md:ml-64 flex flex-col h-screen overflow-hidden">
-            <!-- Top Header -->
-            <header class="bg-white shadow-sm border-b border-stone-200 sticky top-0 z-40">
-                <div class="flex items-center justify-between px-4 py-3">
-                    <div class="flex items-center space-x-3">
-                        <i class="fas fa-cash-register text-2xl text-emerald-600 md:hidden"></i>
-                        <div>
-                            <h1 class="text-lg font-extrabold font-outfit text-stone-850">POS Kasir</h1>
-                            <p class="text-xs text-stone-500 font-medium"><?= $user['full_name'] ?></p>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-3.5">
-                        <button onclick="showActiveOrders()" class="relative text-stone-500 hover:text-emerald-600 bg-stone-100 hover:bg-emerald-50 p-2.5 rounded-full flex items-center justify-center transition" title="Pesanan Aktif">
-                            <i class="fas fa-list text-lg"></i>
-                            <?php if (!empty($activeOrders)): ?>
-                            <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
-                                <?= count($activeOrders) ?>
-                            </span>
-                            <?php endif; ?>
-                        </button>
-                        <!-- Mobile-only logout link (since it is in sidebar now) -->
-                        <a href="logout.php" class="md:hidden text-stone-500 hover:text-red-600 bg-stone-100 hover:bg-red-50 p-2.5 rounded-full flex items-center justify-center transition" title="Logout">
-                            <i class="fas fa-sign-out-alt text-lg"></i>
-                        </a>
-                    </div>
+        <div class="flex-1 flex flex-col h-full overflow-hidden">
+            <!-- Top Header Action Bar -->
+            <div class="bg-white px-4 py-3 border-b border-stone-200 flex justify-between items-center z-30">
+                <div class="hidden md:block">
+                    <h1 class="text-xl font-extrabold font-outfit text-stone-850">Terminal Kasir</h1>
                 </div>
-            </header>
+                <div class="flex items-center space-x-3.5 ml-auto">
+                    <!-- Cart Button (Mobile) -->
+                    <button onclick="toggleOrderSidebar()" class="lg:hidden relative text-emerald-600 bg-emerald-50 hover:bg-emerald-100 p-2.5 rounded-full flex items-center justify-center transition shadow-sm" title="Keranjang">
+                        <i class="fas fa-shopping-basket text-lg"></i>
+                        <span id="floatingCartBadge" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-md hidden">0</span>
+                    </button>
+                    
+                    <button onclick="showActiveOrders()" class="relative text-stone-500 hover:text-emerald-600 bg-stone-100 hover:bg-emerald-50 p-2.5 rounded-full flex items-center justify-center transition shadow-sm" title="Pesanan Aktif">
+                        <i class="fas fa-list text-lg"></i>
+                        <?php if (!empty($activeOrders)): ?>
+                        <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-md">
+                            <?= count($activeOrders) ?>
+                        </span>
+                        <?php endif; ?>
+                    </button>
+                    <!-- Mobile-only logout link -->
+                    <a href="logout.php" class="md:hidden text-stone-500 hover:text-red-600 bg-stone-100 hover:bg-red-50 p-2.5 rounded-full flex items-center justify-center transition" title="Logout">
+                        <i class="fas fa-sign-out-alt text-lg"></i>
+                    </a>
+                </div>
+            </div>
 
             <!-- Main Content -->
     <div class="flex flex-col lg:flex-row flex-1 overflow-hidden">
         <!-- Menu Section (Left/Top) -->
         <div class="flex-1 overflow-hidden flex flex-col">
-            <!-- Search & Category -->
-            <div class="p-4 bg-white border-b">
-                <input 
-                    type="text" 
-                    id="searchMenu"
-                    placeholder="Cari obat herbal, madu, suplemen..."
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 mb-3"
-                    onkeyup="searchMenu()"
-                >
+            <div class="p-5 bg-white border-b border-slate-200/60 shadow-sm z-10">
+                <div class="relative mb-4">
+                    <input 
+                        type="text" 
+                        id="searchMenu"
+                        placeholder="Cari kopi, cemilan, minuman..."
+                        class="w-full px-5 py-3 pl-11 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 font-medium transition-all duration-300"
+                        onkeyup="searchMenu()"
+                    >
+                    <i class="fas fa-search absolute left-4 top-3.5 text-slate-400 text-lg"></i>
+                </div>
                 
-                <div class="category-tabs flex space-x-2 overflow-x-auto">
-                    <button onclick="filterCategory('all')" class="category-btn bg-green-600 text-white px-4 py-2 rounded-lg whitespace-nowrap font-semibold text-sm">
-                        Semua
+                <div class="category-tabs flex space-x-2.5 overflow-x-auto pb-1">
+                    <button onclick="filterCategory('all')" class="category-btn bg-emerald-600 text-white px-5 py-2.5 rounded-full whitespace-nowrap font-bold text-sm shadow-md shadow-emerald-600/20 transition-all duration-300">
+                        Semua Menu
                     </button>
                     <?php foreach ($categories as $category): ?>
-                    <button onclick="filterCategory(<?= $category['id'] ?>)" class="category-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg whitespace-nowrap font-semibold text-sm">
+                    <button onclick="filterCategory(<?= $category['id'] ?>)" class="category-btn bg-white border border-slate-200 text-slate-600 px-5 py-2.5 rounded-full whitespace-nowrap font-bold text-sm hover:bg-slate-50 hover:text-emerald-600 hover:border-emerald-200 transition-all duration-300">
                         <?= $category['icon'] ?> <?= $category['name'] ?>
                     </button>
                     <?php endforeach; ?>
                 </div>
             </div>
 
-            <!-- Menu Grid -->
-            <div class="flex-1 overflow-y-auto p-4">
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" id="menuGrid">
+            <div class="flex-1 overflow-y-auto p-4 sm:p-5 pb-24 lg:pb-5 bg-slate-50/50">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4" id="menuGrid">
                     <?php foreach ($menus as $menu): ?>
                     <button 
                         onclick="addToOrder(<?= $menu['id'] ?>, '<?= addslashes($menu['name']) ?>', <?= $menu['price'] ?>)"
-                        class="menu-item bg-white rounded-lg p-3 text-left hover:shadow-lg transition border-2 border-transparent hover:border-green-500"
+                        class="menu-item group bg-white rounded-2xl p-3 text-left border border-slate-100 hover:border-emerald-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
                         data-name="<?= strtolower($menu['name']) ?>"
                         data-category="<?= $menu['category_id'] ?>"
                     >
-                        <div class="bg-emerald-50 text-emerald-700 rounded-xl h-24 flex items-center justify-center mb-3">
-                            <i class="fas fa-leaf text-3xl"></i>
+                        <div class="bg-slate-100/80 text-slate-400 rounded-xl h-28 sm:h-32 flex items-center justify-center mb-3.5 overflow-hidden group-hover:bg-emerald-50 transition-colors duration-300">
+                            <?php if (!empty($menu['image'])): ?>
+                                <img src="<?= UPLOADS_URL . '/' . $menu['image'] ?>" alt="<?= htmlspecialchars($menu['name']) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            <?php else: ?>
+                                <i class="fas fa-mug-hot text-4xl group-hover:text-emerald-500 transition-colors duration-300"></i>
+                            <?php endif; ?>
                         </div>
-                        <h3 class="font-bold text-sm text-gray-800 mb-1 line-clamp-2"><?= $menu['name'] ?></h3>
-                        <p class="text-green-600 font-bold text-sm"><?= formatRupiah($menu['price']) ?></p>
+                        <div class="px-1 pb-1">
+                            <h3 class="font-bold text-sm text-slate-800 font-outfit mb-1.5 line-clamp-2 group-hover:text-emerald-700 transition-colors"><?= $menu['name'] ?></h3>
+                            <p class="text-emerald-600 font-extrabold text-sm"><?= formatRupiah($menu['price']) ?></p>
+                        </div>
                     </button>
                     <?php endforeach; ?>
                 </div>
@@ -195,81 +126,102 @@ $activeOrders = $stmt->fetchAll();
         </div>
 
         <!-- Order Section (Right/Bottom) -->
-        <div class="w-full lg:w-96 bg-white border-t lg:border-t-0 lg:border-l shadow-lg flex flex-col pb-32 sm:pb-0 max-h-[50vh] lg:max-h-none">
+        <div id="orderSidebar" class="fixed inset-y-0 right-0 w-full lg:w-[420px] bg-white shadow-2xl lg:shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.1)] flex flex-col z-50 transform translate-x-full lg:translate-x-0 transition-transform duration-300 lg:relative lg:inset-auto lg:h-full lg:border-l lg:border-slate-200">
             <!-- Order Header -->
-            <div class="p-4 border-b bg-green-50">
-                <h2 class="font-bold text-lg mb-3">Pesanan Baru</h2>
-                
-                <!-- Table Selection -->
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Meja</label>
-                    <select id="tableSelect" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                        <option value="">Take Away</option>
-                        <?php foreach ($tables as $table): ?>
-                        <option value="<?= $table['id'] ?>" <?= $table['status'] !== 'available' ? 'disabled' : '' ?>>
-                            Meja <?= $table['table_number'] ?> <?= $table['status'] !== 'available' ? '(Terisi)' : '' ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
+            <div class="p-5 border-b border-slate-100 bg-gradient-to-b from-slate-50 to-white">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-extrabold text-xl text-slate-800 font-outfit flex items-center">
+                        Pesanan Saat Ini
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-xs font-bold" id="itemCountBadge">0 Item</span>
+                        <button onclick="toggleOrderSidebar()" class="lg:hidden text-slate-400 hover:text-red-500 w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
                 
-                <!-- Customer Name -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Customer</label>
-                    <input 
-                        type="text" 
-                        id="customerName"
-                        placeholder="Masukkan nama"
-                        class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
-                    >
+                <div class="space-y-3.5">
+                    <!-- Table Selection -->
+                    <div>
+                        <div class="relative">
+                            <select id="tableSelect" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 font-semibold text-slate-700 appearance-none transition-all duration-300 cursor-pointer">
+                                <option value="">🛒 Take Away / Bungkus</option>
+                                <?php foreach ($tables as $table): ?>
+                                <option value="<?= $table['id'] ?>" <?= $table['status'] !== 'available' ? 'disabled' : '' ?>>
+                                    🪑 Meja <?= $table['table_number'] ?> <?= $table['status'] !== 'available' ? '(Terisi)' : '' ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-4 top-4 text-slate-400 pointer-events-none text-sm"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Customer Name -->
+                    <div>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="customerName"
+                                placeholder="Nama Pelanggan (Wajib)"
+                                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 font-semibold text-slate-700 transition-all duration-300"
+                            >
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Order Items -->
-            <div class="flex-1 overflow-y-auto p-4" id="orderItems">
-                <div class="text-center py-8 text-gray-400">
-                    <i class="fas fa-shopping-cart text-4xl mb-2"></i>
-                    <p>Belum ada item</p>
+            <div class="flex-1 overflow-y-auto p-4 bg-slate-50/30" id="orderItems">
+                <div class="h-full flex flex-col items-center justify-center text-slate-400 opacity-80">
+                    <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-shopping-basket text-4xl text-slate-300"></i>
+                    </div>
+                    <p class="font-bold text-slate-500 font-outfit text-lg">Keranjang Kosong</p>
+                    <p class="text-xs mt-1 text-slate-400">Yuk, pilih menu di sebelah kiri!</p>
                 </div>
             </div>
 
             <!-- Order Footer -->
-            <div class="p-4 border-t bg-gray-50">
-                <div class="space-y-2 mb-4">
-                    <div class="flex justify-between text-gray-600" style="display: none;">
+            <div class="p-5 border-t border-slate-200 bg-white shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.05)]">
+                <div class="space-y-3 mb-5 text-sm">
+                    <div class="flex justify-between text-slate-500 font-medium" style="display: none;">
                         <span>Subtotal</span>
                         <span id="subtotal">Rp 0</span>
                     </div>
-                    <div class="flex justify-between text-gray-600" style="display: none;">
+                    <div class="flex justify-between text-slate-500 font-medium" style="display: none;">
                         <span>Pajak (10%)</span>
                         <span id="tax">Rp 0</span>
                     </div>
-                    <div class="flex justify-between text-xl font-bold">
-                        <span>Total</span>
-                        <span class="text-green-600" id="total">Rp 0</span>
+                    <div class="flex justify-between items-end border-t border-dashed border-slate-300 pt-3">
+                        <span class="text-slate-500 font-bold font-outfit uppercase tracking-wider text-xs">Total Tagihan</span>
+                        <span class="text-2xl lg:text-3xl font-extrabold text-emerald-600 font-outfit leading-none" id="total">Rp 0</span>
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-12 gap-3">
                     <button 
                         onclick="clearOrder()"
-                        class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-lg transition"
+                        class="col-span-4 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 font-bold py-3 lg:py-4 rounded-2xl transition-all duration-300 flex flex-col items-center justify-center gap-1 border border-transparent hover:border-red-200"
                     >
-                        <i class="fas fa-trash mr-2"></i>Batal
+                        <i class="fas fa-trash-alt text-sm lg:text-base"></i>
+                        <span class="text-[9px] lg:text-[10px] uppercase tracking-wider">Batal</span>
                     </button>
                     <button 
                         onclick="processOrder()"
                         id="processBtn"
-                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition disabled:opacity-50"
+                        class="col-span-8 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-extrabold py-3 lg:py-4 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(16,185,129,0.4)] hover:shadow-[0_12px_25px_-6px_rgba(16,185,129,0.5)] hover:-translate-y-0.5"
                         disabled
                     >
-                        <i class="fas fa-check mr-2"></i>Proses
+                        <span class="text-base lg:text-lg">Proses Bayar</span>
+                        <i class="fas fa-arrow-right text-sm lg:text-base"></i>
                     </button>
                 </div>
             </div>
         </div>
+        </div>
     </div>
-
+    
     <!-- Active Orders Modal -->
     <div id="activeOrdersModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
@@ -302,9 +254,17 @@ $activeOrders = $stmt->fetchAll();
                                     <?= getStatusText($order['status']) ?>
                                 </span>
                             </div>
-                            <div class="flex items-center justify-between text-sm">
+                            <div class="flex items-center justify-between text-sm mt-2 pt-2 border-t border-gray-100">
                                 <span class="text-gray-600"><?= $order['item_count'] ?> item • <?= timeAgo($order['created_at']) ?></span>
-                                <span class="font-bold text-green-600"><?= formatRupiah($order['total']) ?></span>
+                                <div class="flex items-center gap-2 lg:gap-3">
+                                    <span class="font-bold text-green-600"><?= formatRupiah($order['total']) ?></span>
+                                    <button onclick="cancelOrder(<?= $order['id'] ?>)" class="bg-red-50 hover:bg-red-100 text-red-600 px-2 lg:px-3 py-1.5 rounded-lg text-[10px] lg:text-xs font-bold transition flex items-center border border-red-200" title="Void Pesanan">
+                                        <i class="fas fa-ban mr-1"></i> Void
+                                    </button>
+                                    <button onclick="window.open('print_receipt.php?order=<?= $order['id'] ?>', '_blank', 'width=400,height=600')" class="bg-stone-800 hover:bg-stone-900 text-white px-2 lg:px-3 py-1.5 rounded-lg text-[10px] lg:text-xs font-bold transition flex items-center shadow-sm">
+                                        <i class="fas fa-print mr-1 text-emerald-400"></i> Print Struk
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -386,44 +346,53 @@ $activeOrders = $stmt->fetchAll();
             
             if (currentOrder.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-8 text-gray-400">
-                        <i class="fas fa-shopping-cart text-4xl mb-2"></i>
-                        <p>Belum ada item</p>
+                <div class="h-full flex flex-col items-center justify-center text-slate-400 opacity-80">
+                    <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-shopping-basket text-4xl text-slate-300"></i>
                     </div>
+                    <p class="font-bold text-slate-500 font-outfit text-lg">Keranjang Kosong</p>
+                    <p class="text-xs mt-1 text-slate-400">Yuk, pilih menu di sebelah kiri!</p>
+                </div>
                 `;
                 processBtn.disabled = true;
                 updateTotals(0);
+                document.getElementById('itemCountBadge').textContent = '0 Item';
+                updateFloatingCartBadge(0);
                 return;
             }
             
-            let html = '<div class="space-y-3">';
+            let html = '<div class="space-y-3.5">';
             let subtotal = 0;
+            let itemCount = 0;
             
             currentOrder.forEach(item => {
                 const itemTotal = item.price * item.quantity;
                 subtotal += itemTotal;
+                itemCount += item.quantity;
                 
                 html += `
-                    <div class="bg-gray-50 rounded-lg p-3">
-                        <div class="flex items-center justify-between mb-2">
-                            <h4 class="font-semibold text-gray-800 flex-1">${item.name}</h4>
-                            <button onclick="removeItem(${item.id})" class="text-red-500 hover:text-red-700 ml-2">
-                                <i class="fas fa-trash text-sm"></i>
+                    <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow duration-300 relative group">
+                        <div class="flex items-start justify-between mb-3">
+                            <h4 class="font-bold text-slate-800 text-sm font-outfit flex-1 pr-6 leading-tight">${item.name}</h4>
+                            <button onclick="removeItem(${item.id})" class="absolute right-3 top-3 w-7 h-7 bg-red-50 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors duration-300 opacity-0 group-hover:opacity-100" title="Hapus Item">
+                                <i class="fas fa-times text-xs"></i>
                             </button>
                         </div>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2 bg-white rounded px-2 py-1">
-                                <button onclick="updateQuantity(${item.id}, -1)" class="text-green-600 hover:text-green-700 w-6">
-                                    <i class="fas fa-minus text-xs"></i>
+                        <div class="flex items-end justify-between mt-auto">
+                            <div class="flex items-center space-x-1 bg-slate-50 border border-slate-200/60 rounded-xl p-1">
+                                <button onclick="updateQuantity(${item.id}, -1)" class="w-7 h-7 flex items-center justify-center text-emerald-600 bg-white hover:bg-emerald-50 rounded-lg shadow-sm font-bold transition-colors">
+                                    <i class="fas fa-minus text-[10px]"></i>
                                 </button>
-                                <span class="font-bold w-8 text-center">${item.quantity}</span>
-                                <button onclick="updateQuantity(${item.id}, 1)" class="text-green-600 hover:text-green-700 w-6">
-                                    <i class="fas fa-plus text-xs"></i>
+                                <span class="font-extrabold w-8 text-center text-slate-700 text-sm font-outfit">${item.quantity}</span>
+                                <button onclick="updateQuantity(${item.id}, 1)" class="w-7 h-7 flex items-center justify-center text-emerald-600 bg-white hover:bg-emerald-50 rounded-lg shadow-sm font-bold transition-colors">
+                                    <i class="fas fa-plus text-[10px]"></i>
                                 </button>
                             </div>
-                            <span class="font-bold text-green-600">
-                                Rp ${itemTotal.toLocaleString('id-ID')}
-                            </span>
+                            <div class="text-right">
+                                <span class="font-extrabold text-emerald-600 text-base font-outfit">
+                                    Rp ${itemTotal.toLocaleString('id-ID')}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -432,7 +401,25 @@ $activeOrders = $stmt->fetchAll();
             html += '</div>';
             container.innerHTML = html;
             processBtn.disabled = false;
+            document.getElementById('itemCountBadge').textContent = itemCount + ' Item';
             updateTotals(subtotal);
+            updateFloatingCartBadge(itemCount);
+        }
+        
+        function updateFloatingCartBadge(count) {
+            const badge = document.getElementById('floatingCartBadge');
+            if (badge) {
+                badge.textContent = count;
+                if (count > 0) {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        }
+        
+        function toggleOrderSidebar() {
+            document.getElementById('orderSidebar').classList.toggle('translate-x-full');
         }
         
         function updateTotals(subtotal) {
@@ -446,7 +433,7 @@ $activeOrders = $stmt->fetchAll();
         
         function clearOrder() {
             if (currentOrder.length > 0) {
-                if (confirm('Hapus semua item?')) {
+                if (confirm('Batalkan input pesanan ini?')) {
                     currentOrder = [];
                     document.getElementById('customerName').value = '';
                     document.getElementById('tableSelect').value = '';
@@ -486,7 +473,17 @@ $activeOrders = $stmt->fetchAll();
                 
                 if (result.success) {
                     showNotification('success', 'Pesanan berhasil diproses!');
-                    clearOrder();
+                    
+                    // Open print receipt popup automatically
+                    if (result.order_id) {
+                        window.open('print_receipt.php?order=' + result.order_id, '_blank', 'width=400,height=600');
+                    }
+                    
+                    currentOrder = [];
+                    document.getElementById('customerName').value = '';
+                    document.getElementById('tableSelect').value = '';
+                    renderOrder();
+                    
                     setTimeout(() => {
                         location.reload();
                     }, 1500);
@@ -551,8 +548,34 @@ $activeOrders = $stmt->fetchAll();
             
             setTimeout(() => notification.remove(), 3000);
         }
+        
+        function cancelOrder(orderId) {
+            if (!confirm('AWAS! Yakin mau Void pesanan ini? Stok akan dikembalikan dan meja dikosongkan.')) {
+                return;
+            }
+            
+            fetch('cancel_order.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'order_id=' + orderId
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('success', data.message);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification('error', data.message);
+                }
+            })
+            .catch(e => {
+                showNotification('error', 'Terjadi kesalahan jaringan.');
+                console.error(e);
+            });
+        }
     </script>
         </div>
     </div>
-</body>
-</html>
+<?php include '../includes/footer.php'; ?>

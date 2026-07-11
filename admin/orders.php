@@ -1,6 +1,6 @@
 <?php
 require_once '../config/config.php';
-requireRole(['owner']);
+requireRole(['owner', 'admin', 'kasir']);
 
 // Prevent browser caching of order statuses
 header('Cache-Control: no-cache, no-store, must-revalidate');
@@ -30,81 +30,136 @@ if ($detailId) {
     $paymentDetail = getPaymentDetails($detailId);
 }
 
-$stmt = $db->query("SELECT o.*, t.table_number FROM orders o LEFT JOIN tables t ON o.table_id = t.id ORDER BY o.created_at DESC LIMIT 50");
+$filter = $_GET['filter'] ?? 'today';
+$whereClause = "";
+if ($filter === 'today') {
+    $whereClause = "WHERE DATE(o.created_at) = CURDATE()";
+} else if ($filter === 'yesterday') {
+    $whereClause = "WHERE DATE(o.created_at) = CURDATE() - INTERVAL 1 DAY";
+} else if ($filter === 'this_week') {
+    $whereClause = "WHERE YEARWEEK(o.created_at, 1) = YEARWEEK(CURDATE(), 1)";
+} else if ($filter === 'this_month') {
+    $whereClause = "WHERE MONTH(o.created_at) = MONTH(CURDATE()) AND YEAR(o.created_at) = YEAR(CURDATE())";
+}
+
+$stmt = $db->query("SELECT o.*, t.table_number FROM orders o LEFT JOIN tables t ON o.table_id = t.id $whereClause ORDER BY o.created_at DESC LIMIT 100");
 $orders = $stmt->fetchAll();
 include '../includes/header.php';
 ?>
-<main class="p-4 max-w-7xl mx-auto pb-32 sm:pb-24">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+<div class="p-3 sm:p-6 max-w-7xl mx-auto pb-32 sm:pb-24 w-full">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
         <div>
-            <h1 class="text-2xl font-extrabold text-stone-850 font-outfit">Daftar Pesanan</h1>
-            <p class="text-stone-500 text-sm mt-1">Pantau dan kelola semua transaksi pesanan pelanggan.</p>
+            <h1 class="text-3xl font-extrabold text-slate-800 font-outfit tracking-tight">Daftar Pesanan</h1>
+            <p class="text-slate-500 text-sm mt-1 font-medium">Pantau dan kelola semua transaksi pesanan pelanggan.</p>
+        </div>
+        <div class="w-full sm:w-auto flex items-center gap-2">
+            <span class="text-sm font-semibold text-slate-500"><i class="fas fa-filter mr-1"></i> Filter:</span>
+            <select onchange="window.location.href='?filter='+this.value" class="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 shadow-sm font-semibold transition-all cursor-pointer">
+                <option value="today" <?= $filter === 'today' ? 'selected' : '' ?>>Hari Ini</option>
+                <option value="yesterday" <?= $filter === 'yesterday' ? 'selected' : '' ?>>Kemarin</option>
+                <option value="this_week" <?= $filter === 'this_week' ? 'selected' : '' ?>>Minggu Ini</option>
+                <option value="this_month" <?= $filter === 'this_month' ? 'selected' : '' ?>>Bulan Ini</option>
+                <option value="all" <?= $filter === 'all' ? 'selected' : '' ?>>Semua Data</option>
+            </select>
         </div>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
-        <div class="space-y-4">
-            <?php foreach ($orders as $order): 
-                $payment = getPaymentDetails($order['id']);
-                $needsVerification = ($payment && $payment['payment_method'] === 'qris' && $payment['verification_status'] === 'pending' && $payment['proof_of_payment']);
-            ?>
-            <div class="border <?= $needsVerification ? 'border-orange-300 bg-orange-50/50' : 'border-stone-200 hover:border-emerald-300 hover:shadow-md' ?> rounded-xl p-5 transition duration-200">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 shrink-0 rounded-full flex items-center justify-center font-bold text-xl shadow-inner <?= $needsVerification ? 'bg-orange-100 text-orange-600' : 'bg-emerald-50 text-emerald-600' ?>">
-                            <i class="fas <?= $needsVerification ? 'fa-exclamation-triangle' : 'fa-receipt' ?>"></i>
-                        </div>
-                        <div>
-                            <p class="font-extrabold text-lg text-stone-850 font-outfit mb-0.5"><?= $order['order_number'] ?></p>
-                            <p class="text-sm font-medium text-stone-600 flex items-center flex-wrap gap-2">
-                                <span><i class="fas fa-user text-stone-400 mr-1"></i><?= htmlspecialchars($order['customer_name']) ?></span>
-                                <span class="text-stone-300">|</span>
-                                <span><i class="fas fa-chair text-stone-400 mr-1"></i>Meja <?= $order['table_number'] ?? 'TA' ?></span>
-                            </p>
-                            <?php if ($needsVerification): ?>
-                            <p class="text-xs font-bold text-orange-600 mt-2 bg-orange-100/80 border border-orange-200 inline-block px-2.5 py-1 rounded-md">
-                                <i class="fas fa-circle-notch fa-spin mr-1"></i> Menunggu verifikasi pembayaran QRIS
-                            </p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    
-                    <div class="flex flex-col md:items-end gap-2 w-full md:w-auto">
-                        <div class="flex items-center gap-2">
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider font-extrabold">
+                        <th class="p-4 sm:p-5">Order ID</th>
+                        <th class="p-4 sm:p-5">Pelanggan</th>
+                        <th class="p-4 sm:p-5">Waktu</th>
+                        <th class="p-4 sm:p-5">Metode</th>
+                        <th class="p-4 sm:p-5">Status</th>
+                        <th class="p-4 sm:p-5 text-right">Total</th>
+                        <th class="p-4 sm:p-5 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <?php if (empty($orders)): ?>
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400 font-medium">
+                            <i class="fas fa-clipboard-list text-3xl mb-3 text-slate-300 block"></i>
+                            Tidak ada pesanan ditemukan.
+                        </td>
+                    </tr>
+                    <?php else: ?>
+                    <?php foreach ($orders as $order): 
+                        $payment = getPaymentDetails($order['id']);
+                        $needsVerification = ($payment && $payment['payment_method'] === 'qris' && $payment['verification_status'] === 'pending' && $payment['proof_of_payment']);
+                    ?>
+                    <tr class="hover:bg-slate-50 transition-colors duration-200 <?= $needsVerification ? 'bg-orange-50/30' : '' ?>">
+                        <td class="p-4 sm:p-5 whitespace-nowrap">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center font-bold text-sm <?= $needsVerification ? 'bg-orange-100 text-orange-600' : 'bg-emerald-50 text-emerald-500' ?>">
+                                    <i class="fas <?= $needsVerification ? 'fa-exclamation-triangle' : 'fa-receipt' ?>"></i>
+                                </div>
+                                <span class="font-bold text-slate-800 font-outfit"><?= $order['order_number'] ?></span>
+                            </div>
+                        </td>
+                        <td class="p-4 sm:p-5 whitespace-nowrap">
+                            <p class="font-bold text-slate-700"><?= htmlspecialchars($order['customer_name']) ?></p>
+                            <p class="text-xs text-slate-500 mt-1"><i class="fas fa-chair mr-1"></i>Meja <?= $order['table_number'] ?? 'TA' ?></p>
+                        </td>
+                        <td class="p-4 sm:p-5 whitespace-nowrap text-sm font-medium text-slate-500">
+                            <?= formatDateTime($order['created_at']) ?>
+                        </td>
+                        <td class="p-4 sm:p-5 whitespace-nowrap">
                             <?php if ($payment && $payment['payment_method'] === 'qris'): ?>
-                            <span class="px-2.5 py-1 text-xs font-extrabold rounded-lg bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wide">
+                            <span class="px-2.5 py-1 text-[11px] font-extrabold rounded-lg bg-blue-50 text-blue-600 border border-blue-200 uppercase tracking-wide inline-block">
                                 <i class="fas fa-qrcode mr-1"></i> QRIS
                             </span>
+                            <?php else: ?>
+                            <span class="px-2.5 py-1 text-[11px] font-extrabold rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 uppercase tracking-wide inline-block">
+                                <i class="fas fa-money-bill-wave mr-1"></i> TUNAI
+                            </span>
                             <?php endif; ?>
-                            <span class="px-3 py-1 text-xs font-extrabold rounded-lg shadow-sm border uppercase tracking-wide <?= getStatusBadge($order['status']) ?>">
+                            
+                            <?php if ($needsVerification): ?>
+                            <div class="mt-1.5">
+                                <span class="text-[10px] font-bold text-orange-600 bg-orange-100/80 px-2 py-0.5 rounded shadow-sm inline-flex items-center">
+                                    <i class="fas fa-circle-notch fa-spin mr-1"></i> Verifikasi
+                                </span>
+                            </div>
+                            <?php endif; ?>
+                        </td>
+                        <td class="p-4 sm:p-5 whitespace-nowrap">
+                            <span class="px-3 py-1.5 text-xs font-extrabold rounded-xl shadow-sm border uppercase tracking-wider <?= getStatusBadge($order['status']) ?>">
                                 <?= getStatusText($order['status']) ?>
                             </span>
-                        </div>
-                        <div class="flex items-center justify-between md:justify-end w-full gap-5 mt-2 md:mt-0">
-                            <span class="text-xs text-stone-500 font-medium"><i class="far fa-clock mr-1"></i><?= formatDateTime($order['created_at']) ?></span>
-                            <span class="font-extrabold text-emerald-600 text-xl font-outfit"><?= formatRupiah($order['total']) ?></span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-4 pt-4 border-t border-dashed border-stone-200 flex justify-end">
-                    <a href="?detail=<?= $order['id'] ?>" class="bg-stone-800 hover:bg-stone-900 text-white font-bold py-2.5 px-6 rounded-lg text-sm transition duration-200 flex items-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                        <i class="fas fa-eye mr-2"></i> Lihat Detail
-                    </a>
-                </div>
-            </div>
-            <?php endforeach; ?>
+                        </td>
+                        <td class="p-4 sm:p-5 whitespace-nowrap text-right">
+                            <span class="font-extrabold text-emerald-600 text-lg font-outfit"><?= formatRupiah($order['total']) ?></span>
+                        </td>
+                        <td class="p-4 sm:p-5 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="printReceipt(<?= $order['id'] ?>)" class="inline-flex items-center justify-center bg-stone-100 hover:bg-stone-200 text-stone-600 border border-stone-300 font-bold w-9 h-9 rounded-xl transition-all duration-300 shadow-sm hover:-translate-y-0.5" title="Print Struk">
+                                    <i class="fas fa-print text-sm"></i>
+                                </button>
+                                <a href="?detail=<?= $order['id'] ?>&filter=<?= $filter ?>&t=<?= time() ?>" class="inline-flex items-center justify-center bg-slate-800 hover:bg-slate-900 text-white font-bold w-9 h-9 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5" title="Lihat Detail">
+                                    <i class="fas fa-eye text-sm"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
-</main>
+</div>
 
 <!-- Detail Modal -->
 <?php if ($orderDetail): ?>
 <div class="fixed inset-0 bg-stone-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-stone-50 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-stone-200">
         <!-- Modal Header -->
-        <div class="bg-white px-6 py-4 border-b border-stone-200 flex justify-between items-center z-10 shadow-sm">
-            <h3 class="text-xl font-extrabold text-stone-850 font-outfit flex items-center">
+        <div class="bg-white px-4 sm:px-6 py-3 sm:py-4 border-b border-stone-200 flex justify-between items-center z-10 shadow-sm">
+            <h3 class="text-lg sm:text-xl font-extrabold text-stone-850 font-outfit flex items-center">
                 <i class="fas fa-file-invoice text-emerald-600 mr-2.5"></i> Detail Pesanan
             </h3>
             <a href="orders.php" class="w-8 h-8 flex items-center justify-center rounded-full bg-stone-100 text-stone-500 hover:bg-red-100 hover:text-red-600 transition duration-200">
@@ -113,12 +168,12 @@ include '../includes/header.php';
         </div>
         
         <!-- Modal Content Scrollable -->
-        <div class="p-6 overflow-y-auto flex-1">
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div class="p-4 sm:p-6 overflow-y-auto flex-1">
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
                 <!-- Left Column (Order Info & Items) -->
                 <div class="lg:col-span-3 space-y-6">
                     <!-- Order Info Card -->
-                    <div class="bg-white rounded-xl p-5 border border-stone-200 shadow-sm">
+                    <div class="bg-white rounded-xl p-4 sm:p-5 border border-stone-200 shadow-sm">
                         <div class="flex justify-between items-start mb-4 pb-4 border-b border-stone-100">
                             <div>
                                 <p class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">No. Pesanan</p>
@@ -129,7 +184,7 @@ include '../includes/header.php';
                             </span>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <p class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">Customer</p>
                                 <p class="font-bold text-stone-800"><?= htmlspecialchars($orderDetail['customer_name']) ?></p>
@@ -139,14 +194,30 @@ include '../includes/header.php';
                             </div>
                             <div>
                                 <p class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">Detail Layanan</p>
-                                <p class="font-bold text-stone-800"><i class="fas fa-chair text-stone-400 text-xs mr-1"></i> <?= $orderDetail['table_number'] ? 'Meja '.$orderDetail['table_number'] : 'Take Away' ?></p>
-                                <p class="text-sm text-stone-500 font-medium mt-0.5"><i class="fas fa-user-tag text-xs mr-1 text-stone-300"></i> Kasir: <?= htmlspecialchars($orderDetail['kasir_name'] ?? '-') ?></p>
+                                <p class="font-bold text-stone-800 flex items-start mt-1">
+                                    <?php if ($orderDetail['order_type'] === 'dine_in'): ?>
+                                        <i class="fas fa-chair text-stone-400 text-sm mr-2 mt-0.5"></i> Meja <?= $orderDetail['table_number'] ?>
+                                    <?php elseif ($orderDetail['order_type'] === 'delivery'): ?>
+                                        <i class="fas fa-motorcycle text-emerald-500 text-sm mr-2 mt-0.5"></i> Delivery
+                                    <?php else: ?>
+                                        <i class="fas fa-shopping-bag text-stone-400 text-sm mr-2 mt-0.5"></i> Take Away
+                                    <?php endif; ?>
+                                </p>
+                                
+                                <?php if ($orderDetail['order_type'] === 'delivery' && !empty($orderDetail['delivery_address'])): ?>
+                                    <div class="mt-2 bg-stone-50 border border-stone-200 rounded-lg p-2.5">
+                                        <p class="text-xs font-bold text-stone-500 mb-1"><i class="fas fa-map-marker-alt text-emerald-500 mr-1"></i> Alamat Pengiriman:</p>
+                                        <p class="text-xs text-stone-700 font-medium leading-relaxed"><?= nl2br(htmlspecialchars($orderDetail['delivery_address'])) ?></p>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <p class="text-sm text-stone-500 font-medium mt-2"><i class="fas fa-user-tag text-xs mr-1 text-stone-300"></i> Kasir: <?= htmlspecialchars($orderDetail['kasir_name'] ?? '-') ?></p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Order Items Card -->
-                    <div class="bg-white rounded-xl p-5 border border-stone-200 shadow-sm">
+                    <div class="bg-white rounded-xl p-4 sm:p-5 border border-stone-200 shadow-sm">
                         <h4 class="text-sm font-extrabold text-stone-700 uppercase tracking-wider mb-4 flex items-center">
                             <i class="fas fa-shopping-basket text-emerald-500 mr-2"></i> Daftar Menu
                         </h4>
@@ -164,8 +235,8 @@ include '../includes/header.php';
                         </div>
                         
                         <div class="flex justify-between items-center pt-4 border-t border-dashed border-stone-300">
-                            <span class="font-extrabold text-stone-500 text-lg">TOTAL TAGIHAN</span>
-                            <span class="text-2xl font-extrabold text-emerald-600 font-outfit"><?= formatRupiah($orderDetail['total']) ?></span>
+                            <span class="font-extrabold text-stone-500 text-sm sm:text-lg">TOTAL TAGIHAN</span>
+                            <span class="text-xl sm:text-2xl font-extrabold text-emerald-600 font-outfit"><?= formatRupiah($orderDetail['total']) ?></span>
                         </div>
                     </div>
                 </div>
@@ -174,8 +245,8 @@ include '../includes/header.php';
                 <div class="lg:col-span-2 space-y-6">
                     <?php if ($paymentDetail): ?>
                     <!-- Payment Status Card -->
-                    <div class="bg-white rounded-xl p-5 border border-stone-200 shadow-sm relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full -z-0"></div>
+                    <div class="bg-white rounded-xl p-4 sm:p-5 border border-stone-200 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-blue-50 rounded-bl-full -z-0"></div>
                         
                         <h4 class="text-sm font-extrabold text-stone-700 uppercase tracking-wider mb-4 relative z-10 flex items-center">
                             <i class="fas fa-wallet text-blue-500 mr-2"></i> Info Pembayaran
@@ -256,6 +327,13 @@ include '../includes/header.php';
                             </div>
                             <?php endif; ?>
                         </div>
+                        <?php else: ?>
+                        <!-- For non-QRIS (Cash) Payments -->
+                        <div class="mt-4 pt-2 border-t border-stone-100">
+                            <button onclick="printReceipt(<?= $orderDetail['id'] ?>)" class="w-full bg-stone-800 hover:bg-stone-900 text-white py-3 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center">
+                                <i class="fas fa-print mr-2 text-emerald-400"></i> Print Struk Resi
+                            </button>
+                        </div>
                         <?php endif; ?>
                         
                         <!-- Verified By Info -->
@@ -277,6 +355,15 @@ include '../includes/header.php';
                     </div>
                     <?php endif; ?>
                 </div>
+                
+                <!-- Extra Action Buttons (Cancel Order) -->
+                <?php if ($orderDetail['status'] !== 'cancelled'): ?>
+                <div class="mt-6 pt-4 border-t border-dashed border-stone-300">
+                    <button onclick="cancelOrder(<?= $orderDetail['id'] ?>)" class="w-full bg-white border-2 border-red-200 hover:bg-red-50 text-red-600 py-3 rounded-xl font-bold text-sm shadow-sm transition flex items-center justify-center">
+                        <i class="fas fa-ban mr-2"></i> Batalkan Pesanan (Void)
+                    </button>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -409,7 +496,30 @@ function submitRejectPayment() {
 function printReceipt(orderId) {
     window.open('print_receipt.php?order=' + orderId, '_blank', 'width=400,height=600');
 }
+
+function cancelOrder(orderId) {
+    if (!confirm('AWAS! Apakah Anda yakin ingin membatalkan pesanan ini secara permanen? Stok dan laporan akan disesuaikan kembali, dan meja (jika ada) akan dikosongkan.')) {
+        return;
+    }
+    
+    fetch('cancel_order.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'order_id=' + orderId
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.href = 'orders.php';
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(e => alert('Terjadi kesalahan: ' + e.message));
+}
 </script>
 
 <?php include '../includes/footer.php'; ?>
-

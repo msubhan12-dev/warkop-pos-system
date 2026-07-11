@@ -30,9 +30,12 @@ include '../includes/header.php';
                 <span class="inline-block mt-2 px-3 py-1 text-xs rounded-full <?= getStatusBadge($table['status']) ?>">
                     <?= getStatusText($table['status']) ?>
                 </span>
-                <div class="mt-3">
-                    <a href="?toggle=<?= $table['id'] ?>" class="text-sm text-blue-600 hover:text-blue-800">
+                <div class="mt-3 flex items-center justify-center gap-3">
+                    <a href="?toggle=<?= $table['id'] ?>" class="text-sm text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors font-semibold">
                         <?= $table['status'] == 'available' ? 'Set Terisi' : 'Set Tersedia' ?>
+                    </a>
+                    <a href="print_qr.php?id=<?= $table['id'] ?>" target="_blank" class="text-sm text-emerald-600 hover:text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors font-semibold" title="Cetak QR Code">
+                        <i class="fas fa-qrcode mr-1"></i> QR Code
                     </a>
                 </div>
             </div>

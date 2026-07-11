@@ -8,5 +8,5 @@ if (isset($_SESSION['user_id'])) {
 session_unset();
 session_destroy();
 
-header('Location: ../index.php?logout=1');
+header('Location: ../login.php?logout=1');
 exit;

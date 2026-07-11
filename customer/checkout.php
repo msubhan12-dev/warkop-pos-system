@@ -26,13 +26,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $customerName = clean($_POST['customer_name'] ?? '');
     $customerPhone = clean($_POST['customer_phone'] ?? '');
     $orderType = clean($_POST['order_type'] ?? 'dine_in');
+    $deliveryAddress = clean($_POST['delivery_address'] ?? '');
     $paymentMethod = clean($_POST['payment_method'] ?? 'cash');
     $notes = clean($_POST['notes'] ?? '');
     
     // Validation
     if (empty($customerName)) {
         $error = 'Nama harus diisi';
-    } elseif (empty($customerPhone) || !validatePhone($customerPhone)) {
+    } elseif ($orderType === 'delivery' && empty($deliveryAddress)) {
+        $error = 'Alamat pengiriman harus diisi untuk pesanan delivery';
+    } elseif (!empty($customerPhone) && !validatePhone($customerPhone)) {
         $error = 'Nomor telepon tidak valid';
     } else {
         try {
@@ -45,15 +48,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Create order
             $stmt = $db->prepare("
                 INSERT INTO orders (
-                    order_number, table_id, customer_name, customer_phone,
+                    order_number, table_id, customer_name, customer_phone, delivery_address,
                     order_type, status, subtotal, tax, total, notes
-                ) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $orderNumber,
                 $tableId,
                 $customerName,
                 $customerPhone,
+                $deliveryAddress,
                 $orderType,
                 $subtotal,
                 $tax,
@@ -67,10 +71,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach ($cart as $item) {
                 // Order item
                 $itemSubtotal = $item['price'] * $item['quantity'];
+                $itemNotes = isset($item['notes']) ? $item['notes'] : '';
+                
                 $stmt = $db->prepare("
                     INSERT INTO order_items (
-                        order_id, menu_id, menu_name, price, quantity, subtotal, status
-                    ) VALUES (?, ?, ?, ?, ?, ?, 'pending')
+                        order_id, menu_id, menu_name, price, quantity, subtotal, notes, status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
                 ");
                 $stmt->execute([
                     $orderId,
@@ -78,7 +84,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $item['name'],
                     $item['price'],
                     $item['quantity'],
-                    $itemSubtotal
+                    $itemSubtotal,
+                    $itemNotes
                 ]);
             }
             
@@ -138,6 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->commit();
             
             // Clear cart
+            $_SESSION['last_order_number'] = $orderNumber;
             unset($_SESSION['cart']);
             unset($_SESSION['customer_table_id']);
             unset($_SESSION['customer_table_number']);
@@ -177,14 +185,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
 </head>
-<body class="bg-stone-50 text-stone-900">
+<body class="bg-[#0B1121] text-slate-200">
     <!-- Header -->
-    <header class="bg-stone-900 text-white shadow-lg sticky top-0 z-30">
-        <div class="px-4 py-4 flex items-center">
-            <a href="menu.php" class="mr-4">
-                <i class="fas fa-arrow-left text-xl"></i>
+    <header class="bg-slate-900/80 backdrop-blur-md shadow-md sticky top-0 z-30 border-b border-slate-700/60">
+        <div class="px-5 py-4 flex items-center justify-center relative">
+            <a href="menu.php" class="absolute left-5 w-10 h-10 bg-slate-800 hover:bg-slate-700 border border-slate-700/50 rounded-full flex items-center justify-center text-slate-300 transition-colors">
+                <i class="fas fa-arrow-left"></i>
             </a>
-            <h1 class="text-xl font-bold font-outfit">Ringkasan Pesanan</h1>
+            <h1 class="text-xl font-extrabold font-outfit text-slate-100 drop-shadow-sm">Ringkasan Pesanan</h1>
         </div>
     </header>
 
@@ -192,112 +200,161 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <main class="max-w-md mx-auto p-4 space-y-6">
         
         <?php if (isset($error) && $error): ?>
-        <div class="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg text-sm">
+        <div class="p-4 bg-red-900/30 border-l-4 border-red-500 text-red-300 rounded-lg text-sm">
             <?= $error ?>
         </div>
         <?php endif; ?>
         
         <!-- Summary Card -->
-        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-4">
-            <h2 class="font-bold text-lg mb-4 font-outfit text-stone-850 flex items-center">
-                <i class="fas fa-receipt mr-2 text-stone-600"></i>
+        <div class="bg-slate-800/60 backdrop-blur-md rounded-3xl shadow-xl border border-slate-700/50 p-6 relative overflow-hidden">
+            <!-- Receipt zig-zag top decoration -->
+            <div class="absolute top-0 left-0 right-0 h-2 bg-[radial-gradient(circle_at_10px_0,#1e293b_10px,transparent_11px)] bg-[length:20px_20px]"></div>
+            
+            <h2 class="font-extrabold text-xl mb-5 font-outfit text-slate-100 flex items-center mt-2 drop-shadow-sm">
+                <i class="fas fa-receipt mr-3 text-emerald-400 bg-emerald-900/30 p-2 rounded-xl border border-emerald-500/20"></i>
                 Daftar Pesanan
             </h2>
             
-            <div class="divide-y divide-stone-100 max-h-60 overflow-y-auto mb-4">
+            <div class="divide-y divide-slate-700/50 max-h-60 overflow-y-auto mb-5 pr-2">
                 <?php foreach ($cart as $item): ?>
-                <div class="flex items-center justify-between py-3">
+                <div class="flex items-center justify-between py-3.5">
                     <div class="flex-1">
-                        <p class="font-bold text-stone-800 text-sm"><?= $item['name'] ?></p>
-                        <p class="text-xs text-stone-500"><?= $item['quantity'] ?>x • <?= formatRupiah($item['price']) ?></p>
+                        <p class="font-bold text-slate-200 text-base"><?= $item['name'] ?></p>
+                        <?php if (!empty($item['notes'])): ?>
+                        <p class="text-[11px] text-slate-400 mt-0.5 mb-0.5 bg-slate-900/50 p-1 rounded-lg border border-slate-700 flex items-start gap-1 w-fit"><i class="fas fa-pen-alt text-[9px] text-emerald-400 mt-0.5"></i> <?= htmlspecialchars($item['notes']) ?></p>
+                        <?php endif; ?>
+                        <p class="text-sm text-slate-400 font-medium"><?= $item['quantity'] ?>x • <?= formatRupiah($item['price']) ?></p>
                     </div>
-                    <span class="font-bold text-stone-750 text-sm">
+                    <span class="font-extrabold text-slate-200 text-base drop-shadow-sm">
                         <?= formatRupiah($item['price'] * $item['quantity']) ?>
                     </span>
                 </div>
                 <?php endforeach; ?>
             </div>
             
-            <div class="space-y-2 pt-3 border-t">
-                <div class="flex justify-between text-lg font-extrabold text-stone-900 pt-2 font-outfit">
-                    <span>Total</span>
-                    <span class="text-emerald-600"><?= formatRupiah($total) ?></span>
+            <div class="space-y-3 pt-4 border-t border-dashed border-slate-600">
+                <div class="flex justify-between text-xl font-extrabold text-slate-100 pt-2 font-outfit">
+                    <span>Total Tagihan</span>
+                    <span class="text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]"><?= formatRupiah($total) ?></span>
                 </div>
             </div>
         </div>
 
         <!-- Customer Information -->
-        <form method="POST" action="" class="space-y-4">
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-4">
-                <h2 class="font-bold text-lg mb-4 font-outfit text-stone-850 flex items-center">
-                    <i class="fas fa-user mr-2 text-stone-600"></i>
-                    Informasi Customer
+        <form method="POST" action="" class="space-y-6">
+            <div class="bg-slate-800/60 backdrop-blur-md rounded-3xl shadow-xl border border-slate-700/50 p-6">
+                <h2 class="font-extrabold text-xl mb-5 font-outfit text-slate-100 flex items-center drop-shadow-sm">
+                    <i class="fas fa-user-circle mr-3 text-emerald-400 bg-emerald-900/30 p-2 rounded-xl border border-emerald-500/20"></i>
+                    Informasi Pemesan
                 </h2>
                 
-                <div class="space-y-4">
+                <div class="space-y-5">
                     <div>
-                        <label for="customer_name" class="block text-sm font-semibold text-stone-700 mb-2">
-                            Nama <span class="text-red-500">*</span>
+                        <label for="customer_name" class="block text-sm font-bold text-slate-300 mb-2">
+                            Nama Pemesan <span class="text-red-400">*</span>
                         </label>
                         <input 
                             type="text" 
                             id="customer_name" 
                             name="customer_name" 
                             required
-                            class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium transition duration-200"
+                            class="w-full px-5 py-3.5 bg-slate-900/50 border border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-slate-800 font-medium transition-all duration-300 text-slate-200 placeholder-slate-500"
                             placeholder="Masukkan nama Anda"
                         >
                     </div>
                     
                     <div>
-                        <label for="customer_phone" class="block text-sm font-semibold text-stone-700 mb-2">
-                            Nomor Telepon <span class="text-red-500">*</span>
+                        <label for="customer_phone" class="block text-sm font-bold text-slate-300 mb-2">
+                            Nomor Telepon <span class="text-red-400">*</span>
                         </label>
                         <input 
                             type="tel" 
                             id="customer_phone" 
                             name="customer_phone" 
-                            required
-                            class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium transition duration-200"
+                            class="w-full px-5 py-3.5 bg-slate-900/50 border border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-slate-800 font-medium transition-all duration-300 text-slate-200 placeholder-slate-500"
                             placeholder="08xxxxxxxxxx"
                         >
                     </div>
                     
-                    <!-- Tipe pesanan dideteksi otomatis berdasarkan scan meja -->
-                    <input type="hidden" name="order_type" value="<?= $tableNumber ? 'dine_in' : 'take_away' ?>">
+                    <?php if ($tableNumber): ?>
+                        <input type="hidden" name="order_type" value="dine_in">
+                    <?php else: ?>
+                        <!-- Order type selection -->
+                        <div class="space-y-3">
+                            <label class="block text-sm font-bold text-slate-300 mb-1">Tipe Pesanan</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="relative flex flex-col p-4 border-2 border-emerald-500 rounded-xl cursor-pointer bg-emerald-900/20 transition-all duration-300" id="lblTypeTakeaway">
+                                    <input type="radio" name="order_type" value="take_away" class="peer sr-only" checked onchange="toggleDeliveryAddress()">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-shopping-bag text-emerald-400"></i>
+                                        <span class="font-bold text-slate-200">Ambil Sendiri</span>
+                                    </div>
+                                </label>
+                                <label class="relative flex flex-col p-4 border-2 border-slate-700 rounded-xl cursor-pointer bg-slate-900/50 hover:border-emerald-500/50 transition-all duration-300" id="lblTypeDelivery">
+                                    <input type="radio" name="order_type" value="delivery" class="peer sr-only" onchange="toggleDeliveryAddress()">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-motorcycle text-emerald-400"></i>
+                                        <span class="font-bold text-slate-200">Pesan Antar</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="deliveryAddressContainer" class="hidden transition-all duration-300">
+                            <label for="delivery_address" class="block text-sm font-bold text-slate-300 mb-2">
+                                Alamat Pengiriman <span class="text-red-400">*</span>
+                            </label>
+                            <textarea 
+                                id="delivery_address" 
+                                name="delivery_address" 
+                                rows="3"
+                                class="w-full px-5 py-3.5 bg-slate-900/50 border border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-slate-800 transition-all duration-300 text-slate-200 resize-none font-medium placeholder-slate-500"
+                                placeholder="Jalan, No Rumah, RT/RW, Patokan..."
+                            ></textarea>
+                        </div>
+                    <?php endif; ?>
                     
                     <div>
-                        <label for="notes" class="block text-sm font-semibold text-stone-700 mb-2">
-                            Catatan (Opsional)
+                        <label for="notes" class="block text-sm font-bold text-slate-300 mb-2">
+                            Catatan Tambahan
                         </label>
                         <textarea 
                             id="notes" 
                             name="notes" 
-                            rows="3"
-                            class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition duration-200"
-                            placeholder="Contoh: Manis sedang, kopi dipisah"
+                            rows="2"
+                            class="w-full px-5 py-3.5 bg-slate-900/50 border border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-slate-800 transition-all duration-300 text-slate-200 resize-none font-medium placeholder-slate-500"
+                            placeholder="Contoh: Es dipisah, gulanya dikit"
                         ></textarea>
                     </div>
                 </div>
             </div>
 
             <!-- Payment Method -->
-            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-4">
-                <h2 class="font-bold text-lg mb-4 font-outfit text-stone-850 flex items-center">
-                    <i class="fas fa-wallet mr-2 text-stone-600"></i>
+            <div class="bg-slate-800/60 backdrop-blur-md rounded-3xl shadow-xl border border-slate-700/50 p-6">
+                <h2 class="font-extrabold text-xl mb-5 font-outfit text-slate-100 flex items-center drop-shadow-sm">
+                    <i class="fas fa-wallet mr-3 text-emerald-400 bg-emerald-900/30 p-2 rounded-xl border border-emerald-500/20"></i>
                     Metode Pembayaran
                 </h2>
                 
-                <div class="space-y-3">
-                    <label class="flex items-center p-4 border-2 border-emerald-600 rounded-xl cursor-pointer bg-emerald-50 transition" id="lblPayCash">
-                        <input type="radio" name="payment_method" value="cash" class="mr-3" checked>
-                        <i class="fas fa-money-bill-wave text-green-600 text-lg mr-3"></i>
-                        <span class="font-bold text-stone-800 text-sm">Tunai (Bayar di Kasir)</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label class="relative flex flex-col p-5 border-2 border-emerald-500 rounded-2xl cursor-pointer bg-emerald-900/20 hover:bg-emerald-900/30 transition-all duration-300 shadow-sm" id="lblPayCash">
+                        <input type="radio" name="payment_method" value="cash" class="peer sr-only" checked>
+                        <div class="flex items-center justify-between mb-2">
+                            <i class="fas fa-money-bill-wave text-emerald-400 text-2xl drop-shadow-sm"></i>
+                            <i class="fas fa-check-circle text-emerald-400 text-xl opacity-100 peer-checked:opacity-100 transition-opacity" id="checkCash"></i>
+                        </div>
+                        <span class="font-extrabold text-slate-200 text-base font-outfit block">Tunai di Kasir</span>
+                        <span class="text-xs text-slate-400 font-medium mt-1">Bayar langsung ke kasir</span>
                     </label>
-                    <label class="flex items-center p-4 border-2 border-stone-200 rounded-xl cursor-pointer hover:border-emerald-600 transition" id="lblPayQRIS">
-                        <input type="radio" name="payment_method" value="qris" class="mr-3">
-                        <i class="fas fa-qrcode text-blue-600 text-lg mr-3"></i>
-                        <span class="font-bold text-stone-800 text-sm">QRIS</span>
+                    
+                    <label class="relative flex flex-col p-5 border-2 border-slate-700 rounded-2xl cursor-pointer bg-slate-900/50 hover:border-emerald-500/50 transition-all duration-300 shadow-sm" id="lblPayQRIS">
+                        <input type="radio" name="payment_method" value="qris" class="peer sr-only">
+                        <div class="flex items-center justify-between mb-2">
+                            <i class="fas fa-qrcode text-blue-400 text-2xl drop-shadow-sm"></i>
+                            <i class="fas fa-check-circle text-emerald-400 text-xl opacity-0 peer-checked:opacity-100 transition-opacity" id="checkQRIS"></i>
+                        </div>
+                        <span class="font-extrabold text-slate-200 text-base font-outfit block">Scan QRIS</span>
+                        <span class="text-xs text-slate-400 font-medium mt-1">OVO, Gopay, Dana, dll</span>
                     </label>
                 </div>
             </div>
@@ -305,10 +362,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Submit Button -->
             <button 
                 type="submit"
-                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-2xl shadow-md hover:shadow-lg transition duration-200 text-base font-outfit flex items-center justify-center gap-2"
+                class="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-extrabold py-4 px-6 rounded-2xl shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(16,185,129,0.6)] hover:-translate-y-0.5 transition-all duration-300 text-lg font-outfit flex items-center justify-center gap-3 mt-4"
             >
-                <i class="fas fa-check-circle"></i>
-                Konfirmasi & Kirim Pesanan
+                <i class="fas fa-paper-plane"></i>
+                Pesan Sekarang
             </button>
         </form>
     </main>
@@ -317,16 +374,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Handle payment method radio button styles
         document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
             radio.addEventListener('change', function() {
-                document.querySelectorAll('input[name="payment_method"]').forEach(r => {
-                    const label = r.closest('label');
-                    if (r.checked) {
-                        label.className = "flex items-center p-4 border-2 border-emerald-600 rounded-xl cursor-pointer bg-emerald-50 transition";
-                    } else {
-                        label.className = "flex items-center p-4 border-2 border-stone-200 rounded-xl cursor-pointer hover:border-emerald-600 transition";
-                    }
-                });
+                const lblCash = document.getElementById('lblPayCash');
+                const lblQRIS = document.getElementById('lblPayQRIS');
+                const chkCash = document.getElementById('checkCash');
+                const chkQRIS = document.getElementById('checkQRIS');
+                
+                if (this.value === 'cash') {
+                    lblCash.className = "relative flex flex-col p-5 border-2 border-emerald-500 rounded-2xl cursor-pointer bg-emerald-900/20 hover:bg-emerald-900/30 transition-all duration-300 shadow-sm";
+                    lblQRIS.className = "relative flex flex-col p-5 border-2 border-slate-700 rounded-2xl cursor-pointer bg-slate-900/50 hover:border-emerald-500/50 transition-all duration-300 shadow-sm";
+                    chkCash.style.opacity = '1';
+                    chkQRIS.style.opacity = '0';
+                } else {
+                    lblQRIS.className = "relative flex flex-col p-5 border-2 border-emerald-500 rounded-2xl cursor-pointer bg-emerald-900/20 hover:bg-emerald-900/30 transition-all duration-300 shadow-sm";
+                    lblCash.className = "relative flex flex-col p-5 border-2 border-slate-700 rounded-2xl cursor-pointer bg-slate-900/50 hover:border-emerald-500/50 transition-all duration-300 shadow-sm";
+                    chkQRIS.style.opacity = '1';
+                    chkCash.style.opacity = '0';
+                }
             });
         });
+
+        // Toggle Delivery Address form
+        function toggleDeliveryAddress() {
+            const typeInput = document.querySelector('input[name="order_type"]:checked');
+            if(!typeInput) return;
+            const type = typeInput.value;
+            const container = document.getElementById('deliveryAddressContainer');
+            const input = document.getElementById('delivery_address');
+            const lblTakeaway = document.getElementById('lblTypeTakeaway');
+            const lblDelivery = document.getElementById('lblTypeDelivery');
+            
+            if (type === 'delivery') {
+                container.classList.remove('hidden');
+                input.setAttribute('required', 'required');
+                lblDelivery.classList.add('border-emerald-500', 'bg-emerald-900/20');
+                lblDelivery.classList.remove('border-slate-700', 'bg-slate-900/50');
+                lblTakeaway.classList.remove('border-emerald-500', 'bg-emerald-900/20');
+                lblTakeaway.classList.add('border-slate-700', 'bg-slate-900/50');
+            } else {
+                container.classList.add('hidden');
+                input.removeAttribute('required');
+                lblTakeaway.classList.add('border-emerald-500', 'bg-emerald-900/20');
+                lblTakeaway.classList.remove('border-slate-700', 'bg-slate-900/50');
+                lblDelivery.classList.remove('border-emerald-500', 'bg-emerald-900/20');
+                lblDelivery.classList.add('border-slate-700', 'bg-slate-900/50');
+            }
+        }
     </script>
 </body>
 </html>
