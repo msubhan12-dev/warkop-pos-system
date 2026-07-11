@@ -10,6 +10,12 @@ if (empty($cart)) {
 $tableId = $_SESSION['customer_table_id'] ?? null;
 $tableNumber = $_SESSION['customer_table_number'] ?? null;
 
+if (!$tableId) {
+    // If no table is set, they should be in the online order flow
+    header('Location: menu_online.php');
+    exit;
+}
+
 // Calculate totals
 $subtotal = 0;
 foreach ($cart as $item) {
@@ -221,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="flex-1">
                         <p class="font-bold text-slate-200 text-base"><?= $item['name'] ?></p>
                         <?php if (!empty($item['notes'])): ?>
-                        <p class="text-[11px] text-slate-400 mt-0.5 mb-0.5 bg-slate-900/50 p-1 rounded-lg border border-slate-700 flex items-start gap-1 w-fit"><i class="fas fa-pen-alt text-[9px] text-emerald-400 mt-0.5"></i> <?= htmlspecialchars($item['notes']) ?></p>
+                        <p class="text-xs text-slate-400 mt-0.5 mb-0.5 bg-slate-900/50 p-1 rounded-lg border border-slate-700 flex items-start gap-1 w-fit"><i class="fas fa-pen-alt text-xs text-emerald-400 mt-0.5"></i> <?= htmlspecialchars($item['notes']) ?></p>
                         <?php endif; ?>
                         <p class="text-sm text-slate-400 font-medium"><?= $item['quantity'] ?>x • <?= formatRupiah($item['price']) ?></p>
                     </div>
@@ -276,43 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         >
                     </div>
                     
-                    <?php if ($tableNumber): ?>
                         <input type="hidden" name="order_type" value="dine_in">
-                    <?php else: ?>
-                        <!-- Order type selection -->
-                        <div class="space-y-3">
-                            <label class="block text-sm font-bold text-slate-300 mb-1">Tipe Pesanan</label>
-                            <div class="grid grid-cols-2 gap-3">
-                                <label class="relative flex flex-col p-4 border-2 border-emerald-500 rounded-xl cursor-pointer bg-emerald-900/20 transition-all duration-300" id="lblTypeTakeaway">
-                                    <input type="radio" name="order_type" value="take_away" class="peer sr-only" checked onchange="toggleDeliveryAddress()">
-                                    <div class="flex items-center gap-2">
-                                        <i class="fas fa-shopping-bag text-emerald-400"></i>
-                                        <span class="font-bold text-slate-200">Ambil Sendiri</span>
-                                    </div>
-                                </label>
-                                <label class="relative flex flex-col p-4 border-2 border-slate-700 rounded-xl cursor-pointer bg-slate-900/50 hover:border-emerald-500/50 transition-all duration-300" id="lblTypeDelivery">
-                                    <input type="radio" name="order_type" value="delivery" class="peer sr-only" onchange="toggleDeliveryAddress()">
-                                    <div class="flex items-center gap-2">
-                                        <i class="fas fa-motorcycle text-emerald-400"></i>
-                                        <span class="font-bold text-slate-200">Pesan Antar</span>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div id="deliveryAddressContainer" class="hidden transition-all duration-300">
-                            <label for="delivery_address" class="block text-sm font-bold text-slate-300 mb-2">
-                                Alamat Pengiriman <span class="text-red-400">*</span>
-                            </label>
-                            <textarea 
-                                id="delivery_address" 
-                                name="delivery_address" 
-                                rows="3"
-                                class="w-full px-5 py-3.5 bg-slate-900/50 border border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-slate-800 transition-all duration-300 text-slate-200 resize-none font-medium placeholder-slate-500"
-                                placeholder="Jalan, No Rumah, RT/RW, Patokan..."
-                            ></textarea>
-                        </div>
-                    <?php endif; ?>
                     
                     <div>
                         <label for="notes" class="block text-sm font-bold text-slate-300 mb-2">
@@ -393,32 +363,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         });
 
-        // Toggle Delivery Address form
-        function toggleDeliveryAddress() {
-            const typeInput = document.querySelector('input[name="order_type"]:checked');
-            if(!typeInput) return;
-            const type = typeInput.value;
-            const container = document.getElementById('deliveryAddressContainer');
-            const input = document.getElementById('delivery_address');
-            const lblTakeaway = document.getElementById('lblTypeTakeaway');
-            const lblDelivery = document.getElementById('lblTypeDelivery');
-            
-            if (type === 'delivery') {
-                container.classList.remove('hidden');
-                input.setAttribute('required', 'required');
-                lblDelivery.classList.add('border-emerald-500', 'bg-emerald-900/20');
-                lblDelivery.classList.remove('border-slate-700', 'bg-slate-900/50');
-                lblTakeaway.classList.remove('border-emerald-500', 'bg-emerald-900/20');
-                lblTakeaway.classList.add('border-slate-700', 'bg-slate-900/50');
-            } else {
-                container.classList.add('hidden');
-                input.removeAttribute('required');
-                lblTakeaway.classList.add('border-emerald-500', 'bg-emerald-900/20');
-                lblTakeaway.classList.remove('border-slate-700', 'bg-slate-900/50');
-                lblDelivery.classList.remove('border-emerald-500', 'bg-emerald-900/20');
-                lblDelivery.classList.add('border-slate-700', 'bg-slate-900/50');
-            }
-        }
     </script>
 </body>
 </html>

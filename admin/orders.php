@@ -329,7 +329,12 @@ include '../includes/header.php';
                         </div>
                         <?php else: ?>
                         <!-- For non-QRIS (Cash) Payments -->
-                        <div class="mt-4 pt-2 border-t border-stone-100">
+                        <div class="mt-4 pt-2 border-t border-stone-100 space-y-3">
+                            <?php if ($paymentDetail['status'] === 'pending'): ?>
+                            <button onclick="approveCashPayment(<?= $paymentDetail['id'] ?>)" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center">
+                                <i class="fas fa-check-circle mr-2 text-white"></i> Terima Pembayaran Tunai
+                            </button>
+                            <?php endif; ?>
                             <button onclick="printReceipt(<?= $orderDetail['id'] ?>)" class="w-full bg-stone-800 hover:bg-stone-900 text-white py-3 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center">
                                 <i class="fas fa-print mr-2 text-emerald-400"></i> Print Struk Resi
                             </button>
@@ -456,6 +461,28 @@ function approvePayment(paymentId) {
             setTimeout(() => {
                 window.location.reload();
             }, 500);
+        } else {
+            alert('Error: ' + (data.message || data.error));
+        }
+    })
+    .catch(e => alert('Error: ' + e.message));
+}
+
+function approveCashPayment(paymentId) {
+    if (!confirm('Apakah Anda sudah menerima uang cash dari pembeli?')) return;
+    
+    const formData = new FormData();
+    formData.append('payment_id', paymentId);
+    
+    fetch('process_cash_payment.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('Pembayaran Cash Berhasil Diterima');
+            window.location.reload();
         } else {
             alert('Error: ' + (data.message || data.error));
         }

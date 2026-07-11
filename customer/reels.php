@@ -195,7 +195,7 @@ function getEmbedHtml($url, $title) {
                         <div class="w-12 h-12 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/10 group-hover:bg-emerald-400/20">
                             <i class="fas fa-shopping-basket text-xl"></i>
                         </div>
-                        <span class="text-[10px] font-bold">Pesan</span>
+                        <span class="text-xs font-bold">Pesan</span>
                     </button>
                     <button class="flex flex-col items-center gap-1 group text-white hover:text-blue-400 transition-colors">
                         <div class="w-12 h-12 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/10 group-hover:bg-blue-400/20">

@@ -265,8 +265,8 @@ $dynamicQrisString = QrisGenerator::generateDynamic($order['amount']);
                 
                 <!-- Ticket Footer -->
                 <div class="text-center pt-3 border-t border-dashed border-stone-200 mt-4 text-xs text-stone-500 font-medium">
-                    <p class="text-[11px] leading-relaxed">Terima kasih atas kunjungan Anda!</p>
-                    <p class="text-[10px] text-stone-400 mt-0.5">Silakan tunjukkan struk digital ini ke kasir jika diperlukan.</p>
+                    <p class="text-xs leading-relaxed">Terima kasih atas kunjungan Anda!</p>
+                    <p class="text-xs text-stone-400 mt-0.5">Silakan tunjukkan struk digital ini ke kasir jika diperlukan.</p>
                 </div>
             </div>
 
@@ -317,7 +317,7 @@ $dynamicQrisString = QrisGenerator::generateDynamic($order['amount']);
                 <div class="flex justify-between items-center pt-3 border-t border-slate-700/50">
                     <span class="text-slate-400 font-medium text-sm">Status</span>
                     <div class="flex items-center gap-2">
-                        <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-amber-900/40 text-amber-400 border border-amber-500/30 uppercase tracking-wider">Menunggu Pembayaran</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-900/40 text-amber-400 border border-amber-500/30 uppercase tracking-wider">Menunggu Pembayaran</span>
                         <span class="animate-spin text-amber-500"><i class="fas fa-circle-notch"></i></span>
                     </div>
                 </div>

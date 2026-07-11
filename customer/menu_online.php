@@ -1,22 +1,11 @@
 <?php
 require_once '../config/config.php';
 
-// Get table number from query string (QR Code)
-$tableNumber = $_GET['table'] ?? null;
+// Clear any table session for online orders
+unset($_SESSION['customer_table_id']);
+unset($_SESSION['customer_table_number']);
 $tableId = null;
-
-if ($tableNumber) {
-    $db = getDB();
-    $stmt = $db->prepare("SELECT id, table_number, capacity, status FROM tables WHERE table_number = ? AND is_active = 1");
-    $stmt->execute([$tableNumber]);
-    $table = $stmt->fetch();
-    
-    if ($table) {
-        $tableId = $table['id'];
-        $_SESSION['customer_table_id'] = $tableId;
-        $_SESSION['customer_table_number'] = $table['table_number'];
-    }
-}
+$tableNumber = null;
 
 // Get cart from session
 $cart = $_SESSION['cart'] ?? [];
@@ -88,27 +77,33 @@ foreach ($menus as $menu) {
             }
         }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 </head>
 <body class="bg-[#0B1121] text-slate-100 selection:bg-emerald-500/30">
-    <!-- Cover/Banner Image -->
-    <div class="w-full h-48 sm:h-64 bg-cover bg-center relative rounded-b-[2.5rem] shadow-[0_10px_40px_-10px_rgba(16,185,129,0.2)] overflow-hidden mb-6" style="background-image: url('<?= APP_URL ?>/assets/img/warkop_banner.png');">
-        <!-- Dark gradient overlay -->
-        <div class="absolute inset-0 bg-gradient-to-t from-[#0B1121] via-[#0B1121]/60 to-transparent flex items-end p-5 sm:p-8">
-            <div class="flex items-center gap-4 relative z-10">
-                <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-1 shadow-2xl w-20 h-20 sm:w-24 sm:h-24 overflow-hidden flex-shrink-0 border border-white/10">
-                    <img src="https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0" alt="Logo" class="w-full h-full object-cover rounded-xl">
-                </div>
-                <div>
-                    <h1 class="text-3xl sm:text-4xl font-extrabold text-white font-outfit tracking-tight drop-shadow-lg"><?= APP_NAME ?></h1>
-                    <p class="text-sm sm:text-base text-emerald-400 mt-1 font-medium drop-shadow-sm flex items-center gap-1">
-                        <i class="fas fa-leaf text-xs"></i> Herbal Alami & Kesehatan Keluarga
-                    </p>
+    <!-- Carousel Banner -->
+    <div class="swiper mySwiper w-full h-48 sm:h-72 mb-6 rounded-b-[2.5rem] shadow-[0_10px_40px_-10px_rgba(16,185,129,0.2)]">
+        <div class="swiper-wrapper">
+            <!-- Slide 1 -->
+            <div class="swiper-slide bg-cover bg-center relative" style="background-image: url('<?= APP_URL ?>/assets/img/warkop_banner.png');">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0B1121] via-[#0B1121]/50 to-transparent flex items-end p-5 sm:p-8">
+                    <div class="relative z-10 w-full">
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg tracking-tight mb-1">Pesan Mudah</h2>
+                        <p class="text-sm sm:text-base text-emerald-400 font-medium">Dari rumah sakit atau mana saja, kami antar!</p>
+                    </div>
                 </div>
             </div>
-            
-            <!-- Glow effect behind text -->
-            <div class="absolute bottom-5 left-5 w-40 h-20 bg-emerald-500/20 blur-3xl rounded-full"></div>
+            <!-- Slide 2 -->
+            <div class="swiper-slide bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1559925393-8be0ec4767c8?q=80&w=2071&auto=format&fit=crop');">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0B1121] via-[#0B1121]/50 to-transparent flex items-end p-5 sm:p-8">
+                    <div class="relative z-10 w-full">
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg tracking-tight mb-1">Menu Sehat</h2>
+                        <p class="text-sm sm:text-base text-emerald-400 font-medium">Racikan herbal terbaik untuk menjaga imun keluarga</p>
+                    </div>
+                </div>
+            </div>
         </div>
+        <!-- Pagination -->
+        <div class="swiper-pagination"></div>
     </div>
 
     <!-- Header / Glass Search & Categories -->
@@ -116,11 +111,9 @@ foreach ($menus as $menu) {
         <div class="px-5 py-4">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center space-x-3">
-                    <?php if ($tableNumber): ?>
-                    <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-extrabold px-4 py-2 rounded-full uppercase tracking-wider flex items-center shadow-[0_0_15px_rgba(16,185,129,0.15)]">
-                        <i class="fas fa-chair mr-2"></i>Meja <?= $tableNumber ?>
+                    <span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-extrabold px-4 py-2 rounded-full uppercase tracking-wider flex items-center shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+                        <i class="fas fa-shopping-bag mr-2"></i>Pesan Online
                     </span>
-                    <?php endif; ?>
                 </div>
                 <div class="flex items-center gap-2">
                     <a href="#" target="_blank" class="relative bg-slate-700/50 hover:bg-red-500/20 p-2 sm:p-3 rounded-full transition-colors flex items-center justify-center text-red-500 hover:text-red-400 shadow-inner group border border-slate-600/50" title="Pesan via GoFood">
@@ -679,7 +672,7 @@ foreach ($menus as $menu) {
                 return;
             }
             
-            window.location.href = 'checkout.php';
+            window.location.href = 'checkout_online.php';
         }
         
         // Search menu
@@ -780,6 +773,21 @@ foreach ($menus as $menu) {
                         document.getElementById('promoModalContent').classList.remove('scale-95');
                     }, 10);
                 }, 1500);
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        var swiper = new Swiper(".mySwiper", {
+            spaceBetween: 30,
+            centeredSlides: true,
+            autoplay: {
+                delay: 3500,
+                disableOnInteraction: false,
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
             }
         });
     </script>
