@@ -36,14 +36,23 @@ $limit = 10;
 $offset = ($page - 1) * $limit;
 
 $whereClause = "";
+$today = date('Y-m-d');
+$yesterday = date('Y-m-d', strtotime('-1 day'));
+$whereClause = "";
 if ($filter === 'today') {
-    $whereClause = "WHERE DATE(o.created_at) = CURDATE()";
+    $whereClause = "WHERE DATE(o.created_at) = '$today'";
 } else if ($filter === 'yesterday') {
-    $whereClause = "WHERE DATE(o.created_at) = CURDATE() - INTERVAL 1 DAY";
+    $whereClause = "WHERE DATE(o.created_at) = '$yesterday'";
 } else if ($filter === 'this_week') {
-    $whereClause = "WHERE YEARWEEK(o.created_at, 1) = YEARWEEK(CURDATE(), 1)";
+    // MySQL YEARWEEK might also be affected by timezone, but let's stick to DATE for safety if possible,
+    // or just use PHP to get start and end of week.
+    $startOfWeek = date('Y-m-d', strtotime('monday this week'));
+    $endOfWeek = date('Y-m-d', strtotime('sunday this week'));
+    $whereClause = "WHERE DATE(o.created_at) >= '$startOfWeek' AND DATE(o.created_at) <= '$endOfWeek'";
 } else if ($filter === 'this_month') {
-    $whereClause = "WHERE MONTH(o.created_at) = MONTH(CURDATE()) AND YEAR(o.created_at) = YEAR(CURDATE())";
+    $currentMonth = date('m');
+    $currentYear = date('Y');
+    $whereClause = "WHERE MONTH(o.created_at) = '$currentMonth' AND YEAR(o.created_at) = '$currentYear'";
 }
 
 // Get total for pagination
