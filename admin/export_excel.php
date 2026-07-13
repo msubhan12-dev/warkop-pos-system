@@ -34,7 +34,7 @@ $stmt_stock = $db->query("
     SELECT m.name, c.name as category, m.price, m.stock 
     FROM menus m 
     JOIN categories c ON m.category_id = c.id
-    WHERE m.stock IS NOT NULL AND m.is_active = 1
+    WHERE m.stock IS NOT NULL AND m.is_available = 1
     ORDER BY m.stock ASC
 ");
 $stocks = $stmt_stock->fetchAll();

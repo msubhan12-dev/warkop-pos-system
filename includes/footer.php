@@ -41,7 +41,7 @@
             }
         });
         
-        <?php if (isset($userRole) && in_array($userRole, ['owner', 'admin', 'kasir'])): ?>
+        <?php if (isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], ['owner', 'admin', 'kasir'])): ?>
         // Audio element for notification
         const notifSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
         
@@ -64,11 +64,12 @@
                             data.orders.forEach(order => {
                                 // Text to Speech Voice Notification
                                 if ('speechSynthesis' in window) {
-                                    let text = `Pesanan baru dari kak ${order.customer_name}.`;
+                                    let paymentName = (order.payment_method || 'cash').toLowerCase() === 'qris' ? 'kris' : 'tunai';
+                                    let orderType = order.table_number ? `makan di meja ${order.table_number}` : 'dibungkus atau online';
+                                    
+                                    let text = `Ada pesanan ${orderType} dari kak ${order.customer_name}, bayar pakai ${paymentName}.`;
                                     if (order.proof_of_payment) {
-                                        text = `Kak ${order.customer_name} telah mengirim bukti pembayaran qris. Mohon segera dicek.`;
-                                    } else if (order.payment_method === 'qris') {
-                                        text = `Pesanan masuk dari kak ${order.customer_name}, dengan metode qris.`;
+                                        text = `Kak ${order.customer_name} telah mengirim bukti pembayaran kris. Mohon dicek.`;
                                     }
                                     
                                     const utterance = new SpeechSynthesisUtterance(text);
@@ -132,7 +133,7 @@
                             <h4 class="font-extrabold text-slate-800 text-lg font-outfit mb-1">#${order.order_number}</h4>
                             <p class="text-sm text-slate-600 mb-1"><i class="fas fa-user text-slate-400 mr-2"></i>${order.customer_name}</p>
                             <span class="inline-block bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-md">
-                                <i class="fas fa-money-bill-wave text-emerald-500 mr-1"></i> ${order.payment_method.toUpperCase()}
+                                <i class="fas fa-money-bill-wave text-emerald-500 mr-1"></i> ${(order.payment_method || 'CASH').toUpperCase()}
                             </span>
                         </div>
                         ${order.table_number ? `<div class="bg-emerald-50 text-emerald-700 font-bold px-3 py-1.5 rounded-lg text-sm border border-emerald-100"><i class="fas fa-chair mr-1"></i>Meja ${order.table_number}</div>` : `<div class="bg-orange-50 text-orange-700 font-bold px-3 py-1.5 rounded-lg text-sm border border-orange-100"><i class="fas fa-shopping-bag mr-1"></i>Take Away</div>`}
@@ -158,8 +159,8 @@
             }
         };
         
-        // Poll every 5 seconds
-        setInterval(checkForNewOrders, 5000);
+        // Poll every 1 second for a realtime feel
+        setInterval(checkForNewOrders, 1000);
         <?php endif; ?>
     </script>
 </body>
