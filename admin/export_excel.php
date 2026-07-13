@@ -34,7 +34,7 @@ $stmt_stock = $db->query("
     SELECT m.name, c.name as category, m.price, m.stock 
     FROM menus m 
     JOIN categories c ON m.category_id = c.id
-    WHERE m.stock IS NOT NULL
+    WHERE m.stock IS NOT NULL AND m.is_active = 1
     ORDER BY m.stock ASC
 ");
 $stocks = $stmt_stock->fetchAll();
@@ -58,6 +58,7 @@ header("Expires: 0");
         .header { background-color: #2E7D32; color: #FFFFFF; font-weight: bold; text-align: center; }
         .header-blue { background-color: #1565C0; color: #FFFFFF; font-weight: bold; text-align: center; }
         .money { mso-number-format:"\#\,\#\#0"; text-align: right; }
+        .date { mso-number-format:"yyyy\-mm\-dd"; text-align: center; }
         .negative { color: #D32F2F; }
         .positive { color: #388E3C; }
         .warning { background-color: #FFEBEE; color: #D32F2F; font-weight: bold; text-align: center; }
@@ -88,14 +89,13 @@ header("Expires: 0");
         
         <?php
         // Row 8 is the first data row (Rows: 1-Title, 2-Subtitle, 3-Empty, 4-Section Header, 5-Table Headers)
-        // Actually, HTML tables are exported seamlessly, we just need to count data rows accurately.
         $startRow = 6; 
         $currentRow = $startRow;
         
         // Output Revenues
         foreach ($revenues as $rev) {
             echo "<tr>";
-            echo "<td>" . date('d M Y', strtotime($rev['date'])) . "</td>";
+            echo "<td class='date'>" . date('Y-m-d', strtotime($rev['date'])) . "</td>";
             echo "<td>" . htmlspecialchars($rev['description']) . "</td>";
             echo "<td class='positive'>Pendapatan</td>";
             echo "<td class='money'>" . $rev['amount'] . "</td>";
@@ -106,7 +106,7 @@ header("Expires: 0");
         // Output Expenses
         foreach ($expenses as $exp) {
             echo "<tr>";
-            echo "<td>" . date('d M Y', strtotime($exp['date'])) . "</td>";
+            echo "<td class='date'>" . date('Y-m-d', strtotime($exp['date'])) . "</td>";
             echo "<td>" . htmlspecialchars($exp['description']) . "</td>";
             echo "<td class='negative'>Pengeluaran</td>";
             echo "<td class='money'>-" . $exp['amount'] . "</td>";

@@ -56,11 +56,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $orderNumber = generateOrderNumber();
             
             // Create order
+            // Create order with explicit timestamp to avoid timezone issues
+            $currentTimestamp = date('Y-m-d H:i:s');
             $stmt = $db->prepare("
                 INSERT INTO orders (
                     order_number, table_id, customer_name, customer_phone, delivery_address,
-                    order_type, status, subtotal, tax, delivery_fee, total, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
+                    order_type, status, subtotal, tax, delivery_fee, total, notes, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $orderNumber,
@@ -73,7 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $tax,
                 $deliveryFee,
                 $finalTotal,
-                $notes
+                $notes,
+                $currentTimestamp
             ]);
             
             $orderId = $db->lastInsertId();
