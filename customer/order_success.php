@@ -84,7 +84,11 @@ $items = $stmt->fetchAll();
             
             <div class="bg-slate-900/50 rounded-2xl p-5 border border-slate-700/80 mb-6 relative z-10 shadow-inner">
                 <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Nomor Pesanan</p>
-                <p class="text-3xl font-black text-emerald-400 font-mono tracking-widest drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">#<?= $order['order_number'] ?></p>
+                <?php
+                    $onum = $order['order_number'];
+                    $formattedNum = substr($onum, 0, 3) . '-' . substr($onum, 3, 8) . '-' . substr($onum, 11);
+                ?>
+                <p class="text-3xl font-black text-emerald-400 font-mono tracking-widest drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">#<?= $formattedNum ?></p>
             </div>
             
             <!-- Order Details -->

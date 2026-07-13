@@ -125,12 +125,15 @@
             
             // Add orders to list
             orders.forEach(order => {
+                const onum = order.order_number;
+                const formattedNum = onum.substring(0,3) + '-' + onum.substring(3,11) + '-' + onum.substring(11);
+                
                 const item = document.createElement('div');
                 item.className = 'bg-white border border-slate-200 rounded-2xl p-4 mb-3 shadow-sm border-l-4 border-l-emerald-500';
                 item.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
-                            <h4 class="font-extrabold text-slate-800 text-lg font-outfit mb-1">#${order.order_number}</h4>
+                            <h4 class="font-extrabold text-slate-800 text-lg font-outfit mb-1 tracking-wide">#${formattedNum}</h4>
                             <p class="text-sm text-slate-600 mb-1"><i class="fas fa-user text-slate-400 mr-2"></i>${order.customer_name}</p>
                             <span class="inline-block bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-md">
                                 <i class="fas fa-money-bill-wave text-emerald-500 mr-1"></i> ${(order.payment_method || 'CASH').toUpperCase()}

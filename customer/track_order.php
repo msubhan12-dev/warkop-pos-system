@@ -172,7 +172,11 @@
                     <div class="flex justify-between items-center relative z-10 border-b border-slate-700/50 pb-4">
                         <div>
                             <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Nomor Pesanan</p>
-                            <h3 class="font-extrabold text-lg font-outfit text-white">#<?= $order['order_number'] ?></h3>
+                            <?php
+                                $onum = $order['order_number'];
+                                $formattedNum = substr($onum, 0, 3) . '-' . substr($onum, 3, 8) . '-' . substr($onum, 11);
+                            ?>
+                            <h3 class="font-extrabold text-lg font-outfit text-white">#<?= $formattedNum ?></h3>
                         </div>
                         <span class="bg-slate-900 border border-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 shadow-inner">
                             <i class="fas fa-clock text-rose-500"></i> <?= date('H:i', strtotime($order['created_at'])) ?>

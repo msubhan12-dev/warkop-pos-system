@@ -115,7 +115,12 @@ include '../includes/header.php';
                                 <div class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center font-bold text-sm <?= $needsVerification ? 'bg-orange-100 text-orange-600' : 'bg-emerald-50 text-emerald-500' ?>">
                                     <i class="fas <?= $needsVerification ? 'fa-exclamation-triangle' : 'fa-receipt' ?>"></i>
                                 </div>
-                                <span class="font-bold text-slate-800 font-outfit"><?= $order['order_number'] ?></span>
+                                <?php
+                                    // Format order number for display (e.g. ORD-20260713-ABCD)
+                                    $onum = $order['order_number'];
+                                    $formattedNum = substr($onum, 0, 3) . '-' . substr($onum, 3, 8) . '-' . substr($onum, 11);
+                                ?>
+                                <span class="font-bold text-slate-800 font-outfit tracking-wide"><?= $formattedNum ?></span>
                             </div>
                         </td>
                         <td class="p-4 sm:p-5 whitespace-nowrap">
@@ -223,7 +228,11 @@ include '../includes/header.php';
                         <div class="flex justify-between items-start mb-4 pb-4 border-b border-stone-100">
                             <div>
                                 <p class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">No. Pesanan</p>
-                                <p class="font-extrabold text-xl text-stone-850 font-outfit"><?= $orderDetail['order_number'] ?></p>
+                                <?php
+                                    $mOnum = $orderDetail['order_number'];
+                                    $mFormattedNum = substr($mOnum, 0, 3) . '-' . substr($mOnum, 3, 8) . '-' . substr($mOnum, 11);
+                                ?>
+                                <p class="font-extrabold text-xl text-stone-850 font-outfit tracking-wide"><?= $mFormattedNum ?></p>
                             </div>
                             <span class="px-3 py-1 text-xs font-extrabold rounded-lg shadow-sm border uppercase tracking-wide <?= getStatusBadge($orderDetail['status']) ?>">
                                 <?= getStatusText($orderDetail['status']) ?>
