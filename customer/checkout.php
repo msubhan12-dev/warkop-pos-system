@@ -118,6 +118,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$tableId]);
             }
             
+            // Deduct inventory stock
+            deductStockForOrder($orderId, $db);
+            
             // Create audit log
             createAuditLog('create', 'orders', $orderId, null, [
                 'order_number' => $orderNumber,
@@ -133,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'Pesanan Baru',
                     "Pesanan baru #{$orderNumber} dari {$customerName}",
                     'info',
-                    '/admin/orders.php?id=' . $orderId
+                    APP_URL . '/admin/orders.php?id=' . $orderId
                 );
             } else {
                 // For QRIS, notify admin for verification
@@ -142,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'Verifikasi Pembayaran QRIS',
                     "Pesanan #{$orderNumber} menunggu verifikasi pembayaran QRIS",
                     'warning',
-                    '/admin/orders.php?id=' . $orderId
+                    APP_URL . '/admin/orders.php?id=' . $orderId
                 );
             }
             

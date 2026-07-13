@@ -195,7 +195,7 @@ $payment = getPaymentDetails($orderId);
             </div>
             <div class="info-row">
                 <span class="info-label">Tanggal:</span>
-                <span><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></span>
+                <span><?= date('d/m/Y H:i', strtotime($order['created_at']) + 25200) ?></span>
             </div>
             <div class="info-row">
                 <span class="info-label">Pelanggan:</span>
@@ -261,14 +261,17 @@ $payment = getPaymentDetails($orderId);
                     <?= $payment['payment_method'] === 'qris' ? 'QRIS' : ($payment['payment_method'] === 'transfer' ? 'TRANSFER' : 'TUNAI') ?>
                 </span>
             </div>
-            <?php if ($payment['payment_method'] === 'cash'): ?>
+            <?php if ($payment['payment_method'] === 'cash'): 
+                $displayPaid = $payment['paid_amount'] > 0 ? $payment['paid_amount'] : $order['total'];
+                $displayChange = $payment['change_amount'] > 0 ? $payment['change_amount'] : 0;
+            ?>
             <div class="info-row">
                 <span class="info-label">Bayar:</span>
-                <span><?= number_format($payment['paid_amount'], 0, ',', '.') ?></span>
+                <span><?= number_format($displayPaid, 0, ',', '.') ?></span>
             </div>
             <div class="info-row">
                 <span class="info-label">Kembali:</span>
-                <span><?= number_format($payment['change_amount'], 0, ',', '.') ?></span>
+                <span><?= number_format($displayChange, 0, ',', '.') ?></span>
             </div>
             <?php endif; ?>
         </div>
@@ -334,7 +337,7 @@ $payment = getPaymentDetails($orderId);
     $rawText .= "      Sistem Kasir Terpadu\n";
     $rawText .= "================================\n";
     $rawText .= "No. Pesanan: " . $order['order_number'] . "\n";
-    $rawText .= "Tanggal: " . date('d/m/Y H:i', strtotime($order['created_at'])) . "\n";
+    $rawText .= "Tanggal: " . date('d/m/Y H:i', strtotime($order['created_at']) + 25200) . "\n";
     $rawText .= "Pelanggan: " . $order['customer_name'] . "\n";
     if ($order['table_number']) $rawText .= "Nomor Meja: Meja " . $order['table_number'] . "\n";
     else $rawText .= "Tipe: Take Away\n";
@@ -348,13 +351,16 @@ $payment = getPaymentDetails($orderId);
     $rawText .= "================================\n";
     $rawText .= str_pad("TOTAL:", 16, " ") . str_pad("Rp " . number_format($order['total'],0,',','.'), 16, " ", STR_PAD_LEFT) . "\n";
     
+    if ($payment && $payment['payment_method'] === 'cash') {
+        $displayPaid = $payment['paid_amount'] > 0 ? $payment['paid_amount'] : $order['total'];
+        $displayChange = $payment['change_amount'] > 0 ? $payment['change_amount'] : 0;
+        $rawText .= str_pad("Bayar:", 16, " ") . str_pad("Rp " . number_format($displayPaid,0,',','.'), 16, " ", STR_PAD_LEFT) . "\n";
+        $rawText .= str_pad("Kembali:", 16, " ") . str_pad("Rp " . number_format($displayChange,0,',','.'), 16, " ", STR_PAD_LEFT) . "\n";
+    }
+    
     if ($payment) {
         $method = $payment['payment_method'] === 'qris' ? 'QRIS' : ($payment['payment_method'] === 'transfer' ? 'TRANSFER' : 'TUNAI');
         $rawText .= "Metode: " . $method . "\n";
-        if ($payment['payment_method'] === 'cash') {
-            $rawText .= "Bayar: " . number_format($payment['paid_amount'],0,',','.') . "\n";
-            $rawText .= "Kembali: " . number_format($payment['change_amount'],0,',','.') . "\n";
-        }
         $status = $payment['status'] === 'success' ? 'LUNAS / PAID' : 'BELUM BAYAR';
         $rawText .= "\n*** " . $status . " ***\n";
     }

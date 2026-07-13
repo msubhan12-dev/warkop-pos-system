@@ -121,6 +121,9 @@ try {
         $stmt->execute([$tableId]);
     }
     
+    // Deduct inventory stock
+    deductStockForOrder($orderId, $db);
+    
     // Create audit log
     createAuditLog('create', 'orders', $orderId, null, [
         'order_number' => $orderNumber,

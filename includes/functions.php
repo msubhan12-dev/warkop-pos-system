@@ -85,6 +85,42 @@ function calculateTotal($subtotal) {
 }
 
 /**
+ * Deduct stock based on recipe when an order is created
+ */
+function deductStockForOrder($orderId, $db) {
+    // Get all items in this order
+    $stmt = $db->prepare("SELECT menu_id, quantity FROM order_items WHERE order_id = ?");
+    $stmt->execute([$orderId]);
+    $items = $stmt->fetchAll();
+    
+    foreach ($items as $item) {
+        $menuId = $item['menu_id'];
+        $qty = $item['quantity'];
+        
+        // Find recipe for this menu
+        try {
+            $stmtRecipe = $db->prepare("SELECT ingredient_id, amount_required FROM menu_recipes WHERE menu_id = ?");
+            $stmtRecipe->execute([$menuId]);
+            $recipes = $stmtRecipe->fetchAll();
+            
+            // Deduct each ingredient
+            foreach ($recipes as $recipe) {
+                $ingId = $recipe['ingredient_id'];
+                $totalAmountNeeded = $recipe['amount_required'] * $qty;
+                
+                // Deduct stock
+                $stmtDeduct = $db->prepare("UPDATE ingredients SET stock_quantity = stock_quantity - ? WHERE id = ?");
+                $stmtDeduct->execute([$totalAmountNeeded, $ingId]);
+            }
+        } catch (PDOException $e) {
+            // Silently ignore if table menu_recipes or ingredients doesn't exist yet
+            // This prevents checkout from breaking if user hasn't run the SQL migration
+            continue;
+        }
+    }
+}
+
+/**
  * Send JSON response
  */
 function sendJSON($data, $statusCode = 200) {

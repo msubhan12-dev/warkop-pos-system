@@ -17,7 +17,7 @@ define('APP_VERSION', '1.0.0');
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $scriptPath = dirname($_SERVER['SCRIPT_NAME']);
-$basePath = str_replace(array('/admin', '/customer', '/config', '/includes'), '', $scriptPath);
+$basePath = str_replace(array('/admin', '/customer', '/config', '/includes', '/kasir'), '', $scriptPath);
 if ($basePath == '/' || $basePath == '\\') $basePath = '';
 define('APP_URL', $protocol . "://" . $host . $basePath);
 

@@ -12,6 +12,8 @@ $navItems = [
     ['url' => $basePath . 'kitchen', 'icon' => 'fa-fire', 'label' => 'Dapur', 'color' => 'text-orange-400', 'roles' => ['owner', 'admin', 'pelayan']],
     ['url' => $basePath . 'orders', 'icon' => 'fa-receipt', 'label' => 'Pesanan', 'color' => 'text-indigo-400', 'roles' => ['owner', 'admin', 'kasir', 'pelayan']],
     ['url' => $basePath . 'menu', 'icon' => 'fa-utensils', 'label' => 'Menu', 'color' => 'text-rose-400', 'roles' => ['owner', 'admin']],
+    ['url' => $basePath . 'stock', 'icon' => 'fa-boxes', 'label' => 'Stok Bahan', 'color' => 'text-amber-400', 'roles' => ['owner', 'admin']],
+    ['url' => $basePath . 'recipes', 'icon' => 'fa-clipboard-list', 'label' => 'Resep', 'color' => 'text-lime-400', 'roles' => ['owner', 'admin']],
     ['url' => $basePath . 'tables', 'icon' => 'fa-chair', 'label' => 'Meja', 'color' => 'text-purple-400', 'roles' => ['owner', 'admin', 'kasir']],
     ['url' => $basePath . 'promos', 'icon' => 'fa-tags', 'label' => 'Promo', 'color' => 'text-pink-400', 'roles' => ['owner', 'admin']],
     ['url' => $basePath . 'reels', 'icon' => 'fa-video', 'label' => 'Reels', 'color' => 'text-fuchsia-400', 'roles' => ['owner', 'admin']],
