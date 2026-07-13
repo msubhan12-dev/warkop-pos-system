@@ -46,14 +46,14 @@
         const notifSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
         
         let lastCheckTime = '<?= date('Y-m-d H:i:s') ?>';
-        const checkEndpoint = '<?= APP_URL ?>/admin/check_new_orders.php';
+        const checkEndpoint = '<?= APP_URL ?>/admin/check_new_orders';
         
         function checkForNewOrders() {
             fetch(`${checkEndpoint}?since=${encodeURIComponent(lastCheckTime)}`, { credentials: 'same-origin' })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        lastCheckTime = data.timestamp;
+                        if (data.max_order_time) lastCheckTime = data.max_order_time;
                         if (data.new_orders > 0) {
                             // Play sound
                             notifSound.play().catch(e => console.log('Audio autoplay blocked', e));
