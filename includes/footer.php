@@ -110,7 +110,7 @@
                         </div>
                         
                         <div class="p-6 bg-white border-t border-slate-100 flex flex-col gap-3">
-                            <button onclick="window.location.href='<?= APP_URL ?>/admin/orders.php'" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2">
+                            <button onclick="window.location.href='<?= APP_URL ?>/admin/orders'" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2">
                                 Buka Halaman Orders <i class="fas fa-arrow-right"></i>
                             </button>
                             <button onclick="closeGlobalOrderModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3.5 px-4 rounded-xl transition-colors">

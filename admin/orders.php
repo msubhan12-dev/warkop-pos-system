@@ -31,6 +31,10 @@ if ($detailId) {
 }
 
 $filter = $_GET['filter'] ?? 'today';
+$page = max(1, intval($_GET['page'] ?? 1));
+$limit = 10;
+$offset = ($page - 1) * $limit;
+
 $whereClause = "";
 if ($filter === 'today') {
     $whereClause = "WHERE DATE(o.created_at) = CURDATE()";
@@ -42,7 +46,12 @@ if ($filter === 'today') {
     $whereClause = "WHERE MONTH(o.created_at) = MONTH(CURDATE()) AND YEAR(o.created_at) = YEAR(CURDATE())";
 }
 
-$stmt = $db->query("SELECT o.*, t.table_number FROM orders o LEFT JOIN tables t ON o.table_id = t.id $whereClause ORDER BY o.created_at DESC LIMIT 100");
+// Get total for pagination
+$stmt = $db->query("SELECT COUNT(*) FROM orders o $whereClause");
+$totalOrders = $stmt->fetchColumn();
+$totalPages = ceil($totalOrders / $limit);
+
+$stmt = $db->query("SELECT o.*, t.table_number FROM orders o LEFT JOIN tables t ON o.table_id = t.id $whereClause ORDER BY o.created_at DESC LIMIT $limit OFFSET $offset");
 $orders = $stmt->fetchAll();
 include '../includes/header.php';
 ?>
@@ -150,6 +159,34 @@ include '../includes/header.php';
                 </tbody>
             </table>
         </div>
+        
+        <!-- Pagination UI -->
+        <?php if ($totalPages > 1): ?>
+        <div class="px-6 py-4 bg-white border-t border-slate-200 flex items-center justify-between sm:flex-row flex-col gap-4">
+            <div class="text-sm font-semibold text-slate-500">
+                Menampilkan <span class="text-slate-800"><?= $offset + 1 ?></span> sampai <span class="text-slate-800"><?= min($offset + $limit, $totalOrders) ?></span> dari <span class="text-slate-800"><?= $totalOrders ?></span> pesanan
+            </div>
+            <div class="flex items-center gap-1">
+                <?php if ($page > 1): ?>
+                <a href="?filter=<?= $filter ?>&page=<?= $page - 1 ?>" class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-emerald-600 transition-colors shadow-sm">
+                    <i class="fas fa-chevron-left text-sm"></i>
+                </a>
+                <?php endif; ?>
+                
+                <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
+                <a href="?filter=<?= $filter ?>&page=<?= $i ?>" class="w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-colors shadow-sm <?= $i === $page ? 'bg-emerald-600 text-white border-none' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-emerald-600' ?>">
+                    <?= $i ?>
+                </a>
+                <?php endfor; ?>
+                
+                <?php if ($page < $totalPages): ?>
+                <a href="?filter=<?= $filter ?>&page=<?= $page + 1 ?>" class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-emerald-600 transition-colors shadow-sm">
+                    <i class="fas fa-chevron-right text-sm"></i>
+                </a>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 </div>
 
