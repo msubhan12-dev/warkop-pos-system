@@ -421,7 +421,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Constants
         const WARKOP_LAT = -6.3770866; 
         const WARKOP_LNG = 106.9700012;
-        const COST_PER_KM = 2000;
+        const COST_PER_KM = 3000;
         const BASE_TOTAL = <?= $total ?>;
         let currentMap = null;
         let currentMarker = null;

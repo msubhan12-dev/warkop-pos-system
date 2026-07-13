@@ -15,7 +15,7 @@ function getEmbedHtml($url, $title) {
                     <i class="fas fa-circle-notch fa-spin text-4xl mb-3"></i>
                     <span class="text-xs font-bold tracking-widest uppercase">Memuat...</span>
                 </div>
-                <video class="reel-video relative z-10 bg-transparent" loop muted playsinline preload="auto" src="'.htmlspecialchars($url).'"></video>
+                <video class="reel-video relative z-10 bg-transparent" loop muted playsinline preload="metadata" src="'.htmlspecialchars($url).'"></video>
                 <div class="play-overlay z-20">
                     <div class="w-16 h-16 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center">
                         <i class="fas fa-play text-white text-2xl ml-1"></i>
@@ -165,7 +165,7 @@ function getEmbedHtml($url, $title) {
                         <i class="fas fa-circle-notch fa-spin text-4xl mb-3"></i>
                         <span class="text-xs font-bold tracking-widest uppercase">Memuat...</span>
                     </div>
-                    <video class="reel-video relative z-10 bg-transparent" loop muted playsinline preload="auto" src="<?= UPLOADS_URL . '/' . $reel['media_path'] ?>"></video>
+                    <video class="reel-video relative z-10 bg-transparent" loop muted playsinline preload="metadata" src="<?= UPLOADS_URL . '/' . $reel['media_path'] ?>"></video>
                     <div class="play-overlay z-20">
                         <div class="w-16 h-16 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center">
                             <i class="fas fa-play text-white text-2xl ml-1"></i>
@@ -224,10 +224,7 @@ function getEmbedHtml($url, $title) {
             const items = document.querySelectorAll('.reel-item');
             let currentVideo = null;
 
-            // Unmute all videos on first interaction
-            document.body.addEventListener('click', function unmuteAll() {
-                document.querySelectorAll('video').forEach(v => v.muted = false);
-            }, { once: true });
+            // Removed unmuteAll on body click as it blocks playback on mobile browsers
 
             // Function to handle video playback based on visibility
             const handleIntersection = (entries, observer) => {

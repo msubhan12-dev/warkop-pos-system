@@ -10,11 +10,7 @@ if (empty($cart)) {
 $tableId = $_SESSION['customer_table_id'] ?? null;
 $tableNumber = $_SESSION['customer_table_number'] ?? null;
 
-if (!$tableId) {
-    // If no table is set, they should be in the online order flow
-    header('Location: menu_online.php');
-    exit;
-}
+// Removed redirect to menu_online.php to allow checkout even if tableId is not set.
 
 // Calculate totals
 $subtotal = 0;

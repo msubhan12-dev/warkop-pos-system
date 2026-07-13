@@ -112,8 +112,9 @@ function generateQRSVG($text, $size = 350) {
     return "https://api.qrserver.com/v1/create-qr-code/?size={$size}x{$size}&data=" . $encodedText;
 }
 
-// Generate the dynamic QRIS string based on the total order amount
-$dynamicQrisString = QrisGenerator::generateDynamic($order['amount']);
+// Generate the dynamic QRIS string based on the total order amount (+ admin fee)
+$amountWithAdmin = $order['amount'] + 1000;
+$dynamicQrisString = QrisGenerator::generateDynamic($amountWithAdmin);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -311,8 +312,16 @@ $dynamicQrisString = QrisGenerator::generateDynamic($order['amount']);
                     <span class="font-bold text-slate-200 bg-slate-800 px-3 py-1 rounded-lg border border-slate-600 shadow-sm">#<?= $order['order_number'] ?></span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-slate-400 font-medium text-sm">Total Tagihan</span>
-                    <span class="text-xl font-extrabold text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]"><?= formatRupiah($order['amount']) ?></span>
+                    <span class="text-slate-400 font-medium text-sm">Subtotal Pesanan</span>
+                    <span class="font-bold text-slate-300"><?= formatRupiah($order['amount']) ?></span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-400 font-medium text-sm">Biaya Admin (QRIS)</span>
+                    <span class="font-bold text-slate-300"><?= formatRupiah(1000) ?></span>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-slate-700/50">
+                    <span class="text-slate-200 font-bold">Total Transfer</span>
+                    <span class="text-2xl font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)] font-outfit"><?= formatRupiah($order['amount'] + 1000) ?></span>
                 </div>
                 <div class="flex justify-between items-center pt-3 border-t border-slate-700/50">
                     <span class="text-slate-400 font-medium text-sm">Status</span>
@@ -329,42 +338,86 @@ $dynamicQrisString = QrisGenerator::generateDynamic($order['amount']);
                 <i class="fas fa-qrcode mr-3 text-blue-400 bg-blue-900/30 p-2 rounded-xl border border-blue-500/20"></i>
                 Scan Kode QRIS
             </h2>
-            <div class="mb-6 p-5 bg-gradient-to-br from-blue-900/40 to-indigo-900/40 rounded-3xl border border-blue-500/30 inline-block shadow-inner relative group">
-                <div class="inline-block p-4 bg-white rounded-2xl shadow-[0_0_20px_rgba(59,130,246,0.3)] border border-blue-200">
-                    <img src="<?= generateQRSVG($dynamicQrisString) ?>" alt="QRIS Dinamis" class="w-64 h-64 object-contain">
+            <div class="mb-6 inline-block">
+                <div class="bg-white p-4 rounded-2xl shadow-[0_0_30px_rgba(59,130,246,0.4)]">
+                    <img src="<?= generateQRSVG($dynamicQrisString) ?>&t=<?= time() ?>" alt="QRIS Pembayaran Dinamis" class="w-64 h-64 object-contain">
                 </div>
             </div>
             
             <div class="mb-6">
-                <!-- Tambahkan link untuk download QRIS Dinamis ini -->
-                <a href="<?= generateQRSVG($dynamicQrisString) ?>" download="QRIS_Tagihan_<?= $order['order_number'] ?>.png" target="_blank" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.4)]">
-                    <i class="fas fa-download"></i> Simpan Kode Tagihan
+                <!-- Link untuk force download QRIS Dinamis ini -->
+                <a href="download_qris.php?order=<?= urlencode($order['order_number']) ?>" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+                    <i class="fas fa-download"></i> Simpan Kode QRIS
                 </a>
             </div>
 
-            <p class="text-slate-300 text-sm font-medium flex items-center justify-center gap-2 bg-slate-900/50 py-3 rounded-xl border border-slate-700 mx-4">
-                <i class="fas fa-mobile-alt text-lg text-slate-400"></i>
-                Simpan gambar, lalu buka aplikasi e-wallet Anda (Gopay, Dana, dll) dan pilih upload gambar.
-            </p>
+            <div class="mx-auto max-w-sm sm:max-w-md w-full">
+                <div class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-5 rounded-2xl border border-slate-700/60 shadow-lg text-left backdrop-blur-sm">
+                    <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2 border-b border-slate-700/50 pb-2">
+                        <i class="fas fa-info-circle text-blue-400"></i>
+                        Cara Pembayaran
+                    </h3>
+                    
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-3 text-sm text-slate-300">
+                            <div class="w-6 h-6 rounded-full bg-slate-700/50 border border-slate-600 flex items-center justify-center flex-shrink-0 mt-0.5 text-slate-400 font-bold text-xs">1</div>
+                            <p>Simpan gambar QRIS di atas, atau scan langsung pakai HP lain.</p>
+                        </li>
+                        <li class="flex items-start gap-3 text-sm text-slate-300">
+                            <div class="w-6 h-6 rounded-full bg-slate-700/50 border border-slate-600 flex items-center justify-center flex-shrink-0 mt-0.5 text-slate-400 font-bold text-xs">2</div>
+                            <p>Buka aplikasi e-wallet (Gopay, OVO, Dana) atau M-Banking Anda.</p>
+                        </li>
+                        <li class="flex items-start gap-3 text-sm text-slate-300">
+                            <div class="w-6 h-6 rounded-full bg-slate-700/50 border border-slate-600 flex items-center justify-center flex-shrink-0 mt-0.5 text-slate-400 font-bold text-xs">3</div>
+                            <p>Pilih upload gambar QRIS yang baru saja disimpan.</p>
+                        </li>
+                    </ul>
+                    
+                    <div class="mt-4 pt-3 border-t border-slate-700/50">
+                        <div class="flex items-start gap-3 p-3 bg-emerald-900/20 border border-emerald-500/30 rounded-xl">
+                            <i class="fas fa-check-circle text-emerald-400 text-lg mt-0.5"></i>
+                            <p class="text-emerald-300 text-xs sm:text-sm font-medium leading-relaxed">
+                                Nominal pembayaran <strong><?= formatRupiah($order['amount'] + 1000) ?></strong> akan terisi <span class="font-bold text-emerald-200">otomatis</span> di aplikasi Anda. Anda tinggal konfirmasi dan bayar!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <?php if (!$order['proof_of_payment']): ?>
-        <div class="bg-slate-800/60 backdrop-blur-md rounded-3xl shadow-xl border border-slate-700/50 p-6 mb-6">
-            <h2 class="font-extrabold text-xl mb-5 font-outfit text-slate-100 flex items-center drop-shadow-sm">
-                <i class="fas fa-cloud-upload-alt mr-3 text-emerald-400 bg-emerald-900/30 p-2 rounded-xl border border-emerald-500/20"></i>
-                Upload Bukti
-            </h2>
-            <form method="POST" enctype="multipart/form-data" class="space-y-5">
-                <label class="block relative border-2 border-dashed border-slate-600 rounded-3xl p-8 text-center bg-slate-900/50 hover:bg-emerald-900/20 hover:border-emerald-500/50 transition-all duration-300 cursor-pointer group shadow-inner">
-                    <div class="w-16 h-16 bg-slate-800 border border-slate-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm group-hover:scale-110 transition-transform duration-300 group-hover:text-emerald-400 group-hover:border-emerald-500/40 text-slate-400">
-                        <i class="fas fa-image text-2xl"></i>
+        <div class="bg-white/5 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-white/10 p-6 sm:p-8 mb-8 overflow-hidden relative">
+            <!-- Decorative Elements -->
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="relative z-10 text-center mb-6">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 mb-3">
+                    <i class="fas fa-cloud-upload-alt text-xl"></i>
+                </div>
+                <h2 class="font-outfit text-xl font-bold text-slate-100">Upload Bukti Transfer</h2>
+                <p class="text-sm text-slate-400 mt-1">Sertakan screenshot untuk mempercepat verifikasi</p>
+            </div>
+            
+            <form method="POST" enctype="multipart/form-data" class="relative z-10 space-y-5">
+                <label class="block group relative cursor-pointer">
+                    <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                    <div class="relative border border-slate-600/50 group-hover:border-blue-500/50 bg-slate-900/40 rounded-2xl p-6 sm:p-10 transition-all duration-300 flex flex-col items-center justify-center text-center">
+                        
+                        <div class="w-14 h-14 bg-slate-800/80 rounded-xl border border-slate-700/50 flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 group-hover:bg-blue-900/30 group-hover:border-blue-500/30 transition-all duration-300">
+                            <i class="fas fa-image text-slate-400 group-hover:text-blue-400 text-xl transition-colors"></i>
+                        </div>
+                        
+                        <span class="text-slate-200 font-semibold mb-1 group-hover:text-blue-400 transition-colors" id="file-name-display">Tap untuk pilih foto (Galeri/Kamera)</span>
+                        <span class="text-xs text-slate-400">Format: JPG, PNG (Maksimal 5 MB)</span>
+                        
                     </div>
-                    <p class="text-slate-200 font-bold mb-1 group-hover:text-emerald-400 transition-colors">Pilih screenshot bukti transfer</p>
-                    <p class="text-xs text-slate-400 font-medium">Format JPG atau PNG (Max 5MB)</p>
-                    <input type="file" name="payment_proof" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required>
+                    <input type="file" name="payment_proof" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required onchange="document.getElementById('file-name-display').textContent = this.files[0] ? this.files[0].name : 'Tap untuk pilih foto (Galeri/Kamera)'">
                 </label>
-                <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-extrabold py-4 px-6 rounded-2xl shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(16,185,129,0.6)] hover:-translate-y-0.5 transition-all duration-300 text-lg font-outfit flex items-center justify-center gap-3">
-                    <i class="fas fa-paper-plane"></i> Kirim Bukti
+                
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-4 px-6 rounded-xl shadow-lg shadow-blue-900/20 hover:shadow-blue-500/40 transition-all duration-300 text-[15px] flex items-center justify-center gap-2 group active:scale-[0.98]">
+                    Kirim Bukti Pembayaran
+                    <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
                 </button>
             </form>
         </div>
@@ -378,7 +431,7 @@ $dynamicQrisString = QrisGenerator::generateDynamic($order['amount']);
             <div class="bg-slate-900/60 backdrop-blur-sm rounded-xl p-5 border border-amber-500/20 max-w-sm mx-auto">
                 <p class="text-amber-400 font-medium flex items-center justify-center gap-3">
                     <span class="animate-spin"><i class="fas fa-circle-notch text-amber-500 text-xl"></i></span>
-                    Mohon tunggu, admin sedang mengecek pembayaran Anda...
+                    Mohon tunggu, Pembayaran sedang dalam proses pengecekan...
                 </p>
             </div>
         </div>

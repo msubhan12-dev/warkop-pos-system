@@ -79,16 +79,16 @@ foreach ($menus as $menu) {
     </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 </head>
-<body class="bg-[#0B1121] text-slate-100 selection:bg-emerald-500/30">
+<body class="bg-[#0B1121] text-slate-100 selection:bg-amber-500/30">
     <!-- Carousel Banner -->
-    <div class="swiper mySwiper w-full h-48 sm:h-72 mb-6 rounded-b-[2.5rem] shadow-[0_10px_40px_-10px_rgba(16,185,129,0.2)]">
+    <div class="swiper mySwiper w-full h-48 sm:h-72 mb-6 rounded-b-[2.5rem] shadow-[0_10px_40px_-10px_rgba(245,158,11,0.2)]">
         <div class="swiper-wrapper">
             <!-- Slide 1 -->
             <div class="swiper-slide bg-cover bg-center relative" style="background-image: url('<?= APP_URL ?>/assets/img/warkop_banner.png');">
                 <div class="absolute inset-0 bg-gradient-to-t from-[#0B1121] via-[#0B1121]/50 to-transparent flex items-end p-5 sm:p-8">
                     <div class="relative z-10 w-full">
                         <h2 class="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg tracking-tight mb-1">Pesan Mudah</h2>
-                        <p class="text-sm sm:text-base text-emerald-400 font-medium">Dari rumah sakit atau mana saja, kami antar!</p>
+                        <p class="text-sm sm:text-base text-amber-400 font-medium">Dari rumah sakit atau mana saja, kami antar!</p>
                     </div>
                 </div>
             </div>
@@ -97,7 +97,7 @@ foreach ($menus as $menu) {
                 <div class="absolute inset-0 bg-gradient-to-t from-[#0B1121] via-[#0B1121]/50 to-transparent flex items-end p-5 sm:p-8">
                     <div class="relative z-10 w-full">
                         <h2 class="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg tracking-tight mb-1">Menu Sehat</h2>
-                        <p class="text-sm sm:text-base text-emerald-400 font-medium">Racikan herbal terbaik untuk menjaga imun keluarga</p>
+                        <p class="text-sm sm:text-base text-amber-400 font-medium">Racikan herbal terbaik untuk menjaga imun keluarga</p>
                     </div>
                 </div>
             </div>
@@ -109,27 +109,27 @@ foreach ($menus as $menu) {
     <!-- Header / Glass Search & Categories -->
     <header class="sticky-header bg-slate-800/60 backdrop-blur-xl text-slate-200 shadow-lg z-30 mx-4 sm:mx-6 mt-[-2rem] rounded-3xl border border-slate-700/50 mb-6 transition-all duration-300">
         <div class="px-5 py-4">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-3">
-                    <span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-extrabold px-4 py-2 rounded-full uppercase tracking-wider flex items-center shadow-[0_0_15px_rgba(59,130,246,0.15)]">
-                        <i class="fas fa-shopping-bag mr-2"></i>Pesan Online
+            <div class="flex items-center justify-between mb-4 gap-2">
+                <div class="flex items-center flex-shrink-0">
+                    <span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[10px] sm:text-xs font-extrabold px-3 py-1.5 sm:px-4 sm:py-2 rounded-full uppercase tracking-wider flex items-center shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+                        <i class="fas fa-shopping-bag mr-1.5 sm:mr-2"></i><span class="hidden min-[380px]:inline">Pesan Online</span><span class="inline min-[380px]:hidden">Online</span>
                     </span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <a href="#" target="_blank" class="relative bg-slate-700/50 hover:bg-red-500/20 p-2 sm:p-3 rounded-full transition-colors flex items-center justify-center text-red-500 hover:text-red-400 shadow-inner group border border-slate-600/50" title="Pesan via GoFood">
-                        <i class="fas fa-motorcycle text-lg group-hover:scale-110 transition-all"></i>
+                <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                    <a href="#" target="_blank" class="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700/50 hover:bg-red-500/20 rounded-full transition-colors flex items-center justify-center text-red-500 hover:text-red-400 shadow-inner border border-slate-600/50" title="Pesan via GoFood">
+                        <i class="fas fa-motorcycle text-sm sm:text-base"></i>
                     </a>
-                    <a href="#" target="_blank" class="relative bg-slate-700/50 hover:bg-orange-500/20 p-2 sm:p-3 rounded-full transition-colors flex items-center justify-center text-orange-500 hover:text-orange-400 shadow-inner group border border-slate-600/50" title="Pesan via ShopeeFood">
-                        <i class="fas fa-shopping-bag text-lg group-hover:scale-110 transition-all"></i>
+                    <a href="#" target="_blank" class="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700/50 hover:bg-orange-500/20 rounded-full transition-colors flex items-center justify-center text-orange-500 hover:text-orange-400 shadow-inner border border-slate-600/50" title="Pesan via ShopeeFood">
+                        <i class="fas fa-shopping-bag text-sm sm:text-base"></i>
                     </a>
-                    <a href="https://instagram.com/warkop_os" target="_blank" class="relative bg-slate-700/50 hover:bg-pink-500/20 p-2 sm:p-3 rounded-full transition-colors flex items-center justify-center text-pink-500 hover:text-pink-400 shadow-inner group border border-slate-600/50" title="Follow Instagram Kami">
-                        <i class="fab fa-instagram text-lg group-hover:scale-110 transition-all"></i>
+                    <a href="https://instagram.com/warkop_os" target="_blank" class="w-8 h-8 sm:w-10 sm:h-10 bg-slate-700/50 hover:bg-pink-500/20 rounded-full transition-colors flex items-center justify-center text-pink-500 hover:text-pink-400 shadow-inner border border-slate-600/50" title="Follow Instagram Kami">
+                        <i class="fab fa-instagram text-sm sm:text-base"></i>
                     </a>
-                    <div class="w-px h-6 bg-slate-600/50 mx-1"></div> <!-- Divider -->
-                    <button onclick="toggleCart()" class="relative bg-slate-700/50 hover:bg-emerald-500/20 p-2 sm:p-3 rounded-full transition-colors flex items-center justify-center text-emerald-500 hover:text-emerald-400 shadow-inner group border border-slate-600/50">
-                        <i class="fas fa-shopping-basket text-lg sm:text-xl group-hover:scale-110 transition-all"></i>
+                    <div class="w-px h-5 sm:h-6 bg-slate-600/50 mx-0.5 sm:mx-1"></div> <!-- Divider -->
+                    <button onclick="toggleCart()" class="relative w-8 h-8 sm:w-10 sm:h-10 bg-slate-700/50 hover:bg-amber-500/20 rounded-full transition-colors flex items-center justify-center text-amber-500 hover:text-amber-400 shadow-inner border border-slate-600/50">
+                        <i class="fas fa-shopping-basket text-sm sm:text-base"></i>
                         <?php if (!empty($cart)): ?>
-                        <span class="absolute -top-1 -right-1 bg-gradient-to-tr from-emerald-600 to-emerald-400 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(52,211,153,0.5)] animate-bounce border border-emerald-300">
+                        <span class="absolute -top-1.5 -right-1.5 bg-gradient-to-tr from-amber-600 to-amber-400 text-white text-[10px] sm:text-xs font-bold w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.5)] border border-amber-300">
                             <?= count($cart) ?>
                         </span>
                         <?php endif; ?>
@@ -143,20 +143,20 @@ foreach ($menus as $menu) {
                     type="text" 
                     id="searchMenu"
                     placeholder="Cari menu kesukaanmu..."
-                    class="w-full px-5 py-3 pl-12 bg-slate-900/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 focus:bg-slate-900 font-medium transition-all shadow-inner"
+                    class="w-full px-5 py-3 pl-12 bg-slate-900/50 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 focus:bg-slate-900 font-medium transition-all shadow-inner"
                     onkeyup="searchMenu()"
                 >
-                <i class="fas fa-search absolute left-4 top-3.5 text-slate-400 text-lg group-focus-within:text-emerald-400 transition-colors"></i>
+                <i class="fas fa-search absolute left-4 top-3.5 text-slate-400 text-lg group-focus-within:text-amber-400 transition-colors"></i>
             </div>
         </div>
         
         <!-- Category Tabs -->
         <div class="category-tabs flex space-x-3 px-5 pb-4 overflow-x-auto">
-            <button onclick="filterCategory('all')" class="category-tab category-btn-all bg-emerald-600 text-white px-5 py-2.5 rounded-full whitespace-nowrap font-bold text-sm shadow-[0_4px_15px_-3px_rgba(16,185,129,0.4)] transition-all hover:-translate-y-0.5 border border-emerald-500">
+            <button onclick="filterCategory('all')" class="category-tab category-btn-all bg-amber-600 text-white px-5 py-2.5 rounded-full whitespace-nowrap font-bold text-sm shadow-[0_4px_15px_-3px_rgba(245,158,11,0.4)] transition-all hover:-translate-y-0.5 border border-amber-500">
                 Semua Menu
             </button>
             <?php foreach ($categories as $category): ?>
-            <button onclick="filterCategory(<?= $category['id'] ?>)" class="category-tab category-btn-<?= $category['id'] ?> bg-slate-800 text-slate-300 border border-slate-700/80 px-5 py-2.5 rounded-full whitespace-nowrap font-bold text-sm hover:bg-slate-700 hover:text-emerald-400 hover:border-slate-600 transition-all shadow-sm">
+            <button onclick="filterCategory(<?= $category['id'] ?>)" class="category-tab category-btn-<?= $category['id'] ?> bg-slate-800 text-slate-300 border border-slate-700/80 px-5 py-2.5 rounded-full whitespace-nowrap font-bold text-sm hover:bg-slate-700 hover:text-amber-400 hover:border-slate-600 transition-all shadow-sm">
                 <?= $category['icon'] ?> <?= $category['name'] ?>
             </button>
             <?php endforeach; ?>
@@ -168,15 +168,15 @@ foreach ($menus as $menu) {
         <!-- Delivery Buttons -->
 
         <!-- Friendly Guide -->
-        <div class="bg-gradient-to-r from-emerald-900/30 to-teal-900/30 border border-emerald-500/20 rounded-3xl p-5 mb-8 shadow-lg backdrop-blur-sm flex items-start gap-4">
-            <div class="bg-emerald-500/20 text-emerald-400 rounded-full p-3 shadow-inner flex-shrink-0 mt-1 border border-emerald-500/20">
+        <div class="bg-gradient-to-r from-amber-900/30 to-yellow-900/30 border border-amber-500/20 rounded-3xl p-5 mb-8 shadow-lg backdrop-blur-sm flex items-start gap-4">
+            <div class="bg-amber-500/20 text-amber-400 rounded-full p-3 shadow-inner flex-shrink-0 mt-1 border border-amber-500/20">
                 <i class="fas fa-lightbulb text-xl"></i>
             </div>
             <div>
-                <h3 class="font-bold text-emerald-400 text-sm font-outfit mb-1 drop-shadow-sm">Cara Memesan Gampang:</h3>
-                <p class="text-xs text-emerald-200/70 leading-relaxed font-medium">
-                    1. Klik tombol hijau <span class="bg-emerald-600/80 text-white px-1.5 py-0.5 rounded text-xs mx-0.5 border border-emerald-500/50">+ Pesan</span> pada menu yang Anda sukai.<br>
-                    2. Klik ikon <i class="fas fa-shopping-basket text-emerald-400 mx-0.5"></i> keranjang di kanan atas jika sudah selesai.<br>
+                <h3 class="font-bold text-amber-400 text-sm font-outfit mb-1 drop-shadow-sm">Cara Memesan Gampang:</h3>
+                <p class="text-xs text-amber-200/70 leading-relaxed font-medium">
+                    1. Klik tombol hijau <span class="bg-amber-600/80 text-white px-1.5 py-0.5 rounded text-xs mx-0.5 border border-amber-500/50">+ Pesan</span> pada menu yang Anda sukai.<br>
+                    2. Klik ikon <i class="fas fa-shopping-basket text-amber-400 mx-0.5"></i> keranjang di kanan atas jika sudah selesai.<br>
                     3. Isi nama Anda dan bayar langsung di kasir atau via QRIS.
                 </p>
             </div>
@@ -192,41 +192,41 @@ foreach ($menus as $menu) {
                 
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                     <?php foreach ($menusByCategory[$category['id']] as $menu): ?>
-                    <div class="menu-item menu-card group bg-slate-800/40 backdrop-blur-md rounded-3xl shadow-lg border border-slate-700/50 overflow-hidden hover:shadow-[0_15px_30px_-10px_rgba(16,185,129,0.3)] hover:-translate-y-1 hover:border-emerald-500/40 transition-all duration-300 flex flex-col justify-between relative cursor-pointer" 
+                    <div class="menu-item menu-card group bg-slate-800/40 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-lg border border-slate-700/50 overflow-hidden hover:shadow-[0_15px_30px_-10px_rgba(245,158,11,0.3)] hover:-translate-y-1 hover:border-amber-500/40 transition-all duration-300 flex flex-col justify-between relative cursor-pointer" 
                          data-name="<?= strtolower($menu['name']) ?>" 
                          data-category="<?= $category['id'] ?>"
                          onclick="showMenuDetail(<?= $menu['id'] ?>, '<?= addslashes($menu['name']) ?>', <?= $menu['price'] ?>, '<?= $menu['image'] ? UPLOADS_URL . '/' . $menu['image'] : '' ?>', '<?= htmlspecialchars(addslashes(str_replace(array("\r", "\n"), '', $menu['description']))) ?>')">
                         <div>
                             <!-- Image Container -->
-                            <div class="bg-slate-900/60 h-32 sm:h-44 relative flex items-center justify-center overflow-hidden">
+                            <div class="bg-slate-900/60 h-28 sm:h-44 relative flex items-center justify-center overflow-hidden">
                                 <?php if ($menu['image']): ?>
                                     <img src="<?= UPLOADS_URL . '/' . $menu['image'] ?>" alt="<?= $menu['name'] ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-90 group-hover:opacity-100">
                                 <?php else: ?>
-                                    <i class="fas fa-mug-hot text-slate-700 text-4xl group-hover:scale-110 transition-transform duration-500"></i>
+                                    <i class="fas fa-mug-hot text-slate-700 text-3xl sm:text-4xl group-hover:scale-110 transition-transform duration-500"></i>
                                 <?php endif; ?>
                                 
                                 <!-- Floating Add Button -->
-                                <div class="absolute bottom-3 right-3 bg-slate-800/80 backdrop-blur-md text-emerald-400 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-colors duration-300 z-10 border border-slate-600/50 group-hover:bg-emerald-500 group-hover:text-white group-hover:border-emerald-400">
-                                    <i class="fas fa-plus text-sm drop-shadow-sm"></i>
+                                <div class="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 bg-slate-800/80 backdrop-blur-md text-amber-400 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition-colors duration-300 z-10 border border-slate-600/50 group-hover:bg-amber-500 group-hover:text-white group-hover:border-amber-400">
+                                    <i class="fas fa-plus text-[10px] sm:text-sm drop-shadow-sm"></i>
                                 </div>
                                 
                                 <?php if ($menu['is_recommended']): ?>
-                                <span class="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-[0_0_10px_rgba(245,158,11,0.5)] flex items-center gap-1 z-10 border border-amber-400/30">
-                                    <i class="fas fa-star text-xs"></i> Laris
+                                <span class="absolute top-2 left-2 sm:top-3 sm:left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-bold shadow-[0_0_10px_rgba(245,158,11,0.5)] flex items-center gap-1 z-10 border border-amber-400/30">
+                                    <i class="fas fa-star text-[10px] sm:text-xs"></i> Laris
                                 </span>
                                 <?php endif; ?>
                             </div>
                             
-                            <div class="p-4 pt-4 flex-1">
-                                <h3 class="font-bold text-slate-100 text-base lg:text-lg font-outfit line-clamp-2 leading-snug group-hover:text-emerald-400 transition-colors drop-shadow-sm"><?= $menu['name'] ?></h3>
+                            <div class="p-3 sm:p-4 flex-1">
+                                <h3 class="font-bold text-slate-100 text-sm sm:text-base lg:text-lg font-outfit line-clamp-2 leading-tight sm:leading-snug group-hover:text-amber-400 transition-colors drop-shadow-sm"><?= $menu['name'] ?></h3>
                                 <?php if ($menu['description']): ?>
-                                <p class="text-xs sm:text-sm text-slate-400 mt-2 leading-relaxed line-clamp-2"><?= $menu['description'] ?></p>
+                                <p class="text-[10px] sm:text-xs sm:text-sm text-slate-400 mt-1 sm:mt-2 leading-tight sm:leading-relaxed line-clamp-2"><?= $menu['description'] ?></p>
                                 <?php endif; ?>
                             </div>
                         </div>
                         
-                        <div class="px-4 pb-4 mt-auto">
-                            <span class="font-extrabold text-emerald-400 text-base sm:text-lg drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">
+                        <div class="px-3 pb-3 sm:px-4 sm:pb-4 mt-auto">
+                            <span class="font-extrabold text-amber-400 text-sm sm:text-base lg:text-lg drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]">
                                 <?= formatRupiah($menu['price']) ?>
                             </span>
                         </div>
@@ -259,7 +259,7 @@ foreach ($menus as $menu) {
             </button>
             
             <!-- Image Header -->
-            <div class="w-full h-48 bg-gradient-to-br from-emerald-600 to-teal-800 relative flex items-center justify-center p-6">
+            <div class="w-full h-48 bg-gradient-to-br from-amber-600 to-yellow-800 relative flex items-center justify-center p-6">
                 <!-- Decorative elements -->
                 <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                 <div class="absolute bottom-0 left-0 w-24 h-24 bg-black/20 rounded-full blur-xl -ml-5 -mb-5"></div>
@@ -273,7 +273,7 @@ foreach ($menus as $menu) {
             <div class="p-6 text-center bg-slate-800 relative">
                 <!-- Gift Icon overlay -->
                 <div class="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] border border-slate-700/80">
-                    <i class="fas fa-gift text-2xl text-emerald-400 animate-bounce drop-shadow-sm"></i>
+                    <i class="fas fa-gift text-2xl text-amber-400 animate-bounce drop-shadow-sm"></i>
                 </div>
                 
                 <div class="pt-6">
@@ -281,7 +281,7 @@ foreach ($menus as $menu) {
                         Khusus hari ini! Nikmati kehangatan Wedang Jahe khas kami secara <strong>GRATIS</strong> untuk setiap pemesanan.
                     </p>
                     
-                    <button onclick="claimPromo()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)] transition-all flex items-center justify-center gap-2 font-outfit text-lg hover:-translate-y-0.5">
+                    <button onclick="claimPromo()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-[0_8px_20px_-6px_rgba(245,158,11,0.5)] transition-all flex items-center justify-center gap-2 font-outfit text-lg hover:-translate-y-0.5">
                         Klaim Promo Sekarang
                     </button>
                     <button onclick="closePromoModal()" class="w-full mt-3 text-slate-500 hover:text-slate-400 text-sm font-medium transition-colors">
@@ -298,9 +298,9 @@ foreach ($menus as $menu) {
             <!-- Cart Header -->
             <div class="bg-slate-800/80 backdrop-blur-md text-slate-100 p-5 flex items-center justify-between shadow-md border-b border-slate-700 z-10">
                 <h2 class="text-xl font-extrabold font-outfit flex items-center drop-shadow-sm">
-                    <i class="fas fa-shopping-basket mr-3 text-emerald-400"></i>Keranjang Anda
+                    <i class="fas fa-shopping-basket mr-3 text-amber-400"></i>Keranjang Anda
                 </h2>
-                <button onclick="toggleCart()" class="text-slate-400 hover:text-emerald-400 bg-slate-800 hover:bg-slate-700 border border-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-all">
+                <button onclick="toggleCart()" class="text-slate-400 hover:text-amber-400 bg-slate-800 hover:bg-slate-700 border border-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-all">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -314,12 +314,12 @@ foreach ($menus as $menu) {
             <div class="border-t border-slate-700 p-4 bg-slate-800/90 backdrop-blur-lg shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.3)]">
                 <div class="flex items-center justify-between mb-4">
                     <span class="text-slate-400 font-bold text-sm uppercase tracking-wider">Total Tagihan</span>
-                    <span id="cartTotal" class="text-xl font-extrabold text-emerald-400 font-outfit drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">Rp 0</span>
+                    <span id="cartTotal" class="text-xl font-extrabold text-amber-400 font-outfit drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]">Rp 0</span>
                 </div>
                 <button 
                     onclick="checkout()" 
                     id="checkoutBtn"
-                    class="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3.5 px-4 rounded-xl transition duration-300 disabled:opacity-50 disabled:grayscale font-outfit shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(16,185,129,0.6)] flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                    class="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold py-3.5 px-4 rounded-xl transition duration-300 disabled:opacity-50 disabled:grayscale font-outfit shadow-[0_8px_20px_-6px_rgba(245,158,11,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(245,158,11,0.6)] flex items-center justify-center gap-2 hover:-translate-y-0.5"
                 >
                     <i class="fas fa-check-circle"></i>Lanjutkan ke Checkout
                 </button>
@@ -351,7 +351,7 @@ foreach ($menus as $menu) {
             <div class="p-6">
                 <div class="flex justify-between items-start mb-2">
                     <h3 id="modalTitle" class="text-2xl font-extrabold text-slate-100 font-outfit pr-4 drop-shadow-sm">Nama Menu</h3>
-                    <span id="modalPrice" class="font-extrabold text-emerald-400 text-lg whitespace-nowrap drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">Rp 0</span>
+                    <span id="modalPrice" class="font-extrabold text-amber-400 text-lg whitespace-nowrap drop-shadow-[0_0_8px_rgba(251,191,36,0.3)]">Rp 0</span>
                 </div>
                 
                 <p id="modalDesc" class="text-slate-400 text-sm leading-relaxed mb-6 hidden"></p>
@@ -359,26 +359,26 @@ foreach ($menus as $menu) {
                 <!-- Notes Input -->
                 <div class="mb-6">
                     <label for="modalNotes" class="block text-sm font-bold text-slate-300 mb-2 font-outfit">
-                        <i class="fas fa-pen-alt text-emerald-500 mr-1"></i> Catatan Khusus
+                        <i class="fas fa-pen-alt text-amber-500 mr-1"></i> Catatan Khusus
                     </label>
-                    <textarea id="modalNotes" rows="2" class="w-full px-4 py-3 bg-slate-900/60 border border-slate-700/80 rounded-2xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none transition-all placeholder-slate-600 shadow-inner" placeholder="Contoh: Es dipisah, gula dikit, pedas sedang..."></textarea>
+                    <textarea id="modalNotes" rows="2" class="w-full px-4 py-3 bg-slate-900/60 border border-slate-700/80 rounded-2xl text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none transition-all placeholder-slate-600 shadow-inner" placeholder="Contoh: Es dipisah, gula dikit, pedas sedang..."></textarea>
                 </div>
                 
                 <!-- Action Area -->
                 <div class="flex items-center gap-4">
                     <!-- Quantity -->
                     <div class="flex items-center space-x-1 bg-slate-900/60 border border-slate-700/80 rounded-2xl p-1.5 shadow-inner">
-                        <button onclick="updateModalQty(-1)" class="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-800 text-emerald-400 hover:bg-slate-700 hover:text-emerald-300 shadow-sm transition-all font-bold border border-slate-700/50">
+                        <button onclick="updateModalQty(-1)" class="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-800 text-amber-400 hover:bg-slate-700 hover:text-amber-300 shadow-sm transition-all font-bold border border-slate-700/50">
                             <i class="fas fa-minus text-xs"></i>
                         </button>
                         <span id="modalQty" class="font-extrabold text-slate-100 w-10 text-center text-lg">1</span>
-                        <button onclick="updateModalQty(1)" class="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-800 text-emerald-400 hover:bg-slate-700 hover:text-emerald-300 shadow-sm transition-all font-bold border border-slate-700/50">
+                        <button onclick="updateModalQty(1)" class="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-800 text-amber-400 hover:bg-slate-700 hover:text-amber-300 shadow-sm transition-all font-bold border border-slate-700/50">
                             <i class="fas fa-plus text-xs"></i>
                         </button>
                     </div>
                     
                     <!-- Add Button -->
-                    <button onclick="submitModalCart()" class="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
+                    <button onclick="submitModalCart()" class="flex-1 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-[0_8px_20px_-6px_rgba(245,158,11,0.5)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
                         <i class="fas fa-shopping-basket"></i> Tambah
                     </button>
                 </div>
@@ -394,7 +394,7 @@ foreach ($menus as $menu) {
     <?php if (!empty($cart)): ?>
     <button 
         onclick="toggleCart()"
-        class="fixed bottom-28 right-6 bg-emerald-600 hover:bg-emerald-700 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center z-[45] sm:hidden transition duration-200"
+        class="fixed bottom-28 right-6 bg-amber-600 hover:bg-amber-700 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center z-[45] sm:hidden transition duration-200"
     >
         <i class="fas fa-shopping-cart text-xl"></i>
         <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5.5 h-5.5 rounded-full flex items-center justify-center font-bold animate-pulse">
@@ -606,11 +606,11 @@ foreach ($menus as $menu) {
                 
                 let notesHtml = '';
                 if (item.notes && item.notes.trim() !== '') {
-                    notesHtml = `<p class="text-xs text-slate-400 mt-1 bg-slate-800/80 p-1.5 rounded-lg border border-slate-700/50 flex items-start gap-1"><i class="fas fa-pen-alt text-xs text-emerald-500 mt-0.5"></i> ${item.notes}</p>`;
+                    notesHtml = `<p class="text-xs text-slate-400 mt-1 bg-slate-800/80 p-1.5 rounded-lg border border-slate-700/50 flex items-start gap-1"><i class="fas fa-pen-alt text-xs text-amber-500 mt-0.5"></i> ${item.notes}</p>`;
                 }
                 
                 html += `
-                    <div class="bg-slate-900/60 border border-slate-700/80 rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-emerald-500/30 transition-all duration-300 group">
+                    <div class="bg-slate-900/60 border border-slate-700/80 rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-300 group">
                         <div class="flex items-start justify-between mb-3">
                             <div class="flex-1 pr-4">
                                 <h4 class="font-bold text-slate-200 text-base font-outfit drop-shadow-sm">${item.name}</h4>
@@ -622,15 +622,15 @@ foreach ($menus as $menu) {
                         </div>
                         <div class="flex items-end justify-between">
                             <div class="flex items-center space-x-1 bg-slate-800 border border-slate-700/80 rounded-xl p-1 shadow-inner">
-                                <button onclick="updateQuantity('${item.cartItemId}', -1)" class="text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 w-7 h-7 rounded-lg flex items-center justify-center font-bold bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all">
+                                <button onclick="updateQuantity('${item.cartItemId}', -1)" class="text-amber-400 hover:text-amber-300 hover:bg-slate-700 w-7 h-7 rounded-lg flex items-center justify-center font-bold bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all">
                                     <i class="fas fa-minus text-xs"></i>
                                 </button>
                                 <span class="font-extrabold text-slate-200 w-8 text-center text-sm">${item.quantity}</span>
-                                <button onclick="updateQuantity('${item.cartItemId}', 1)" class="text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 w-7 h-7 rounded-lg flex items-center justify-center font-bold bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all">
+                                <button onclick="updateQuantity('${item.cartItemId}', 1)" class="text-amber-400 hover:text-amber-300 hover:bg-slate-700 w-7 h-7 rounded-lg flex items-center justify-center font-bold bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all">
                                     <i class="fas fa-plus text-xs"></i>
                                 </button>
                             </div>
-                            <span class="font-extrabold text-emerald-400 text-base font-outfit drop-shadow-[0_0_5px_rgba(52,211,153,0.2)]">
+                            <span class="font-extrabold text-amber-400 text-base font-outfit drop-shadow-[0_0_5px_rgba(251,191,36,0.2)]">
                                 Rp ${subtotal.toLocaleString('id-ID')}
                             </span>
                         </div>
@@ -648,7 +648,7 @@ foreach ($menus as $menu) {
             let badge = btnCart.querySelector('span');
             if (!badge) {
                 badge = document.createElement('span');
-                badge.className = 'absolute -top-1 -right-1 bg-gradient-to-tr from-emerald-600 to-emerald-400 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(52,211,153,0.5)] animate-bounce border border-emerald-300';
+                badge.className = 'absolute -top-1 -right-1 bg-gradient-to-tr from-amber-600 to-amber-400 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.5)] animate-bounce border border-amber-300';
                 btnCart.appendChild(badge);
             }
             badge.textContent = cart.length; // Or totalItems if you want total qty
@@ -701,7 +701,7 @@ foreach ($menus as $menu) {
             
             // Update button styles
             buttons.forEach(btn => {
-                btn.classList.remove('bg-emerald-600', 'text-white', 'shadow-md', 'shadow-emerald-500/30');
+                btn.classList.remove('bg-amber-600', 'text-white', 'shadow-md', 'shadow-amber-500/30');
                 btn.classList.add('bg-slate-100', 'text-slate-600');
             });
             
@@ -710,7 +710,7 @@ foreach ($menus as $menu) {
                 : document.querySelector('.category-btn-' + categoryId);
             if (activeBtn) {
                 activeBtn.classList.remove('bg-slate-100', 'text-slate-600');
-                activeBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-md', 'shadow-emerald-500/30');
+                activeBtn.classList.add('bg-amber-600', 'text-white', 'shadow-md', 'shadow-amber-500/30');
             }
             
             // Show/hide sections
