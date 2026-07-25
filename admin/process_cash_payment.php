@@ -1,6 +1,6 @@
 <?php
 require_once '../config/config.php';
-requireRole(['kasir', 'owner']);
+requireRole(['kasir', 'owner', 'admin']);
 
 header('Content-Type: application/json');
 

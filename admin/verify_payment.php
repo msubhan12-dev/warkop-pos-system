@@ -4,7 +4,7 @@
  * Handle QRIS payment proof verification
  */
 require_once '../config/config.php';
-requireRole(['kasir', 'owner']);
+requireRole(['kasir', 'owner', 'admin']);
 
 $action = clean($_POST['action'] ?? '');
 $paymentId = (int)($_POST['payment_id'] ?? 0);

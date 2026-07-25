@@ -7,16 +7,16 @@ $basePath = ($currentDir == 'kasir') ? '../admin/' : '';
 $userRole = $user['role'] ?? 'pelayan'; 
 
 $navItems = [
-    ['url' => $basePath . 'index', 'icon' => 'fa-chart-pie', 'label' => 'Dashboard', 'color' => 'text-emerald-400', 'roles' => ['owner', 'admin']],
+    ['url' => $basePath . 'index', 'icon' => 'fa-chart-pie', 'label' => 'Dashboard', 'color' => 'text-emerald-400', 'roles' => ['owner']],
     ['url' => ($currentDir == 'kasir' ? 'index' : 'pos'), 'icon' => 'fa-cash-register', 'label' => 'POS Kasir', 'color' => 'text-blue-400', 'roles' => ['owner', 'admin', 'kasir']],
     ['url' => $basePath . 'kitchen', 'icon' => 'fa-fire', 'label' => 'Dapur', 'color' => 'text-orange-400', 'roles' => ['owner', 'admin', 'pelayan']],
     ['url' => $basePath . 'orders', 'icon' => 'fa-receipt', 'label' => 'Pesanan', 'color' => 'text-indigo-400', 'roles' => ['owner', 'admin', 'kasir', 'pelayan']],
-    ['url' => $basePath . 'menu', 'icon' => 'fa-utensils', 'label' => 'Menu', 'color' => 'text-rose-400', 'roles' => ['owner', 'admin']],
-    ['url' => $basePath . 'stock', 'icon' => 'fa-boxes', 'label' => 'Stok Bahan', 'color' => 'text-amber-400', 'roles' => ['owner', 'admin']],
-    ['url' => $basePath . 'recipes', 'icon' => 'fa-clipboard-list', 'label' => 'Resep', 'color' => 'text-lime-400', 'roles' => ['owner', 'admin']],
+    ['url' => $basePath . 'menu', 'icon' => 'fa-utensils', 'label' => 'Menu', 'color' => 'text-rose-400', 'roles' => ['owner']],
+    ['url' => $basePath . 'stock', 'icon' => 'fa-boxes', 'label' => 'Stok Bahan', 'color' => 'text-amber-400', 'roles' => ['owner']],
+    ['url' => $basePath . 'recipes', 'icon' => 'fa-clipboard-list', 'label' => 'Resep', 'color' => 'text-lime-400', 'roles' => ['owner']],
     ['url' => $basePath . 'tables', 'icon' => 'fa-chair', 'label' => 'Meja', 'color' => 'text-purple-400', 'roles' => ['owner', 'admin', 'kasir']],
-    ['url' => $basePath . 'promos', 'icon' => 'fa-tags', 'label' => 'Promo', 'color' => 'text-pink-400', 'roles' => ['owner', 'admin']],
-    ['url' => $basePath . 'reels', 'icon' => 'fa-video', 'label' => 'Reels', 'color' => 'text-fuchsia-400', 'roles' => ['owner', 'admin']],
+    ['url' => $basePath . 'promos', 'icon' => 'fa-tags', 'label' => 'Promo', 'color' => 'text-pink-400', 'roles' => ['owner']],
+    ['url' => $basePath . 'reels', 'icon' => 'fa-video', 'label' => 'Reels', 'color' => 'text-fuchsia-400', 'roles' => ['owner']],
     ['url' => $basePath . 'reports', 'icon' => 'fa-file-invoice-dollar', 'label' => 'Laporan', 'color' => 'text-teal-400', 'roles' => ['owner']],
     ['url' => $basePath . 'users', 'icon' => 'fa-users', 'label' => 'Karyawan', 'color' => 'text-cyan-400', 'roles' => ['owner']]
 ];
@@ -133,4 +133,4 @@ $navItems = [
         </div>
 
         <!-- Page Content -->
-        <main class="flex-1 <?= $isPosPage ? 'flex flex-col overflow-hidden' : 'overflow-auto' ?> bg-slate-50/50 relative">
+        <main class="flex-1 <?= $isPosPage ? 'flex flex-col overflow-hidden pb-16 md:pb-0' : 'overflow-auto pb-16 md:pb-0' ?> bg-slate-50/50 relative">

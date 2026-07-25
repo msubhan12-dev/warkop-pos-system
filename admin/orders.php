@@ -62,17 +62,23 @@ $totalPages = ceil($totalOrders / $limit);
 
 $stmt = $db->query("SELECT o.*, t.table_number FROM orders o LEFT JOIN tables t ON o.table_id = t.id $whereClause ORDER BY o.created_at DESC LIMIT $limit OFFSET $offset");
 $orders = $stmt->fetchAll();
+
+// Calculate statistics for current query
+$totalAmountSum = array_sum(array_column($orders, 'total'));
+$pendingOrdersCount = count(array_filter($orders, fn($o) => in_array($o['status'], ['pending', 'cooking', 'ready'])));
+$completedOrdersCount = count(array_filter($orders, fn($o) => $o['status'] === 'completed'));
 include '../includes/header.php';
 ?>
 <div class="p-3 sm:p-6 max-w-7xl mx-auto pb-32 sm:pb-24 w-full">
+    <!-- Header Section -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
         <div>
-            <h1 class="text-3xl font-extrabold text-slate-800 font-outfit tracking-tight">Daftar Pesanan</h1>
-            <p class="text-slate-500 text-sm mt-1 font-medium">Pantau dan kelola semua transaksi pesanan pelanggan.</p>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 font-outfit tracking-tight">Daftar Pesanan & Transaksi</h1>
+            <p class="text-slate-500 text-sm mt-1 font-medium">Pantau dan kelola seluruh alur pesanan kedai secara real-time.</p>
         </div>
         <div class="w-full sm:w-auto flex items-center gap-2">
-            <span class="text-sm font-semibold text-slate-500"><i class="fas fa-filter mr-1"></i> Filter:</span>
-            <select onchange="window.location.href='?filter='+this.value" class="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 shadow-sm font-semibold transition-all cursor-pointer">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider"><i class="fas fa-filter mr-1"></i> Periode:</span>
+            <select onchange="window.location.href='?filter='+this.value" class="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 shadow-sm font-bold transition-all cursor-pointer">
                 <option value="today" <?= $filter === 'today' ? 'selected' : '' ?>>Hari Ini</option>
                 <option value="yesterday" <?= $filter === 'yesterday' ? 'selected' : '' ?>>Kemarin</option>
                 <option value="this_week" <?= $filter === 'this_week' ? 'selected' : '' ?>>Minggu Ini</option>
@@ -82,11 +88,63 @@ include '../includes/header.php';
         </div>
     </div>
 
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <i class="fas fa-receipt text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Pesanan Tampil</p>
+                <p class="text-xl font-extrabold text-slate-800 font-outfit mt-0.5"><?= count($orders) ?></p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <i class="fas fa-fire text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Dalam Proses</p>
+                <p class="text-xl font-extrabold text-amber-600 font-outfit mt-0.5"><?= $pendingOrdersCount ?></p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <i class="fas fa-coins text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Nilai Transaksi</p>
+                <p class="text-xl font-extrabold text-emerald-600 font-outfit mt-0.5"><?= formatRupiah($totalAmountSum) ?></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Quick Filter Bar -->
+    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm mb-6 flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="orderSearchInput" onkeyup="filterOrderTable()" placeholder="Cari nomor pesanan, nama pemesan, atau meja..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+        </div>
+
+        <div class="sm:w-56">
+            <select id="orderStatusFilterSelect" onchange="filterOrderTable()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                <option value="all">Semua Status Pesanan</option>
+                <option value="pending">Menunggu</option>
+                <option value="cooking">Sedang Dimasak</option>
+                <option value="ready">Siap Disajikan</option>
+                <option value="completed">Selesai</option>
+                <option value="cancelled">Dibatalkan</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider font-extrabold">
+                    <tr class="bg-slate-50/80 border-b border-slate-100 text-slate-400 text-[11px] uppercase tracking-wider font-extrabold">
                         <th class="p-4 sm:p-5">Order ID</th>
                         <th class="p-4 sm:p-5">Pelanggan</th>
                         <th class="p-4 sm:p-5">Waktu</th>
@@ -96,7 +154,7 @@ include '../includes/header.php';
                         <th class="p-4 sm:p-5 text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody id="ordersTableBody" class="divide-y divide-slate-100">
                     <?php if (empty($orders)): ?>
                     <tr>
                         <td colspan="7" class="py-12 text-center text-slate-400 font-medium">
@@ -107,13 +165,19 @@ include '../includes/header.php';
                     <?php else: ?>
                     <?php foreach ($orders as $order): 
                         $payment = getPaymentDetails($order['id']);
-                        $needsVerification = ($payment && $payment['payment_method'] === 'qris' && $payment['verification_status'] === 'pending' && $payment['proof_of_payment']);
+                        // OLD: required admin verification | NEW: auto-verified on customer confirm
+                        $needsVerification = false; // Disable since QRIS auto-verifies now
+                        $autoVerifiedQris = ($payment && $payment['payment_method'] === 'qris' && $payment['verification_status'] === 'verified');
                     ?>
-                    <tr class="hover:bg-slate-50 transition-colors duration-200 <?= $needsVerification ? 'bg-orange-50/30' : '' ?>">
+                    <tr class="order-row hover:bg-slate-50 transition-colors duration-200 <?= $autoVerifiedQris && $order['status'] === 'confirmed' ? 'bg-emerald-50/40 border-l-4 border-emerald-500' : '' ?>"
+                        data-ordernum="<?= htmlspecialchars(strtolower($order['order_number'])) ?>"
+                        data-customer="<?= htmlspecialchars(strtolower($order['customer_name'])) ?>"
+                        data-table="<?= htmlspecialchars(strtolower($order['table_number'] ?? 'ta')) ?>"
+                        data-status="<?= htmlspecialchars(strtolower($order['status'])) ?>">
                         <td class="p-4 sm:p-5 whitespace-nowrap">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center font-bold text-sm <?= $needsVerification ? 'bg-orange-100 text-orange-600' : 'bg-emerald-50 text-emerald-500' ?>">
-                                    <i class="fas <?= $needsVerification ? 'fa-exclamation-triangle' : 'fa-receipt' ?>"></i>
+                                <div class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center font-bold text-sm <?= $autoVerifiedQris && $order['status'] === 'confirmed' ? 'bg-emerald-100 text-emerald-600' : 'bg-emerald-50 text-emerald-500' ?>">
+                                    <i class="fas <?= $autoVerifiedQris && $order['status'] === 'confirmed' ? 'fa-check-circle' : 'fa-receipt' ?>"></i>
                                 </div>
                                 <?php
                                     // Format order number for display (e.g. ORD-20260713-ABCD)
@@ -141,10 +205,10 @@ include '../includes/header.php';
                             </span>
                             <?php endif; ?>
                             
-                            <?php if ($needsVerification): ?>
+                            <?php if ($autoVerifiedQris && $order['status'] === 'confirmed'): ?>
                             <div class="mt-1.5">
-                                <span class="text-[10px] font-bold text-orange-600 bg-orange-100/80 px-2 py-0.5 rounded shadow-sm inline-flex items-center">
-                                    <i class="fas fa-circle-notch fa-spin mr-1"></i> Verifikasi
+                                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-100/80 px-2 py-0.5 rounded shadow-sm inline-flex items-center">
+                                    <i class="fas fa-check-circle mr-1"></i> Auto-Verified
                                 </span>
                             </div>
                             <?php endif; ?>
@@ -365,7 +429,7 @@ include '../includes/header.php';
                             <?php endif; ?>
                             
                             <!-- Action Buttons -->
-                            <?php if ($paymentDetail['verification_status'] === 'pending' && $paymentDetail['proof_of_payment']): ?>
+                            <?php if ($paymentDetail['verification_status'] === 'pending'): ?>
                             <div class="grid grid-cols-2 gap-3 pt-2">
                                 <button onclick="showRejectDialog(<?= $paymentDetail['id'] ?>)" class="bg-white border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 py-2.5 rounded-xl font-bold text-sm transition flex items-center justify-center">
                                     <i class="fas fa-times mr-2"></i> Tolak
@@ -602,6 +666,50 @@ function cancelOrder(orderId) {
     })
     .catch(e => alert('Terjadi kesalahan: ' + e.message));
 }
+
+function filterOrderTable() {
+    const searchVal = document.getElementById('orderSearchInput').value.toLowerCase().trim();
+    const statusVal = document.getElementById('orderStatusFilterSelect').value;
+    const rows = document.querySelectorAll('.order-row');
+
+    rows.forEach(row => {
+        const ordernum = row.getAttribute('data-ordernum');
+        const customer = row.getAttribute('data-customer');
+        const table = row.getAttribute('data-table');
+        const status = row.getAttribute('data-status');
+
+        const matchesSearch = ordernum.includes(searchVal) || customer.includes(searchVal) || table.includes(searchVal);
+        const matchesStatus = (statusVal === 'all') || (status === statusVal);
+
+        if (matchesSearch && matchesStatus) {
+            row.classList.remove('hidden');
+        } else {
+            row.classList.add('hidden');
+        }
+    });
+}
+
+// Real-time order updates polling for admin dashboard
+// Auto-refreshes when new QRIS payments are confirmed (auto-verified)
+function pollForOrderUpdates() {
+    fetch('api_pending_payments.php?t=' + Date.now())
+        .then(r => r.json())
+        .then(data => {
+            if (data.success && data.count > 0) {
+                console.log('New pending payments detected:', data.count);
+                // Auto-refresh page to show latest order statuses
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
+        })
+        .catch(e => console.log('Poll error:', e));
+}
+
+// Poll every 5 seconds for new auto-verified QRIS payments
+setInterval(pollForOrderUpdates, 5000);
+
 </script>
 
 <?php include '../includes/footer.php'; ?>
+

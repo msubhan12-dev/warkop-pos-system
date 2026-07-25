@@ -1,6 +1,6 @@
 <?php
 require_once '../config/config.php';
-requireRole(['owner', 'admin']);
+requireRole(['owner']);
 $pageTitle = 'Stok Bahan Baku';
 $user = getCurrentUser();
 $db = getDB();
@@ -45,70 +45,141 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 $stmt = $db->query("SELECT * FROM ingredients ORDER BY name");
 $ingredients = $stmt->fetchAll();
 
+// Fetch menu names for auto-complete datalist
+$stmtMenu = $db->query("SELECT name FROM menus ORDER BY name");
+$menuNames = $stmtMenu->fetchAll(PDO::FETCH_COLUMN);
+
+// Stats calculations
+$totalIngredients = count($ingredients);
+$lowStockCount = count(array_filter($ingredients, fn($i) => $i['stock_quantity'] <= 10));
+$normalStockCount = $totalIngredients - $lowStockCount;
+
 include '../includes/header.php';
 ?>
+
 <main class="p-4 sm:p-6 pb-32 sm:pb-24 max-w-7xl mx-auto">
+    <!-- Header Section -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
-            <h1 class="text-3xl font-extrabold text-slate-800 font-outfit tracking-tight">Stok Bahan Baku</h1>
-            <p class="text-slate-500 text-sm mt-1 font-medium">Pantau dan kelola persediaan bahan baku (Inventory).</p>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 font-outfit tracking-tight">Stok & Persediaan Bahan</h1>
+            <p class="text-slate-500 text-sm mt-1 font-medium">Pantau dan kelola persediaan bahan baku (Inventory kedai).</p>
         </div>
-        <button onclick="showModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center">
-            <i class="fas fa-plus mr-2"></i> Tambah Bahan
+        <button onclick="showModal()" class="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-emerald-600/20 hover:shadow-xl transition-all cursor-pointer">
+            <i class="fas fa-plus text-base"></i>
+            <span>Tambah Bahan Baku</span>
         </button>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <i class="fas fa-boxes text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Jenis Bahan</p>
+                <p class="text-xl font-extrabold text-slate-800 font-outfit mt-0.5"><?= $totalIngredients ?></p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <i class="fas fa-check-circle text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Stok Aman</p>
+                <p class="text-xl font-extrabold text-emerald-600 font-outfit mt-0.5"><?= $normalStockCount ?></p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
+                <i class="fas fa-exclamation-triangle text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Stok Menipis (≤10)</p>
+                <p class="text-xl font-extrabold text-rose-500 font-outfit mt-0.5"><?= $lowStockCount ?></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm mb-6 flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="stockSearchInput" onkeyup="filterStock()" placeholder="Cari nama bahan baku atau satuan..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+        </div>
+
+        <div class="sm:w-56">
+            <select id="stockFilterSelect" onchange="filterStock()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                <option value="all">Semua Kondisi Stok</option>
+                <option value="low">Menipis / Habis (≤10)</option>
+                <option value="normal">Stok Aman (>10)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider font-bold">
+                    <tr class="bg-slate-50/80 border-b border-slate-100 text-slate-400 text-[11px] uppercase tracking-wider font-bold">
                         <th class="p-4 sm:p-5">Bahan Baku</th>
                         <th class="p-4 sm:p-5 text-center">Sisa Stok</th>
                         <th class="p-4 sm:p-5 text-center">Satuan</th>
+                        <th class="p-4 sm:p-5 text-center">Status</th>
                         <th class="p-4 sm:p-5 text-right">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody id="stockTableBody" class="divide-y divide-slate-100">
                     <?php if (empty($ingredients)): ?>
                     <tr>
-                        <td colspan="4" class="py-12 text-center text-slate-400 font-medium">
+                        <td colspan="5" class="py-12 text-center text-slate-400 font-medium">
                             <i class="fas fa-boxes text-4xl mb-3 text-slate-300 block"></i>
                             Belum ada data bahan baku.
                         </td>
                     </tr>
                     <?php else: ?>
                     <?php foreach ($ingredients as $ing): 
-                        $isLow = $ing['stock_quantity'] <= 10; // Warning threshold
+                        $isLow = $ing['stock_quantity'] <= 10;
                     ?>
-                    <tr class="hover:bg-slate-50 transition-colors">
+                    <tr class="stock-row hover:bg-slate-50/80 transition-colors"
+                        data-name="<?= htmlspecialchars(strtolower($ing['name'])) ?>"
+                        data-unit="<?= htmlspecialchars(strtolower($ing['unit'])) ?>"
+                        data-low="<?= $isLow ? '1' : '0' ?>">
                         <td class="p-4 sm:p-5">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center font-bold text-sm <?= $isLow ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-500' ?>">
+                                <div class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center font-bold text-sm <?= $isLow ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600' ?>">
                                     <i class="fas fa-box"></i>
                                 </div>
-                                <span class="font-bold text-slate-800 text-base"><?= htmlspecialchars($ing['name']) ?></span>
+                                <span class="font-bold text-slate-800 text-sm font-outfit"><?= htmlspecialchars($ing['name']) ?></span>
                             </div>
                         </td>
                         <td class="p-4 sm:p-5 text-center">
-                            <span class="font-extrabold text-lg <?= $isLow ? 'text-rose-600' : 'text-slate-700' ?>">
+                            <span class="font-extrabold text-base font-outfit <?= $isLow ? 'text-rose-600' : 'text-slate-800' ?>">
                                 <?= number_format($ing['stock_quantity'], 1, ',', '.') ?>
                             </span>
                         </td>
                         <td class="p-4 sm:p-5 text-center">
-                            <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 border border-slate-200 uppercase">
+                            <span class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-600 uppercase border border-slate-200/60">
                                 <?= htmlspecialchars($ing['unit']) ?>
                             </span>
                         </td>
+                        <td class="p-4 sm:p-5 text-center">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold <?= $isLow ? 'bg-rose-50 text-rose-600 border border-rose-200/60' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' ?>">
+                                <span class="w-1.5 h-1.5 rounded-full mr-1.5 <?= $isLow ? 'bg-rose-500' : 'bg-emerald-500' ?>"></span>
+                                <?= $isLow ? 'Perlu Ditambah' : 'Cukup' ?>
+                            </span>
+                        </td>
                         <td class="p-4 sm:p-5 text-right whitespace-nowrap">
-                            <button onclick="showUpdateModal(<?= $ing['id'] ?>, '<?= htmlspecialchars(addslashes($ing['name'])) ?>', <?= $ing['stock_quantity'] ?>)" class="inline-flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 w-9 h-9 rounded-xl transition-colors mr-1" title="Update Stok Cepat">
-                                <i class="fas fa-bolt text-sm"></i>
+                            <button onclick="showUpdateModal(<?= $ing['id'] ?>, '<?= htmlspecialchars(addslashes($ing['name'])) ?>', <?= $ing['stock_quantity'] ?>)" class="inline-flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 w-8 h-8 rounded-lg transition-colors mr-1" title="Update Stok Cepat">
+                                <i class="fas fa-bolt text-xs"></i>
                             </button>
-                            <button onclick='editIngredient(<?= json_encode($ing) ?>)' class="inline-flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 w-9 h-9 rounded-xl transition-colors mr-1" title="Edit">
-                                <i class="fas fa-edit text-sm"></i>
+                            <button onclick='editIngredient(<?= json_encode($ing) ?>)' class="inline-flex items-center justify-center bg-amber-50 text-amber-600 hover:bg-amber-100 w-8 h-8 rounded-lg transition-colors mr-1" title="Edit">
+                                <i class="fas fa-edit text-xs"></i>
                             </button>
-                            <a href="?delete=<?= $ing['id'] ?>" onclick="return confirm('Hapus bahan baku ini? Resep yang menggunakan bahan ini mungkin akan terganggu.')" class="inline-flex items-center justify-center bg-rose-50 text-rose-600 hover:bg-rose-100 w-9 h-9 rounded-xl transition-colors" title="Hapus">
-                                <i class="fas fa-trash text-sm"></i>
+                            <a href="?delete=<?= $ing['id'] ?>" onclick="return confirm('Hapus bahan baku ini? Resep yang menggunakan bahan ini mungkin akan terganggu.')" class="inline-flex items-center justify-center bg-rose-50 text-rose-600 hover:bg-rose-100 w-8 h-8 rounded-lg transition-colors" title="Hapus">
+                                <i class="fas fa-trash text-xs"></i>
                             </a>
                         </td>
                     </tr>
@@ -136,7 +207,12 @@ include '../includes/header.php';
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1.5">Nama Bahan Baku</label>
-                    <input type="text" name="name" id="ing_name" required placeholder="Cth: Bubuk Matcha Premium" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium">
+                    <input type="text" list="menuList" name="name" id="ing_name" required placeholder="Ketik atau pilih dari daftar..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-medium">
+                    <datalist id="menuList">
+                        <?php foreach ($menuNames as $mName): ?>
+                        <option value="<?= htmlspecialchars($mName) ?>">
+                        <?php endforeach; ?>
+                    </datalist>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
@@ -257,5 +333,29 @@ function closeUpdateModal() {
     content.classList.add('scale-95', 'opacity-0');
     setTimeout(() => modal.classList.add('hidden'), 300);
 }
+
+function filterStock() {
+    const searchVal = document.getElementById('stockSearchInput').value.toLowerCase().trim();
+    const filterVal = document.getElementById('stockFilterSelect').value;
+    const rows = document.querySelectorAll('.stock-row');
+
+    rows.forEach(row => {
+        const name = row.getAttribute('data-name');
+        const unit = row.getAttribute('data-unit');
+        const isLow = row.getAttribute('data-low');
+
+        const matchesSearch = name.includes(searchVal) || unit.includes(searchVal);
+        let matchesFilter = true;
+        if (filterVal === 'low') matchesFilter = (isLow === '1');
+        if (filterVal === 'normal') matchesFilter = (isLow === '0');
+
+        if (matchesSearch && matchesFilter) {
+            row.classList.remove('hidden');
+        } else {
+            row.classList.add('hidden');
+        }
+    });
+}
 </script>
 <?php include '../includes/footer.php'; ?>
+

@@ -15,7 +15,7 @@ $stmt = $db->query("
         COUNT(*) as orders,
         COALESCE(SUM(total), 0) as revenue
     FROM orders
-    WHERE DATE(created_at) = CURDATE() AND status = 'completed'
+    WHERE DATE(created_at) = CURDATE() AND status IN ('confirmed', 'cooking', 'ready', 'served', 'completed')
     GROUP BY HOUR(created_at)
     ORDER BY hour
 ");
@@ -32,7 +32,7 @@ $stmt = $db->query("
     JOIN menus m ON oi.menu_id = m.id
     JOIN categories c ON m.category_id = c.id
     JOIN orders o ON oi.order_id = o.id
-    WHERE DATE(o.created_at) = CURDATE() AND o.status = 'completed'
+    WHERE DATE(o.created_at) = CURDATE() AND o.status IN ('confirmed', 'cooking', 'ready', 'served', 'completed')
     GROUP BY m.id, m.name, c.name
     ORDER BY qty DESC
     LIMIT 5
@@ -66,63 +66,74 @@ $stmt = $db->query("
     GROUP BY payment_method
 ");
 $paymentMethods = $stmt->fetchAll();
-?>
-<?php
+
 $pageTitle = 'Dashboard Owner';
 include '../includes/header.php';
 ?>
-            <div class="p-6 pb-24 md:pb-6 max-w-7xl mx-auto w-full">
+            <div class="p-4 sm:p-6 pb-32 sm:pb-24 max-w-7xl mx-auto w-full">
                 <!-- Header Info -->
-                <div class="mb-6">
-                    <h2 class="text-2xl font-extrabold text-slate-800 font-outfit">Ringkasan Hari Ini</h2>
-                    <p class="text-xs text-slate-500 font-medium mt-1">Pantau laporan transaksi dan performa kedai secara real-time</p>
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 font-outfit tracking-tight">Ringkasan Kedai Hari Ini</h1>
+                        <p class="text-slate-500 text-sm mt-1 font-medium">Pantau laporan transaksi, omset, dan penjualan secara real-time.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-3.5 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200/60 rounded-xl text-xs font-extrabold inline-flex items-center shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-2"></span>
+                            Sistem Online
+                        </span>
+                        <button onclick="window.location.reload()" class="w-9 h-9 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-emerald-600 hover:border-emerald-300 flex items-center justify-center transition-all shadow-sm">
+                            <i class="fas fa-sync-alt text-xs"></i>
+                        </button>
+                    </div>
                 </div>
+
                 <!-- Stats Cards -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
                     <!-- Total Orders -->
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-5 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition duration-300 flex items-center justify-between group">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 hover:shadow-md hover:-translate-y-1 transition duration-300 flex items-center justify-between group">
                         <div>
                             <p class="text-[10px] sm:text-xs text-slate-400 font-extrabold uppercase tracking-wider mb-1">Total Pesanan</p>
                             <h3 class="text-3xl sm:text-4xl font-black text-slate-800 font-outfit"><?= $stats['orders'] ?></h3>
-                            <p class="text-[10px] sm:text-xs text-emerald-500 font-bold mt-1.5 flex items-center"><i class="fas fa-calendar-day mr-1.5"></i>Hari Ini</p>
+                            <p class="text-[10px] sm:text-xs text-blue-600 font-bold mt-1.5 flex items-center"><i class="fas fa-calendar-day mr-1.5"></i>Hari Ini</p>
                         </div>
-                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-inner group-hover:scale-110 transition-transform">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-inner group-hover:scale-110 transition-transform shrink-0">
                             <i class="fas fa-shopping-cart"></i>
                         </div>
                     </div>
 
                     <!-- Revenue -->
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-5 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition duration-300 flex items-center justify-between group">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 hover:shadow-md hover:-translate-y-1 transition duration-300 flex items-center justify-between group">
                         <div>
                             <p class="text-[10px] sm:text-xs text-slate-400 font-extrabold uppercase tracking-wider mb-1">Pendapatan</p>
                             <h3 class="text-2xl sm:text-3xl font-black text-emerald-600 font-outfit"><?= formatRupiah($stats['revenue']) ?></h3>
-                            <p class="text-[10px] sm:text-xs text-emerald-500 font-bold mt-1.5 flex items-center"><i class="fas fa-calendar-day mr-1.5"></i>Hari Ini</p>
+                            <p class="text-[10px] sm:text-xs text-emerald-600 font-bold mt-1.5 flex items-center"><i class="fas fa-chart-line mr-1.5"></i>Hari Ini</p>
                         </div>
-                        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-inner group-hover:scale-110 transition-transform">
+                        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-inner group-hover:scale-110 transition-transform shrink-0">
                             <i class="fas fa-money-bill-wave"></i>
                         </div>
                     </div>
 
                     <!-- Active Orders -->
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-5 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition duration-300 flex items-center justify-between group">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 hover:shadow-md hover:-translate-y-1 transition duration-300 flex items-center justify-between group">
                         <div>
                             <p class="text-[10px] sm:text-xs text-slate-400 font-extrabold uppercase tracking-wider mb-1">Pesanan Aktif</p>
-                            <h3 class="text-3xl sm:text-4xl font-black text-slate-850 font-outfit"><?= $stats['active_orders'] ?></h3>
-                            <p class="text-[10px] sm:text-xs text-amber-500 font-bold mt-1.5 flex items-center"><i class="fas fa-fire mr-1.5"></i>Dapur / Kasir</p>
+                            <h3 class="text-3xl sm:text-4xl font-black text-slate-800 font-outfit"><?= $stats['active_orders'] ?></h3>
+                            <p class="text-[10px] sm:text-xs text-amber-600 font-bold mt-1.5 flex items-center"><i class="fas fa-fire mr-1.5"></i>Proses Dapur/Kasir</p>
                         </div>
-                        <div class="bg-gradient-to-br from-amber-50 to-amber-100 text-amber-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-inner group-hover:scale-110 transition-transform">
+                        <div class="bg-gradient-to-br from-amber-50 to-amber-100 text-amber-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-inner group-hover:scale-110 transition-transform shrink-0">
                             <i class="fas fa-clock"></i>
                         </div>
                     </div>
 
                     <!-- Available Tables -->
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-5 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition duration-300 flex items-center justify-between group">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 hover:shadow-md hover:-translate-y-1 transition duration-300 flex items-center justify-between group">
                         <div>
-                            <p class="text-[10px] sm:text-xs text-slate-400 font-extrabold uppercase tracking-wider mb-1">Meja Tersedia</p>
-                            <h3 class="text-3xl sm:text-4xl font-black text-slate-850 font-outfit"><?= $stats['available_tables'] ?></h3>
-                            <p class="text-[10px] sm:text-xs text-purple-500 font-bold mt-1.5 flex items-center"><i class="fas fa-info-circle mr-1.5"></i>Status Meja</p>
+                            <p class="text-[10px] sm:text-xs text-slate-400 font-extrabold uppercase tracking-wider mb-1">Meja Kosong</p>
+                            <h3 class="text-3xl sm:text-4xl font-black text-slate-800 font-outfit"><?= $stats['available_tables'] ?></h3>
+                            <p class="text-[10px] sm:text-xs text-purple-600 font-bold mt-1.5 flex items-center"><i class="fas fa-chair mr-1.5"></i>Siap Digunakan</p>
                         </div>
-                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 text-purple-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-inner group-hover:scale-110 transition-transform">
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 text-purple-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-inner group-hover:scale-110 transition-transform shrink-0">
                             <i class="fas fa-chair"></i>
                         </div>
                     </div>

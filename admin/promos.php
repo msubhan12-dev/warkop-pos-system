@@ -1,6 +1,6 @@
 <?php
 require_once '../config/config.php';
-requireRole(['owner', 'admin']);
+requireRole(['owner']);
 $pageTitle = 'Kelola Promo';
 $user = getCurrentUser();
 $db = getDB();
@@ -59,71 +59,145 @@ if (isset($_GET['toggle'])) {
 
 $stmt = $db->query("SELECT * FROM promos ORDER BY created_at DESC");
 $promos = $stmt->fetchAll();
+
+$totalPromos = count($promos);
+$activePromosCount = count(array_filter($promos, fn($p) => $p['is_active'] == 1));
+$inactivePromosCount = $totalPromos - $activePromosCount;
+
 include '../includes/header.php';
 ?>
-<main class="p-4 pb-32 sm:pb-24">
+<main class="p-4 sm:p-6 pb-32 sm:pb-24 max-w-7xl mx-auto">
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 font-outfit tracking-tight">Kelola Promo & Diskon</h1>
+            <p class="text-slate-500 text-sm mt-1 font-medium">Buat dan kelola spanduk promo penawaran menarik untuk pelanggan.</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center shrink-0">
+                <i class="fas fa-tags text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Promo</p>
+                <p class="text-xl font-extrabold text-slate-800 font-outfit mt-0.5"><?= $totalPromos ?></p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <i class="fas fa-check-circle text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Promo Aktif</p>
+                <p class="text-xl font-extrabold text-emerald-600 font-outfit mt-0.5"><?= $activePromosCount ?></p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                <i class="fas fa-eye-slash text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Non-Aktif</p>
+                <p class="text-xl font-extrabold text-slate-600 font-outfit mt-0.5"><?= $inactivePromosCount ?></p>
+            </div>
+        </div>
+    </div>
+
     <?= $message ?>
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Form Add Promo -->
-        <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
-            <h2 class="font-extrabold text-xl font-outfit mb-5 text-slate-800">Tambah Promo</h2>
+        <div class="bg-white rounded-3xl shadow-sm p-6 border border-slate-100 h-fit">
+            <h2 class="font-extrabold text-lg font-outfit mb-1 text-slate-800">Tambah Promo Baru</h2>
+            <p class="text-slate-400 text-xs mb-5">Unggah gambar spanduk promo dan tentukan batas waktunya.</p>
+            
             <form method="POST" enctype="multipart/form-data" class="space-y-4">
                 <input type="hidden" name="action" value="add">
                 
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Judul Promo</label>
-                    <input type="text" name="title" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Judul Promo</label>
+                    <input type="text" name="title" required placeholder="Cth: Diskon Kopi 20%" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Deskripsi (Opsional)</label>
-                    <textarea name="description" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"></textarea>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Deskripsi Singkat</label>
+                    <textarea name="description" rows="3" placeholder="Tuliskan syarat & ketentuan promo..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"></textarea>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Berlaku Sampai</label>
-                    <input type="date" name="valid_until" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Berlaku Sampai</label>
+                    <input type="date" name="valid_until" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Gambar Promo</label>
-                    <input type="file" name="image" accept="image/*" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Gambar Promo Banner</label>
+                    <input type="file" name="image" accept="image/*" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
                 </div>
                 
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2">
-                    <i class="fas fa-plus"></i> Simpan Promo
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 text-sm mt-2">
+                    <i class="fas fa-plus text-xs"></i> Simpan Promo
                 </button>
             </form>
         </div>
         
-        <!-- Promo List -->
+        <!-- Promo List Section -->
         <div class="md:col-span-2 space-y-4">
-            <h2 class="font-extrabold text-xl font-outfit mb-5 text-slate-800">Daftar Promo</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Search & Filter Bar -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex flex-col sm:flex-row gap-3">
+                <div class="relative flex-1">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="promoSearchInput" onkeyup="filterPromos()" placeholder="Cari judul promo..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                </div>
+
+                <div class="sm:w-48">
+                    <select id="promoFilterSelect" onchange="filterPromos()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                        <option value="all">Semua Status</option>
+                        <option value="1">Aktif</option>
+                        <option value="0">Non-Aktif</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="promosGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <?php foreach ($promos as $promo): ?>
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden group">
-                    <div class="h-40 bg-slate-200 relative overflow-hidden">
+                <div class="promo-card bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden group hover:shadow-md transition-all flex flex-col"
+                     data-title="<?= htmlspecialchars(strtolower($promo['title'])) ?>"
+                     data-active="<?= $promo['is_active'] ?>">
+                    
+                    <div class="h-40 bg-slate-100 relative overflow-hidden">
                         <img src="<?= UPLOADS_URL . '/' . $promo['image_path'] ?>" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt="Promo">
                         <?php if (!$promo['is_active']): ?>
-                            <div class="absolute inset-0 bg-slate-900/50 flex items-center justify-center">
-                                <span class="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">Tidak Aktif</span>
+                            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center">
+                                <span class="bg-rose-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">Tidak Aktif</span>
+                            </div>
+                        <?php else: ?>
+                            <div class="absolute top-3 left-3">
+                                <span class="bg-emerald-500/90 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider backdrop-blur-xs shadow-sm">Aktif</span>
                             </div>
                         <?php endif; ?>
                     </div>
-                    <div class="p-4">
-                        <h3 class="font-extrabold text-lg text-slate-800 font-outfit mb-1"><?= $promo['title'] ?></h3>
-                        <p class="text-sm text-slate-500 mb-3 line-clamp-2"><?= $promo['description'] ?></p>
+                    
+                    <div class="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-extrabold text-base text-slate-800 font-outfit mb-1 truncate" title="<?= htmlspecialchars($promo['title']) ?>"><?= htmlspecialchars($promo['title']) ?></h3>
+                            <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed"><?= htmlspecialchars($promo['description'] ?? 'Tanpa deskripsi') ?></p>
+                        </div>
                         
-                        <div class="flex items-center justify-between mt-4">
-                            <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md">
-                                <i class="fas fa-clock mr-1"></i> S/d <?= $promo['valid_until'] ? formatDateTime($promo['valid_until'], 'd M Y') : 'Selamanya' ?>
+                        <div class="flex items-center justify-between pt-3 mt-3 border-t border-slate-100">
+                            <span class="text-[11px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                                <i class="fas fa-clock mr-1 text-slate-400"></i> S/d <?= $promo['valid_until'] ? formatDateTime($promo['valid_until'], 'd M Y') : 'Selamanya' ?>
                             </span>
-                            <div class="flex gap-2">
-                                <a href="?toggle=<?= $promo['id'] ?>" class="text-slate-400 hover:text-emerald-500 transition-colors p-2" title="Toggle Aktif">
-                                    <i class="fas <?= $promo['is_active'] ? 'fa-toggle-on text-emerald-500' : 'fa-toggle-off' ?> text-xl"></i>
+                            <div class="flex items-center gap-1">
+                                <a href="?toggle=<?= $promo['id'] ?>" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors" title="Ubah Status Aktif">
+                                    <i class="fas <?= $promo['is_active'] ? 'fa-toggle-on text-emerald-600 text-base' : 'fa-toggle-off text-slate-400 text-base' ?>"></i>
                                 </a>
-                                <a href="?delete=<?= $promo['id'] ?>" onclick="return confirm('Yakin ingin menghapus promo ini?')" class="text-slate-400 hover:text-red-500 transition-colors p-2" title="Hapus">
-                                    <i class="fas fa-trash text-lg"></i>
+                                <a href="?delete=<?= $promo['id'] ?>" onclick="return confirm('Yakin ingin menghapus promo ini?')" class="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-colors" title="Hapus">
+                                    <i class="fas fa-trash text-xs"></i>
                                 </a>
                             </div>
                         </div>
@@ -132,13 +206,37 @@ include '../includes/header.php';
                 <?php endforeach; ?>
                 
                 <?php if (empty($promos)): ?>
-                <div class="col-span-full text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                <div class="col-span-full text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                     <i class="fas fa-tags text-4xl text-slate-300 mb-3"></i>
-                    <p class="text-slate-500 font-medium">Belum ada promo yang ditambahkan.</p>
+                    <p class="text-slate-500 font-medium text-sm">Belum ada promo yang ditambahkan.</p>
                 </div>
                 <?php endif; ?>
             </div>
         </div>
     </div>
 </main>
+
+<script>
+function filterPromos() {
+    const searchVal = document.getElementById('promoSearchInput').value.toLowerCase().trim();
+    const filterVal = document.getElementById('promoFilterSelect').value;
+    const cards = document.querySelectorAll('.promo-card');
+
+    cards.forEach(card => {
+        const title = card.getAttribute('data-title');
+        const active = card.getAttribute('data-active');
+
+        const matchesSearch = title.includes(searchVal);
+        const matchesFilter = (filterVal === 'all') || (active === filterVal);
+
+        if (matchesSearch && matchesFilter) {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+}
+</script>
+
 <?php include '../includes/footer.php'; ?>
+

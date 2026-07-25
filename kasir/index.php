@@ -34,7 +34,7 @@ $stmt = $db->query("
     LEFT JOIN order_items oi ON o.id = oi.order_id
     WHERE o.status IN ('pending', 'confirmed', 'cooking', 'ready')
     GROUP BY o.id
-    ORDER BY o.created_at ASC
+    ORDER BY o.created_at DESC
 ");
 $activeOrders = $stmt->fetchAll();
 ?>

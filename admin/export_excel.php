@@ -8,9 +8,12 @@ $month = date('m');
 $year = date('Y');
 $bulan = date('F Y');
 
-// Get Revenue (Pendapatan) for current month
+// Get Revenue (Pendapatan) for current month - grouped per day with order count
 $stmt_rev = $db->prepare("
-    SELECT DATE(created_at) as date, 'Pendapatan Penjualan POS' as description, SUM(total) as amount 
+    SELECT 
+        DATE(created_at) as date, 
+        COUNT(*) as order_count,
+        SUM(total) as amount 
     FROM orders 
     WHERE status = 'completed' AND MONTH(created_at) = ? AND YEAR(created_at) = ?
     GROUP BY DATE(created_at)
@@ -29,13 +32,11 @@ $stmt_exp = $db->prepare("
 $stmt_exp->execute([$month, $year]);
 $expenses = $stmt_exp->fetchAll();
 
-// Get Stocks (Only items that have stock tracking)
+// Get Stocks from ingredients table (bahan baku)
 $stmt_stock = $db->query("
-    SELECT m.name, c.name as category, m.price, m.stock 
-    FROM menus m 
-    JOIN categories c ON m.category_id = c.id
-    WHERE m.stock IS NOT NULL AND m.is_available = 1
-    ORDER BY m.stock ASC
+    SELECT name, unit, stock_quantity 
+    FROM ingredients
+    ORDER BY stock_quantity ASC
 ");
 $stocks = $stmt_stock->fetchAll();
 
@@ -94,22 +95,29 @@ header("Expires: 0");
         
         // Output Revenues
         foreach ($revenues as $rev) {
+            $dayNames = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+            $dayName = $dayNames[date('w', strtotime($rev['date']))];
+            $formattedDate = $dayName . ', ' . date('d M Y', strtotime($rev['date']));
+            $desc = 'Pendapatan POS - ' . $rev['order_count'] . ' Pesanan Selesai';
             echo "<tr>";
-            echo "<td class='date'>" . date('Y-m-d', strtotime($rev['date'])) . "</td>";
-            echo "<td>" . htmlspecialchars($rev['description']) . "</td>";
-            echo "<td class='positive'>Pendapatan</td>";
-            echo "<td class='money'>" . $rev['amount'] . "</td>";
+            echo "<td class='date'>" . $formattedDate . "</td>";
+            echo "<td>" . $desc . "</td>";
+            echo "<td class='positive' style='text-align:center;'>Pendapatan</td>";
+            echo "<td class='money positive'>+" . number_format($rev['amount'], 0, ',', '.') . "</td>";
             echo "</tr>";
             $currentRow++;
         }
         
         // Output Expenses
         foreach ($expenses as $exp) {
+            $dayNames = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+            $dayName = $dayNames[date('w', strtotime($exp['date']))];
+            $formattedDate = $dayName . ', ' . date('d M Y', strtotime($exp['date']));
             echo "<tr>";
-            echo "<td class='date'>" . date('Y-m-d', strtotime($exp['date'])) . "</td>";
+            echo "<td class='date'>" . $formattedDate . "</td>";
             echo "<td>" . htmlspecialchars($exp['description']) . "</td>";
-            echo "<td class='negative'>Pengeluaran</td>";
-            echo "<td class='money'>-" . $exp['amount'] . "</td>";
+            echo "<td class='negative' style='text-align:center;'>Pengeluaran</td>";
+            echo "<td class='money negative'>-" . number_format($exp['amount'], 0, ',', '.') . "</td>";
             echo "</tr>";
             $currentRow++;
         }
@@ -135,28 +143,32 @@ header("Expires: 0");
         <tr><td colspan="4" style="border:none;"></td></tr>
         <tr><td colspan="4" style="border:none;"></td></tr>
 
-        <!-- BAGIAN 2: STOK -->
+        <!-- BAGIAN 2: STOK BAHAN BAKU -->
         <tr>
-            <th colspan="4" class="header-blue">2. LAPORAN STOK SAAT INI</th>
+            <th colspan="4" class="header-blue">2. LAPORAN STOK BAHAN BAKU SAAT INI</th>
         </tr>
         <tr>
-            <th style="background-color:#E0E0E0; font-weight:bold; text-align:center;">Nama Item</th>
-            <th style="background-color:#E0E0E0; font-weight:bold; text-align:center;">Kategori</th>
-            <th style="background-color:#E0E0E0; font-weight:bold; text-align:center;">Harga Jual (Rp)</th>
-            <th style="background-color:#E0E0E0; font-weight:bold; text-align:center;">Sisa Stok</th>
+            <th style="background-color:#E0E0E0; font-weight:bold; text-align:center;">Nama Bahan Baku</th>
+            <th style="background-color:#E0E0E0; font-weight:bold; text-align:center;">Satuan</th>
+            <th style="background-color:#E0E0E0; font-weight:bold; text-align:center;">Jumlah Stok</th>
+            <th style="background-color:#E0E0E0; font-weight:bold; text-align:center;">Status</th>
         </tr>
         <?php foreach ($stocks as $stock): 
-            // Flag stock as warning if <= 5
-            $isLow = $stock['stock'] <= 5;
+            // Flag stock as warning if <= 10
+            $isLow = $stock['stock_quantity'] <= 10;
             $rowClass = $isLow ? 'warning' : 'normal';
+            $statusLabel = $isLow ? 'Perlu Ditambah' : 'Cukup';
         ?>
         <tr>
             <td><?= htmlspecialchars($stock['name']) ?></td>
-            <td><?= htmlspecialchars($stock['category']) ?></td>
-            <td class="money"><?= $stock['price'] ?></td>
-            <td class="<?= $rowClass ?>"><?= $stock['stock'] ?> <?= $isLow ? '(Low!)' : '' ?></td>
+            <td class="normal"><?= htmlspecialchars($stock['unit']) ?></td>
+            <td class="<?= $rowClass ?>"><?= $stock['stock_quantity'] ?></td>
+            <td class="<?= $rowClass ?>"><?= $statusLabel ?></td>
         </tr>
         <?php endforeach; ?>
+        <?php if (empty($stocks)): ?>
+        <tr><td colspan="4" style="text-align:center;">Belum ada data stok bahan baku.</td></tr>
+        <?php endif; ?>
     </table>
 </body>
 </html>

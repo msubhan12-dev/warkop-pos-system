@@ -1,6 +1,6 @@
 <?php
 require_once '../config/config.php';
-requireRole(['owner', 'admin']);
+requireRole(['owner']);
 $pageTitle = 'Resep & Racikan Menu';
 $user = getCurrentUser();
 $db = getDB();
@@ -44,34 +44,95 @@ foreach ($recipesData as $row) {
     $recipes[$row['menu_id']][] = $row;
 }
 
+// Stats calculations
+$totalMenusCount = count($menus);
+$configuredRecipesCount = 0;
+foreach ($menus as $m) {
+    if (!empty($recipes[$m['id']])) $configuredRecipesCount++;
+}
+$missingRecipesCount = $totalMenusCount - $configuredRecipesCount;
+
 include '../includes/header.php';
 ?>
 <main class="p-4 sm:p-6 pb-32 sm:pb-24 max-w-7xl mx-auto">
+    <!-- Header Section -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
-            <h1 class="text-3xl font-extrabold text-slate-800 font-outfit tracking-tight">Resep Menu</h1>
-            <p class="text-slate-500 text-sm mt-1 font-medium">Atur racikan bahan baku (Bill of Materials) untuk setiap menu.</p>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 font-outfit tracking-tight">Resep & Racikan Menu</h1>
+            <p class="text-slate-500 text-sm mt-1 font-medium">Atur racikan bahan baku (Bill of Materials) untuk setiap produk kedai.</p>
         </div>
-        <a href="generate_ai_recipe.php" onclick="return confirm('Ini akan menggunakan AI untuk meracik semua resep kosong secara otomatis. Lanjutkan?')" class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 border border-indigo-400/30">
-            <i class="fas fa-magic"></i> Auto-Generate via AI
+        <a href="generate_ai_recipe.php" onclick="return confirm('Ini akan menggunakan AI untuk meracik semua resep kosong secara otomatis. Lanjutkan?')" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-5 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-indigo-600/20 hover:shadow-xl transition-all flex items-center gap-2 border border-indigo-400/30">
+            <i class="fas fa-magic text-base"></i> Auto-Generate via AI
         </a>
     </div>
 
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <i class="fas fa-utensils text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Menu</p>
+                <p class="text-xl font-extrabold text-slate-800 font-outfit mt-0.5"><?= $totalMenusCount ?></p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <i class="fas fa-check-circle text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Resep Diatur</p>
+                <p class="text-xl font-extrabold text-emerald-600 font-outfit mt-0.5"><?= $configuredRecipesCount ?></p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
+                <i class="fas fa-exclamation-circle text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Belum Ada Resep</p>
+                <p class="text-xl font-extrabold text-rose-500 font-outfit mt-0.5"><?= $missingRecipesCount ?></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm mb-6 flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="recipeSearchInput" onkeyup="filterRecipes()" placeholder="Cari nama menu atau kategori..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+        </div>
+
+        <div class="sm:w-56">
+            <select id="recipeFilterSelect" onchange="filterRecipes()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                <option value="all">Semua Status Resep</option>
+                <option value="configured">Resep Diatur</option>
+                <option value="missing">Belum Ada Resep</option>
+            </select>
+        </div>
+    </div>
+
     <?php if (isset($_GET['success'])): ?>
-    <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl mb-6 font-semibold flex items-center gap-3">
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-2xl mb-6 font-semibold flex items-center gap-3 shadow-sm">
         <i class="fas fa-check-circle text-emerald-500 text-lg"></i>
         Resep berhasil disimpan!
     </div>
     <?php endif; ?>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div id="recipeContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <?php foreach ($menus as $menu): ?>
         <?php 
             $menuRecipes = $recipes[$menu['id']] ?? []; 
             $hasRecipe = count($menuRecipes) > 0;
         ?>
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
-            <div class="p-5 flex gap-4 items-start border-b border-slate-100">
+        <div class="recipe-card bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md transition-all duration-200"
+             data-name="<?= htmlspecialchars(strtolower($menu['name'])) ?>"
+             data-category="<?= htmlspecialchars(strtolower($menu['category_name'])) ?>"
+             data-hasrecipe="<?= $hasRecipe ? '1' : '0' ?>">
+            <div class="p-4 flex gap-4 items-start border-b border-slate-100">
                 <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0">
                     <?php if ($menu['image']): ?>
                         <img src="<?= UPLOADS_URL . '/' . $menu['image'] ?>" class="w-full h-full object-cover">
@@ -79,24 +140,24 @@ include '../includes/header.php';
                         <div class="w-full h-full flex items-center justify-center text-slate-400"><i class="fas fa-utensils text-xl"></i></div>
                     <?php endif; ?>
                 </div>
-                <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider"><?= $menu['category_name'] ?></span>
-                    <h3 class="font-extrabold text-slate-800 font-outfit text-lg leading-tight mt-0.5"><?= htmlspecialchars($menu['name']) ?></h3>
-                    <div class="mt-2">
+                <div class="min-w-0 flex-1">
+                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block truncate"><?= htmlspecialchars($menu['category_name']) ?></span>
+                    <h3 class="font-extrabold text-slate-800 font-outfit text-base leading-tight mt-0.5 truncate" title="<?= htmlspecialchars($menu['name']) ?>"><?= htmlspecialchars($menu['name']) ?></h3>
+                    <div class="mt-1.5">
                         <?php if ($hasRecipe): ?>
-                            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase border border-emerald-100">
-                                <i class="fas fa-check"></i> Resep Diatur
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-extrabold uppercase border border-emerald-200/60">
+                                <i class="fas fa-check text-[9px]"></i> Resep Diatur (<?= count($menuRecipes) ?> Bahan)
                             </span>
                         <?php else: ?>
-                            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-rose-50 text-rose-600 text-[10px] font-bold uppercase border border-rose-100">
-                                <i class="fas fa-exclamation-circle"></i> Belum Ada Resep
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-600 text-[10px] font-extrabold uppercase border border-rose-200/60">
+                                <i class="fas fa-exclamation-circle text-[9px]"></i> Belum Ada Resep
                             </span>
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
             
-            <div class="p-4 bg-slate-50 flex-1 flex flex-col">
+            <div class="p-4 bg-slate-50/50 flex-1 flex flex-col">
                 <?php if ($hasRecipe): ?>
                     <ul class="space-y-2 mb-4 flex-1">
                         <?php foreach ($menuRecipes as $ing): ?>
@@ -213,5 +274,29 @@ function closeRecipeModal() {
     content.classList.add('scale-95', 'opacity-0');
     setTimeout(() => modal.classList.add('hidden'), 300);
 }
+
+function filterRecipes() {
+    const searchVal = document.getElementById('recipeSearchInput').value.toLowerCase().trim();
+    const filterVal = document.getElementById('recipeFilterSelect').value;
+    const cards = document.querySelectorAll('.recipe-card');
+
+    cards.forEach(card => {
+        const name = card.getAttribute('data-name');
+        const category = card.getAttribute('data-category');
+        const hasRecipe = card.getAttribute('data-hasrecipe');
+
+        const matchesSearch = name.includes(searchVal) || category.includes(searchVal);
+        let matchesFilter = true;
+        if (filterVal === 'configured') matchesFilter = (hasRecipe === '1');
+        if (filterVal === 'missing') matchesFilter = (hasRecipe === '0');
+
+        if (matchesSearch && matchesFilter) {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+}
 </script>
 <?php include '../includes/footer.php'; ?>
+

@@ -232,7 +232,7 @@
             </div>
         </main>
 
-        <!-- Grand Opening Promo Modal -->
+         <!-- Welcome Modal -->
         <div id="promoModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 hidden pointer-events-none opacity-0 transition-opacity duration-300">
             <!-- Overlay -->
             <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closePromoModal()"></div>
@@ -245,33 +245,30 @@
                 </button>
                 
                 <!-- Image Header -->
-                <div class="w-full h-48 bg-gradient-to-br from-orange-600 to-red-800 relative flex items-center justify-center p-6">
+                <div class="w-full h-48 bg-gradient-to-br from-blue-600 to-indigo-800 relative flex items-center justify-center p-6">
                     <!-- Decorative elements -->
                     <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                     <div class="absolute bottom-0 left-0 w-24 h-24 bg-black/20 rounded-full blur-xl -ml-5 -mb-5"></div>
                     
                     <div class="text-center relative z-10">
-                        <span class="inline-block bg-amber-500 text-amber-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 shadow-[0_0_15px_rgba(245,158,11,0.4)] border border-amber-400">Spesial Grand Opening</span>
-                        <h3 class="text-3xl font-extrabold text-white font-outfit drop-shadow-lg leading-tight">FREE Wedang Jahe</h3>
+                        <span class="inline-block bg-blue-500/20 text-blue-200 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 border border-blue-400/30">Selamat Datang</span>
+                        <h3 class="text-3xl font-extrabold text-white font-outfit drop-shadow-lg leading-tight">Halo, Kak!</h3>
                     </div>
                 </div>
                 
                 <div class="p-6 text-center bg-slate-800 relative">
-                    <!-- Gift Icon overlay -->
+                    <!-- Icon overlay -->
                     <div class="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] border border-slate-700/80">
-                        <i class="fas fa-gift text-2xl text-orange-400 animate-bounce drop-shadow-sm"></i>
+                        <i class="fas fa-mug-hot text-2xl text-blue-400 animate-bounce drop-shadow-sm"></i>
                     </div>
                     
                     <div class="pt-6">
                         <p class="text-slate-300 text-sm font-medium leading-relaxed mb-6">
-                            Khusus hari ini! Nikmati kehangatan Wedang Jahe khas kami secara <strong>GRATIS</strong> untuk setiap pemesanan.
+                            Selamat datang di warung <strong>ArrahmanHerb</strong>! Silakan pilih menu kesukaanmu dan nikmati racikan spesial dari kami. Selamat bersantai!
                         </p>
                         
-                        <button onclick="claimPromo()" class="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-[0_8px_20px_-6px_rgba(249,115,22,0.5)] transition-all flex items-center justify-center gap-2 font-outfit text-lg hover:-translate-y-0.5">
-                            Klaim Promo Sekarang
-                        </button>
-                        <button onclick="closePromoModal()" class="w-full mt-3 text-slate-500 hover:text-slate-400 text-sm font-medium transition-colors">
-                            Mungkin Nanti
+                        <button onclick="closePromoModal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-[0_8px_20px_-6px_rgba(37,99,235,0.5)] transition-all flex items-center justify-center gap-2 font-outfit text-lg hover:-translate-y-0.5">
+                            <i class="fas fa-utensils text-sm"></i> Lihat Menu
                         </button>
                     </div>
                 </div>

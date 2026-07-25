@@ -112,9 +112,8 @@ function generateQRSVG($text, $size = 350) {
     return "https://api.qrserver.com/v1/create-qr-code/?size={$size}x{$size}&data=" . $encodedText;
 }
 
-// Generate the dynamic QRIS string based on the total order amount (+ admin fee)
-$amountWithAdmin = $order['amount'] + 1000;
-$dynamicQrisString = QrisGenerator::generateDynamic($amountWithAdmin);
+// Generate the dynamic QRIS string based on the total order amount (no admin fee)
+$dynamicQrisString = QrisGenerator::generateDynamic($order['amount']);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -312,16 +311,12 @@ $dynamicQrisString = QrisGenerator::generateDynamic($amountWithAdmin);
                     <span class="font-bold text-slate-200 bg-slate-800 px-3 py-1 rounded-lg border border-slate-600 shadow-sm">#<?= $order['order_number'] ?></span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-slate-400 font-medium text-sm">Subtotal Pesanan</span>
+                    <span class="text-slate-400 font-medium text-sm">Subtotal</span>
                     <span class="font-bold text-slate-300"><?= formatRupiah($order['amount']) ?></span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-slate-400 font-medium text-sm">Biaya Admin (QRIS)</span>
-                    <span class="font-bold text-slate-300"><?= formatRupiah(1000) ?></span>
                 </div>
                 <div class="flex justify-between items-center pt-2 border-t border-slate-700/50">
                     <span class="text-slate-200 font-bold">Total Transfer</span>
-                    <span class="text-2xl font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)] font-outfit"><?= formatRupiah($order['amount'] + 1000) ?></span>
+                    <span class="text-2xl font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)] font-outfit"><?= formatRupiah($order['amount']) ?></span>
                 </div>
                 <div class="flex justify-between items-center pt-3 border-t border-slate-700/50">
                     <span class="text-slate-400 font-medium text-sm">Status</span>
@@ -377,7 +372,7 @@ $dynamicQrisString = QrisGenerator::generateDynamic($amountWithAdmin);
                         <div class="flex items-start gap-3 p-3 bg-emerald-900/20 border border-emerald-500/30 rounded-xl">
                             <i class="fas fa-check-circle text-emerald-400 text-lg mt-0.5"></i>
                             <p class="text-emerald-300 text-xs sm:text-sm font-medium leading-relaxed">
-                                Nominal pembayaran <strong><?= formatRupiah($order['amount'] + 1000) ?></strong> akan terisi <span class="font-bold text-emerald-200">otomatis</span> di aplikasi Anda. Anda tinggal konfirmasi dan bayar!
+                                Nominal pembayaran <strong><?= formatRupiah($order['amount']) ?></strong> akan terisi <span class="font-bold text-emerald-200">otomatis</span> di aplikasi Anda. Anda tinggal konfirmasi dan bayar!
                             </p>
                         </div>
                     </div>
@@ -385,57 +380,32 @@ $dynamicQrisString = QrisGenerator::generateDynamic($amountWithAdmin);
             </div>
         </div>
 
-        <?php if (!$order['proof_of_payment']): ?>
+        <!-- CONFIRM PAYMENT BUTTON -->
         <div class="bg-white/5 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-white/10 p-6 sm:p-8 mb-8 overflow-hidden relative">
             <!-- Decorative Elements -->
-            <div class="absolute -top-24 -right-24 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
             <div class="relative z-10 text-center mb-6">
-                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 mb-3">
-                    <i class="fas fa-cloud-upload-alt text-xl"></i>
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 mb-4">
+                    <i class="fas fa-check-double text-2xl"></i>
                 </div>
-                <h2 class="font-outfit text-xl font-bold text-slate-100">Upload Bukti Transfer</h2>
-                <p class="text-sm text-slate-400 mt-1">Sertakan screenshot untuk mempercepat verifikasi</p>
+                <h2 class="font-outfit text-xl font-bold text-slate-100">Sudah Melakukan Pembayaran?</h2>
+                <p class="text-sm text-slate-400 mt-1">Tekan tombol di bawah setelah scan & bayar QRIS berhasil</p>
             </div>
-            
-            <form method="POST" enctype="multipart/form-data" class="relative z-10 space-y-5">
-                <label class="block group relative cursor-pointer">
-                    <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
-                    <div class="relative border border-slate-600/50 group-hover:border-blue-500/50 bg-slate-900/40 rounded-2xl p-6 sm:p-10 transition-all duration-300 flex flex-col items-center justify-center text-center">
-                        
-                        <div class="w-14 h-14 bg-slate-800/80 rounded-xl border border-slate-700/50 flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 group-hover:bg-blue-900/30 group-hover:border-blue-500/30 transition-all duration-300">
-                            <i class="fas fa-image text-slate-400 group-hover:text-blue-400 text-xl transition-colors"></i>
-                        </div>
-                        
-                        <span class="text-slate-200 font-semibold mb-1 group-hover:text-blue-400 transition-colors" id="file-name-display">Tap untuk pilih foto (Galeri/Kamera)</span>
-                        <span class="text-xs text-slate-400">Format: JPG, PNG (Maksimal 5 MB)</span>
-                        
-                    </div>
-                    <input type="file" name="payment_proof" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required onchange="document.getElementById('file-name-display').textContent = this.files[0] ? this.files[0].name : 'Tap untuk pilih foto (Galeri/Kamera)'">
-                </label>
-                
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-4 px-6 rounded-xl shadow-lg shadow-blue-900/20 hover:shadow-blue-500/40 transition-all duration-300 text-[15px] flex items-center justify-center gap-2 group active:scale-[0.98]">
-                    Kirim Bukti Pembayaran
+
+            <div class="relative z-10">
+                <button id="confirmPaymentBtn" onclick="confirmQrisPayment()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-extrabold py-5 px-6 rounded-2xl shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/30 transition-all duration-300 text-lg flex items-center justify-center gap-3 group active:scale-[0.98] font-outfit">
+                    <i class="fas fa-check-circle text-xl"></i>
+                    Saya Sudah Bayar
                     <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
                 </button>
-            </form>
-        </div>
-        <?php else: ?>
-        <div class="bg-gradient-to-br from-amber-900/30 to-orange-900/30 backdrop-blur-md border border-amber-500/30 rounded-3xl p-8 mb-6 shadow-xl text-center">
-            <div class="w-16 h-16 bg-amber-900/50 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                <i class="fas fa-hourglass-half text-amber-400 text-2xl animate-pulse"></i>
-            </div>
-            <h2 class="font-extrabold text-2xl mb-4 text-amber-400 font-outfit drop-shadow-sm">Bukti Sedang Diproses</h2>
-            
-            <div class="bg-slate-900/60 backdrop-blur-sm rounded-xl p-5 border border-amber-500/20 max-w-sm mx-auto">
-                <p class="text-amber-400 font-medium flex items-center justify-center gap-3">
-                    <span class="animate-spin"><i class="fas fa-circle-notch text-amber-500 text-xl"></i></span>
-                    Mohon tunggu, Pembayaran sedang dalam proses pengecekan...
+                <p class="text-center text-xs text-slate-500 mt-3">
+                    <i class="fas fa-shield-alt mr-1"></i>
+                    Pesanan otomatis masuk ke dapur setelah konfirmasi
                 </p>
             </div>
         </div>
-        <?php endif; ?>
 
         <div class="text-center pb-6">
             <a href="menu.php" class="inline-flex items-center text-slate-300 hover:text-white font-bold bg-slate-800 hover:bg-slate-700 px-6 py-3 rounded-full shadow-md border border-slate-600 transition-colors">
@@ -443,58 +413,146 @@ $dynamicQrisString = QrisGenerator::generateDynamic($amountWithAdmin);
             </a>
         </div>
         <?php endif; ?>
+
     </main>
 
-    <script>
-        // Handle form submission - simple version
-        document.querySelector('form')?.addEventListener('submit', function(e) {
-            const fileInput = this.querySelector('input[type="file"]');
-            
-            if (!fileInput.files || fileInput.files.length === 0) {
-                alert('Silahkan pilih foto terlebih dahulu');
-                e.preventDefault();
-                return false;
-            }
-            
-            const file = fileInput.files[0];
-            
-            // Log file info
-            console.log('File submit:', {
-                name: file.name,
-                size: file.size,
-                type: file.type
-            });
-            
-            // Check file size
-            if (file.size > 5 * 1024 * 1024) {
-                alert('File terlalu besar! Max 5MB. Ukuran file: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB');
-                e.preventDefault();
-                return false;
-            }
-            
-            // Form akan submit normally
-        });
+    <!-- Loading Overlay (hidden by default) -->
+    <div id="paymentLoadingOverlay" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/95 backdrop-blur-sm">
+        <div class="text-center px-8">
+            <!-- Animated spinner -->
+            <div class="relative w-28 h-28 mx-auto mb-8">
+                <div class="absolute inset-0 rounded-full border-4 border-emerald-500/20"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-t-emerald-400 animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i class="fas fa-qrcode text-4xl text-emerald-400"></i>
+                </div>
+            </div>
 
-        <?php if (!$isVerified && !$isRejected): ?>
-        // Polling untuk check status verification (every 1 second)
-        let checkCount = 0;
-        function checkPaymentStatus() {
-            checkCount++;
-            
-            fetch('check_payment_status.php?order=<?= $orderNumber ?>&t=' + Date.now())
+            <h2 class="text-2xl font-extrabold text-white font-outfit mb-3">Memproses Pembayaran...</h2>
+            <p class="text-slate-400 text-sm mb-6">Harap tunggu, kami sedang memverifikasi transaksi QRIS Anda</p>
+
+            <!-- Progress bar -->
+            <div class="w-64 mx-auto bg-slate-700/50 rounded-full h-1.5 overflow-hidden">
+                <div id="paymentProgressBar" class="h-full bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full transition-all duration-100" style="width:0%"></div>
+            </div>
+            <p id="paymentLoadingMsg" class="text-xs text-slate-500 mt-3">Menghubungkan ke server...</p>
+        </div>
+    </div>
+
+    <script>
+        function confirmQrisPayment() {
+            const btn = document.getElementById('confirmPaymentBtn');
+            const overlay = document.getElementById('paymentLoadingOverlay');
+            const progressBar = document.getElementById('paymentProgressBar');
+            const loadingMsg = document.getElementById('paymentLoadingMsg');
+
+            // Disable button to prevent double submit
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // Show overlay
+            overlay.classList.remove('hidden');
+
+            // Animate progress bar over 3 seconds
+            const messages = [
+                'Menghubungkan ke server...',
+                'Memverifikasi transaksi QRIS...',
+                'Mengkonfirmasi pesanan ke dapur...',
+                'Hampir selesai...'
+            ];
+            let progress = 0;
+            let msgIdx = 0;
+
+            const progressInterval = setInterval(() => {
+                progress = Math.min(progress + 1.5, 90); // cap at 90, jump to 100 on success
+                progressBar.style.width = progress + '%';
+                if (progress > 20 && msgIdx === 0) { msgIdx = 1; loadingMsg.textContent = messages[1]; }
+                if (progress > 50 && msgIdx === 1) { msgIdx = 2; loadingMsg.textContent = messages[2]; }
+                if (progress > 75 && msgIdx === 2) { msgIdx = 3; loadingMsg.textContent = messages[3]; }
+            }, 50);
+
+            // After 3 seconds, send confirm request
+            setTimeout(() => {
+                const formData = new FormData();
+                formData.append('order', '<?= htmlspecialchars($orderNumber) ?>');
+
+                fetch('confirm_qris.php', {
+                    method: 'POST',
+                    body: formData
+                })
                 .then(r => r.json())
                 .then(data => {
-                    if (data.status !== 'pending') {
-                        location.reload();
+                    clearInterval(progressInterval);
+                    if (data.success) {
+                        progressBar.style.width = '100%';
+                        loadingMsg.textContent = 'Pembayaran berhasil!';
+                        // Redirect to order success page after short delay
+                        setTimeout(() => {
+                            window.location.href = 'order_success.php?order=<?= htmlspecialchars($orderNumber) ?>';
+                        }, 600);
+                    } else {
+                        overlay.classList.add('hidden');
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        alert('Gagal: ' + data.message + '\nSilahkan coba lagi.');
                     }
                 })
-                .catch(e => console.log('Status check error:', e));
+                .catch(err => {
+                    clearInterval(progressInterval);
+                    overlay.classList.add('hidden');
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    alert('Terjadi kesalahan koneksi. Silahkan coba lagi.');
+                });
+            }, 3000);
         }
+
+        <?php if (!$isVerified && !$isRejected): ?>
+        // Real-time polling for payment verification status (check every 1 second)
+        let statusCheckCount = 0;
+        const maxStatusChecks = 300; // 5 minutes max polling
         
-        // Start polling
-        checkPaymentStatus();
-        setInterval(checkPaymentStatus, 1000);
+        function checkPaymentStatusRealTime() {
+            statusCheckCount++;
+            
+            if (statusCheckCount > maxStatusChecks) {
+                console.log('Status check timeout');
+                return;
+            }
+
+            fetch('check_payment_status.php?order=<?= htmlspecialchars($orderNumber) ?>&t=' + Date.now())
+                .then(r => r.json())
+                .then(data => {
+                    console.log('Payment status:', data);
+                    
+                    // Auto-reload if verified or rejected
+                    if (data.verified === true) {
+                        console.log('Payment verified! Reloading...');
+                        setTimeout(() => location.reload(), 500);
+                        return;
+                    }
+                    
+                    // Continue polling if still pending
+                    if (data.status === 'pending' || data.verified === false) {
+                        setTimeout(checkPaymentStatusRealTime, 1000);
+                    } else {
+                        // Unknown status, reload page
+                        setTimeout(() => location.reload(), 500);
+                    }
+                })
+                .catch(e => {
+                    console.log('Status check error:', e);
+                    // Retry on error
+                    if (statusCheckCount < maxStatusChecks) {
+                        setTimeout(checkPaymentStatusRealTime, 2000);
+                    }
+                });
+        }
+
+        // Start polling immediately when page loads
+        checkPaymentStatusRealTime();
         <?php endif; ?>
     </script>
 </body>
 </html>
+

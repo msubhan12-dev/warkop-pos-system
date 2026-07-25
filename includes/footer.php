@@ -1,6 +1,31 @@
         </main>
     </div>
 
+    <!-- Mobile Bottom Navigation -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex flex-nowrap px-2 pb-1 pt-2 z-[60] shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.1)] overflow-x-auto" style="scrollbar-width: none; -ms-overflow-style: none;">
+        <style>
+            nav.md\\:hidden::-webkit-scrollbar { display: none; }
+            .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0.5rem); }
+        </style>
+        <div class="flex pb-safe w-full justify-start space-x-2">
+        <?php 
+        if (isset($navItems)): 
+            foreach ($navItems as $item): 
+                if (!isset($userRole) || !in_array($userRole, $item['roles'])) continue;
+                $isActive = (isset($currentPage) && $currentPage == basename($item['url']) . '.php');
+                if (isset($currentDir) && $currentDir == 'kasir' && $item['label'] == 'POS Kasir') $isActive = true;
+        ?>
+            <a href="<?= $item['url'] ?>" class="flex flex-col items-center justify-center w-16 min-w-[64px] py-1 shrink-0 rounded-xl <?= $isActive ? 'text-emerald-600 bg-emerald-50 font-bold' : 'text-slate-400 hover:text-emerald-500 hover:bg-slate-50 transition-colors' ?>">
+                <i class="fas <?= $item['icon'] ?> text-lg mb-1"></i>
+                <span class="text-[9px] font-medium font-outfit truncate w-full text-center px-1"><?= $item['label'] ?></span>
+            </a>
+        <?php 
+            endforeach; 
+        endif; 
+        ?>
+        </div>
+    </nav>
+
     <script>
         function toggleMobileMenu() {
             const sidebar = document.getElementById('mobileSidebar');

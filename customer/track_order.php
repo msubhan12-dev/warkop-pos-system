@@ -261,5 +261,14 @@
         </main>
 
         <?php include 'bottom_nav.php'; ?>
+        
+        <?php if ($order && !in_array($order['status'], ['completed', 'cancelled'])): ?>
+        <script>
+            // Auto refresh every 10 seconds to check for status updates
+            setTimeout(function() {
+                window.location.reload();
+            }, 10000);
+        </script>
+        <?php endif; ?>
     </body>
     </html>

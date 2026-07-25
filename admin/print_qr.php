@@ -1,6 +1,6 @@
 <?php
 require_once '../config/config.php';
-requireRole(['owner', 'admin']);
+requireRole(['owner']);
 
 $tableId = (int)($_GET['id'] ?? 0);
 

@@ -1,6 +1,6 @@
 <?php
 require_once '../config/config.php';
-requireRole(['kasir', 'owner']);
+requireRole(['kasir', 'owner', 'admin']);
 
 $orderId = (int)($_GET['order'] ?? 0);
 if (!$orderId) {
@@ -59,7 +59,7 @@ $payment = getPaymentDetails($orderId);
             font-family: 'Courier New', Courier, monospace;
             background: white;
             color: black;
-            padding: 3mm;
+            padding: 15mm 3mm 10mm 3mm; /* Top padding 15mm to avoid cutoff */
             width: 100%;
         }
         
@@ -195,7 +195,7 @@ $payment = getPaymentDetails($orderId);
             </div>
             <div class="info-row">
                 <span class="info-label">Tanggal:</span>
-                <span><?= date('d/m/Y H:i', strtotime($order['created_at']) + 25200) ?></span>
+                <span><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></span>
             </div>
             <div class="info-row">
                 <span class="info-label">Pelanggan:</span>
@@ -334,10 +334,10 @@ $payment = getPaymentDetails($orderId);
     <?php
     // Generate plain text receipt for Thermal Apps
     $rawText = "      " . APP_NAME . "\n";
-    $rawText .= "      Sistem Kasir Terpadu\n";
-    $rawText .= "================================\n";
+    $rawText .= str_pad("Sistem Kasir Terpadu", 32, " ", STR_PAD_BOTH) . "\n";
+    $rawText .= str_pad("", 32, "=") . "\n";
     $rawText .= "No. Pesanan: " . $order['order_number'] . "\n";
-    $rawText .= "Tanggal: " . date('d/m/Y H:i', strtotime($order['created_at']) + 25200) . "\n";
+    $rawText .= "Tanggal: " . date('d/m/Y H:i', strtotime($order['created_at'])) . "\n";
     $rawText .= "Pelanggan: " . $order['customer_name'] . "\n";
     if ($order['table_number']) $rawText .= "Nomor Meja: Meja " . $order['table_number'] . "\n";
     else $rawText .= "Tipe: Take Away\n";
