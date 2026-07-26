@@ -72,6 +72,9 @@ include '../includes/header.php';
                         <?php endif; ?>
                     </button>
                     <!-- Mobile-only payment/logout links -->
+                    <a href="../admin/revenue.php" class="text-stone-500 hover:text-emerald-600 bg-stone-100 hover:bg-emerald-50 p-2.5 rounded-full flex items-center justify-center transition" title="Laporan Pendapatan">
+                        <i class="fas fa-chart-line text-lg"></i>
+                    </a>
                     <a href="payments.php" class="md:hidden text-stone-500 hover:text-emerald-600 bg-stone-100 hover:bg-emerald-50 p-2.5 rounded-full flex items-center justify-center transition" title="Verifikasi Pembayaran">
                         <i class="fas fa-credit-card text-lg"></i>
                     </a>

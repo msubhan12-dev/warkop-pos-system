@@ -107,13 +107,13 @@ try {
         ]);
     }
     
-    // Create payment record (pending)
+    // Create payment record (auto-success for POS cash orders)
     $stmt = $db->prepare("
         INSERT INTO payments (
             order_id, payment_method, amount, paid_amount, status, created_by
-        ) VALUES (?, 'cash', ?, 0, 'pending', ?)
+        ) VALUES (?, 'cash', ?, ?, 'success', ?)
     ");
-    $stmt->execute([$orderId, $total, $_SESSION['user_id']]);
+    $stmt->execute([$orderId, $total, $total, $_SESSION['user_id']]);
     
     // Update table status if dine in
     if ($tableId) {

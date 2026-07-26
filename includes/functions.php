@@ -366,3 +366,33 @@ function getPaymentDetails($orderId) {
     $stmt->execute([$orderId]);
     return $stmt->fetch();
 }
+
+/**
+ * Auto-delete old payment records (older than 24 hours)
+ * Can be called via cron job or manually
+ */
+function autoDeleteOldPaymentRecords($db = null) {
+    if ($db === null) {
+        $db = getDB();
+    }
+    
+    try {
+        // Delete payment records older than 24 hours
+        $stmt = $db->prepare("
+            DELETE FROM payments 
+            WHERE DATE(created_at) < DATE_SUB(NOW(), INTERVAL 1 DAY) 
+            AND verification_status IN ('verified', 'rejected')
+        ");
+        $stmt->execute();
+        
+        return [
+            'success' => true,
+            'deleted' => $stmt->rowCount()
+        ];
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'error' => $e->getMessage()
+        ];
+    }
+}

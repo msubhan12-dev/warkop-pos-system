@@ -37,7 +37,7 @@ $stmt = $db->query("SELECT * FROM ingredients ORDER BY name");
 $allIngredients = $stmt->fetchAll();
 
 // Fetch current recipes mapped by menu_id
-$stmt = $db->query("SELECT mr.menu_id, mr.ingredient_id, mr.amount_required, i.name, i.unit FROM menu_recipes mr JOIN ingredients i ON mr.ingredient_id = i.id");
+$stmt = $db->query("SELECT mr.menu_id, mr.ingredient_id, mr.quantity_needed, i.name, i.unit FROM menu_recipes mr JOIN ingredients i ON mr.ingredient_id = i.id");
 $recipesData = $stmt->fetchAll();
 $recipes = [];
 foreach ($recipesData as $row) {
@@ -163,7 +163,7 @@ include '../includes/header.php';
                         <?php foreach ($menuRecipes as $ing): ?>
                         <li class="flex justify-between items-center text-sm">
                             <span class="text-slate-600 font-medium"><i class="fas fa-circle text-[6px] text-slate-300 mr-2 relative -top-0.5"></i><?= htmlspecialchars($ing['name']) ?></span>
-                            <span class="font-bold text-slate-800"><?= $ing['amount_required'] ?> <span class="text-slate-400 text-xs font-semibold"><?= $ing['unit'] ?></span></span>
+                            <span class="font-bold text-slate-800"><?= $ing['quantity_needed'] ?? $ing['amount_required'] ?> <span class="text-slate-400 text-xs font-semibold"><?= $ing['unit'] ?></span></span>
                         </li>
                         <?php endforeach; ?>
                     </ul>

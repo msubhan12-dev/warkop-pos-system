@@ -5,8 +5,8 @@ $pageTitle = 'Laporan Keuangan & Stok';
 $user = getCurrentUser();
 $db = getDB();
 
-// Get Daily Sales
-$stmt = $db->query("SELECT DATE(created_at) as date, COUNT(*) as orders, SUM(total) as revenue FROM orders WHERE status = 'completed' GROUP BY DATE(created_at) ORDER BY date DESC LIMIT 30");
+// Get Daily Sales (same status filter as revenue.php)
+$stmt = $db->query("SELECT DATE(created_at) as date, COUNT(*) as orders, SUM(total) as revenue FROM orders WHERE status IN ('confirmed', 'cooking', 'ready', 'served', 'completed') GROUP BY DATE(created_at) ORDER BY date DESC LIMIT 30");
 $dailyReport = $stmt->fetchAll();
 
 // Get Recent Expenses

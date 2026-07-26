@@ -1,24 +1,25 @@
 <?php
 $currentPage = basename($_SERVER['PHP_SELF']);
 $currentDir = basename(dirname($_SERVER['PHP_SELF']));
-$isPosPage = in_array($currentPage, ['pos.php']) || ($currentDir == 'kasir' && in_array($currentPage, ['index.php', 'payments.php']));
+$isPosPage = in_array($currentPage, ['pos.php']) || in_array($currentPage, ['index.php', 'payments.php']);
 $sidebarCollapsed = $isPosPage ? true : false;
-$basePath = ($currentDir == 'kasir') ? '../admin/' : '';
+$basePath = '';
 $userRole = $user['role'] ?? 'pelayan'; 
 
 $navItems = [
-    ['url' => $basePath . 'index', 'icon' => 'fa-chart-pie', 'label' => 'Dashboard', 'color' => 'text-emerald-400', 'roles' => ['owner']],
-    ['url' => ($currentDir == 'kasir' ? 'index' : 'pos'), 'icon' => 'fa-cash-register', 'label' => 'POS Kasir', 'color' => 'text-blue-400', 'roles' => ['owner', 'admin', 'kasir']],
-    ['url' => $basePath . 'kitchen', 'icon' => 'fa-fire', 'label' => 'Dapur', 'color' => 'text-orange-400', 'roles' => ['owner', 'admin', 'pelayan']],
-    ['url' => $basePath . 'orders', 'icon' => 'fa-receipt', 'label' => 'Pesanan', 'color' => 'text-indigo-400', 'roles' => ['owner', 'admin', 'kasir', 'pelayan']],
-    ['url' => $basePath . 'menu', 'icon' => 'fa-utensils', 'label' => 'Menu', 'color' => 'text-rose-400', 'roles' => ['owner']],
-    ['url' => $basePath . 'stock', 'icon' => 'fa-boxes', 'label' => 'Stok Bahan', 'color' => 'text-amber-400', 'roles' => ['owner']],
-    ['url' => $basePath . 'recipes', 'icon' => 'fa-clipboard-list', 'label' => 'Resep', 'color' => 'text-lime-400', 'roles' => ['owner']],
-    ['url' => $basePath . 'tables', 'icon' => 'fa-chair', 'label' => 'Meja', 'color' => 'text-purple-400', 'roles' => ['owner', 'admin', 'kasir']],
-    ['url' => $basePath . 'promos', 'icon' => 'fa-tags', 'label' => 'Promo', 'color' => 'text-pink-400', 'roles' => ['owner']],
-    ['url' => $basePath . 'reels', 'icon' => 'fa-video', 'label' => 'Reels', 'color' => 'text-fuchsia-400', 'roles' => ['owner']],
-    ['url' => $basePath . 'reports', 'icon' => 'fa-file-invoice-dollar', 'label' => 'Laporan', 'color' => 'text-teal-400', 'roles' => ['owner']],
-    ['url' => $basePath . 'users', 'icon' => 'fa-users', 'label' => 'Karyawan', 'color' => 'text-cyan-400', 'roles' => ['owner']]
+    ['url' => 'index', 'icon' => 'fa-chart-pie', 'label' => 'Dashboard', 'color' => 'text-emerald-400', 'roles' => ['owner']],
+    ['url' => 'pos', 'icon' => 'fa-cash-register', 'label' => 'POS Kasir', 'color' => 'text-blue-400', 'roles' => ['owner', 'admin', 'kasir']],
+    ['url' => 'revenue', 'icon' => 'fa-chart-line', 'label' => 'Pendapatan', 'color' => 'text-teal-400', 'roles' => ['owner', 'admin', 'kasir']],
+    ['url' => 'kitchen', 'icon' => 'fa-fire', 'label' => 'Dapur', 'color' => 'text-orange-400', 'roles' => ['owner', 'admin', 'pelayan']],
+    ['url' => 'orders', 'icon' => 'fa-receipt', 'label' => 'Pesanan', 'color' => 'text-indigo-400', 'roles' => ['owner', 'admin', 'kasir', 'pelayan']],
+    ['url' => 'menu', 'icon' => 'fa-utensils', 'label' => 'Menu', 'color' => 'text-rose-400', 'roles' => ['owner']],
+    ['url' => 'stock', 'icon' => 'fa-boxes', 'label' => 'Stok Bahan', 'color' => 'text-amber-400', 'roles' => ['owner']],
+    ['url' => 'recipes', 'icon' => 'fa-clipboard-list', 'label' => 'Resep', 'color' => 'text-lime-400', 'roles' => ['owner']],
+    ['url' => 'tables', 'icon' => 'fa-chair', 'label' => 'Meja', 'color' => 'text-purple-400', 'roles' => ['owner', 'admin', 'kasir']],
+    ['url' => 'promos', 'icon' => 'fa-tags', 'label' => 'Promo', 'color' => 'text-pink-400', 'roles' => ['owner']],
+    ['url' => 'reels', 'icon' => 'fa-video', 'label' => 'Reels', 'color' => 'text-fuchsia-400', 'roles' => ['owner']],
+    ['url' => 'reports', 'icon' => 'fa-file-invoice-dollar', 'label' => 'Laporan', 'color' => 'text-teal-400', 'roles' => ['owner']],
+    ['url' => 'users', 'icon' => 'fa-users', 'label' => 'Karyawan', 'color' => 'text-cyan-400', 'roles' => ['owner']]
 ];
 ?>
 <!DOCTYPE html>
@@ -64,6 +65,7 @@ $navItems = [
                 if (!in_array($userRole, $item['roles'])) continue;
                 $isActive = ($currentPage == basename($item['url']) . '.php');
                 if ($currentDir == 'kasir' && $item['label'] == 'POS Kasir') $isActive = true;
+                if ($currentPage == 'pos.php' && $item['label'] == 'POS Kasir') $isActive = true;
             ?>
                 <a href="<?= $item['url'] ?>" class="nav-link flex items-center space-x-3 p-3 <?= $isActive ? 'bg-slate-800/80 text-white shadow-inner border-l-2 border-emerald-500' : 'text-slate-400 hover:bg-slate-800 hover:text-white' ?> rounded-xl transition-all duration-200 group/link whitespace-nowrap" title="<?= $item['label'] ?>">
                     <div class="w-6 flex justify-center shrink-0">
@@ -133,4 +135,4 @@ $navItems = [
         </div>
 
         <!-- Page Content -->
-        <main class="flex-1 <?= $isPosPage ? 'flex flex-col overflow-hidden pb-16 md:pb-0' : 'overflow-auto pb-16 md:pb-0' ?> bg-slate-50/50 relative">
+        <main class="flex-1 <?= $isPosPage ? 'flex flex-col overflow-hidden pb-16 md:pb-0' : 'overflow-y-auto pb-16 md:pb-0' ?> bg-slate-50/50 relative">

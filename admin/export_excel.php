@@ -8,14 +8,14 @@ $month = date('m');
 $year = date('Y');
 $bulan = date('F Y');
 
-// Get Revenue (Pendapatan) for current month - grouped per day with order count
+// Get Revenue (Pendapatan) for current month - grouped per day with order count (same status filter as revenue.php)
 $stmt_rev = $db->prepare("
     SELECT 
         DATE(created_at) as date, 
         COUNT(*) as order_count,
         SUM(total) as amount 
     FROM orders 
-    WHERE status = 'completed' AND MONTH(created_at) = ? AND YEAR(created_at) = ?
+    WHERE status IN ('confirmed', 'cooking', 'ready', 'served', 'completed') AND MONTH(created_at) = ? AND YEAR(created_at) = ?
     GROUP BY DATE(created_at)
     ORDER BY date ASC
 ");

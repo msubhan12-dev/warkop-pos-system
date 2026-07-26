@@ -276,13 +276,23 @@ $payment = getPaymentDetails($orderId);
             <?php endif; ?>
         </div>
         
+        <?php 
+            // Determine payment status based on payment data
+            $paymentStatus = 'BELUM BAYAR';
+            if ($payment['status'] === 'success' || $payment['verification_status'] === 'verified' || $payment['paid_amount'] > 0) {
+                $paymentStatus = 'LUNAS / PAID';
+            }
+        ?>
         <div class="payment-status-box">
-            *** <?= $payment['status'] === 'success' ? 'LUNAS / PAID' : 'BELUM BAYAR' ?> ***
+            *** <?= $paymentStatus ?> ***
         </div>
         <?php endif; ?>
         
         <!-- Footer -->
         <div class="footer">
+            <div class="footer-line">------------------------</div>
+            <div class="footer-line" style="font-size: 7.5pt; margin-bottom: 1.5mm;">WiFi Password:</div>
+            <div class="footer-line" style="font-size: 8.5pt; font-weight: bold; margin-bottom: 2mm; letter-spacing: 0.08em;">Bismillah2026</div>
             <div class="footer-line">------------------------</div>
             <div class="footer-line">Terima Kasih!</div>
             <div class="footer-line">Selamat Menikmati</div>
@@ -361,10 +371,15 @@ $payment = getPaymentDetails($orderId);
     if ($payment) {
         $method = $payment['payment_method'] === 'qris' ? 'QRIS' : ($payment['payment_method'] === 'transfer' ? 'TRANSFER' : 'TUNAI');
         $rawText .= "Metode: " . $method . "\n";
-        $status = $payment['status'] === 'success' ? 'LUNAS / PAID' : 'BELUM BAYAR';
-        $rawText .= "\n*** " . $status . " ***\n";
+        $paymentStatus = 'BELUM BAYAR';
+        if ($payment['status'] === 'success' || $payment['verification_status'] === 'verified' || $payment['paid_amount'] > 0) {
+            $paymentStatus = 'LUNAS / PAID';
+        }
+        $rawText .= "\n*** " . $paymentStatus . " ***\n";
     }
     
+    $rawText .= "--------------------------------\n";
+    $rawText .= "    WiFi: Bismillah2026    \n";
     $rawText .= "--------------------------------\n";
     $rawText .= "         Terima Kasih!          \n";
     $rawText .= "       Selamat Menikmati        \n";

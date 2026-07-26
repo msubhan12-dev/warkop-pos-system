@@ -9,13 +9,13 @@ if (isset($_SESSION['user_id'])) {
             header('Location: admin/index.php');
             break;
         case 'kasir':
-            header('Location: kasir/index.php');
+            header('Location: admin/pos.php');
             break;
         case 'dapur':
             header('Location: dapur/index.php');
             break;
         case 'pelayan':
-            header('Location: kasir/index.php');
+            header('Location: admin/pos.php');
             break;
         default:
             header('Location: customer/menu.php');
@@ -64,13 +64,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header('Location: admin/index.php');
                     break;
                 case 'kasir':
-                    header('Location: kasir/index.php');
+                    header('Location: admin/pos.php');
                     break;
                 case 'dapur':
                     header('Location: dapur/index.php');
                     break;
                 case 'pelayan':
-                    header('Location: kasir/index.php');
+                    header('Location: admin/pos.php');
                     break;
                 default:
                     header('Location: customer/menu.php');

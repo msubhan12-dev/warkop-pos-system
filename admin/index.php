@@ -70,6 +70,7 @@ $paymentMethods = $stmt->fetchAll();
 $pageTitle = 'Dashboard Owner';
 include '../includes/header.php';
 ?>
+            <div class="overflow-y-auto h-full">
             <div class="p-4 sm:p-6 pb-32 sm:pb-24 max-w-7xl mx-auto w-full">
                 <!-- Header Info -->
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -240,9 +241,7 @@ include '../includes/header.php';
                 </div>
             </div>
         </div>
-            </main>
-        </div> <!-- Close Main View Area -->
-    </div> <!-- Close flex min-h-screen -->
+            </div>
 
     <script>
         // Format Rupiah

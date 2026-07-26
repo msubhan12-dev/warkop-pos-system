@@ -20,6 +20,35 @@ class NotificationSound {
     }
     
     /**
+     * Play notification with Indonesian voice message
+     */
+    async playWithVoiceMessage(message = 'Pesanan baru masuk') {
+        // Play generated tone first
+        await this.play();
+        
+        // Then play voice message if supported
+        if ('speechSynthesis' in window) {
+            this.playVoiceMessage(message);
+        }
+    }
+    
+    /**
+     * Play Indonesian voice message
+     */
+    playVoiceMessage(message) {
+        // Cancel any ongoing speech
+        speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = 'id-ID'; // Indonesian
+        utterance.rate = 0.9; // Slightly slower for clarity
+        utterance.pitch = 1.0;
+        utterance.volume = 0.8;
+        
+        speechSynthesis.speak(utterance);
+    }
+    
+    /**
      * Play notification sound
      * Try audio file first, fallback to generated tone
      */

@@ -16,7 +16,7 @@ if (!$payment) {
     die("Payment tidak ditemukan.");
 }
 
-$amount = $payment['amount'] + 1000; // Biaya Admin
+$amount = $payment['amount']; // Tanpa biaya admin untuk QRIS
 $dynamicQrisString = QrisGenerator::generateDynamic($amount);
 $encodedText = urlencode($dynamicQrisString);
 $url = "https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=" . $encodedText;

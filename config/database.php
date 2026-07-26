@@ -6,9 +6,9 @@
 
 // Database credentials
 define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'warkop_db');
+define('DB_USER', 'arrahma1_admin');
+define('DB_PASS', 'Admin@123!');
+define('DB_NAME', 'arrahma1_warkop_db');
 define('DB_CHARSET', 'utf8mb4');
 
 // Database connection class

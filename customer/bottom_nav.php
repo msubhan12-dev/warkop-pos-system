@@ -43,7 +43,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <span class="text-[9px] sm:text-xs font-bold font-outfit <?= $current_page == 'reels.php' ? 'text-emerald-400' : 'text-slate-400 group-hover:text-emerald-400' ?>">Reels</span>
         </a>
         
-        <!-- Pesanan -->
+        <!-- Pesanan (dengan history) -->
         <a href="track_order.php" class="flex flex-col items-center gap-1 group flex-1 max-w-[64px] transition-transform hover:scale-110 relative">
             <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 <?= $current_page == 'track_order.php' ? 'bg-gradient-to-tr from-rose-700 to-rose-600 text-white shadow-[0_0_15px_rgba(190,18,60,0.5)]' : 'bg-slate-800 text-slate-400 group-hover:text-rose-500 group-hover:bg-slate-700' ?>">
                 <i class="fas fa-receipt text-base sm:text-lg"></i>

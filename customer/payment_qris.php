@@ -47,13 +47,21 @@ if (isset($_SESSION['success_msg'])) {
 
 // Handle proof of payment upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['payment_proof'])) {
+    // Send JSON response
+    header('Content-Type: application/json');
+    
     // Protect against resubmissions resetting verified status
     $stmt = $db->prepare("SELECT verification_status FROM payments WHERE order_id = ? AND payment_method = 'qris'");
     $stmt->execute([$order['id']]);
     $currentPaymentStatus = $stmt->fetch();
     
     if ($currentPaymentStatus && $currentPaymentStatus['verification_status'] === 'verified') {
-        header("Location: payment_qris.php?order=" . urlencode($orderNumber));
+        http_response_code(200);
+        echo json_encode([
+            'success' => true, 
+            'message' => 'Pembayaran sudah diverifikasi',
+            'verified' => true
+        ]);
         exit;
     }
 
@@ -69,30 +77,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['payment_proof'])) {
                 ");
                 $stmt->execute([$uploadResult['path'], $order['id']]);
                 
-                $_SESSION['success_msg'] = 'Bukti pembayaran berhasil dikirim! Menunggu verifikasi admin.';
-                header("Location: payment_qris.php?order=" . urlencode($orderNumber));
+                // Log success with full path info
+                error_log("[PAYMENT_UPLOAD] Order: " . $orderNumber . " | Payment ID: " . $order['payment_id'] . " | File: " . $uploadResult['path'] . " | Size: " . $_FILES['payment_proof']['size']);
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Bukti pembayaran berhasil dikirim! Menunggu verifikasi dari admin.',
+                    'path' => $uploadResult['path'],
+                    'order_id' => $order['id']
+                ]);
                 exit;
                 
             } catch (Exception $e) {
-                $error = 'Terjadi kesalahan: ' . $e->getMessage();
-                // logAccess('payment_qris.php', 'upload_error', [
-                //     'order_number' => $orderNumber,
-                //     'error' => $e->getMessage()
-                // ]);
+                error_log("[PAYMENT_UPLOAD_ERROR] Order: " . $orderNumber . " | Error: " . $e->getMessage());
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Gagal menyimpan data pembayaran: ' . $e->getMessage()
+                ]);
+                exit;
             }
         } else {
-            $error = $uploadResult['message'];
-            // logAccess('payment_qris.php', 'upload_failed', [
-            //     'order_number' => $orderNumber,
-            //     'error' => $uploadResult['message']
-            // ]);
+            error_log("[PAYMENT_UPLOAD_FAILED] Order: " . $orderNumber . " | Message: " . $uploadResult['message']);
+            http_response_code(400);
+            echo json_encode([
+                'success' => false, 
+                'message' => $uploadResult['message']
+            ]);
+            exit;
         }
     } else {
-        $error = 'File gagal diupload';
-        // logAccess('payment_qris.php', 'upload_error', [
-        //     'order_number' => $orderNumber,
-        //     'error_code' => $_FILES['payment_proof']['error']
-        // ]);
+        // PHP upload error codes
+        $uploadErrors = [
+            UPLOAD_ERR_INI_SIZE => 'File terlalu besar (server limit)',
+            UPLOAD_ERR_FORM_SIZE => 'File terlalu besar (form limit)',
+            UPLOAD_ERR_PARTIAL => 'Upload tidak lengkap',
+            UPLOAD_ERR_NO_FILE => 'File tidak dipilih',
+            UPLOAD_ERR_NO_TMP_DIR => 'Direktori temp tidak ditemukan',
+            UPLOAD_ERR_CANT_WRITE => 'Gagal menulis file',
+            UPLOAD_ERR_EXTENSION => 'Extension file tidak diizinkan'
+        ];
+        
+        $errorMsg = $uploadErrors[$_FILES['payment_proof']['error']] ?? 'Unknown error';
+        error_log("[PAYMENT_UPLOAD_ERROR] Order: " . $orderNumber . " | Upload Error: " . $_FILES['payment_proof']['error'] . " (" . $errorMsg . ")");
+        
+        http_response_code(400);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Gagal upload file: ' . $errorMsg
+        ]);
+        exit;
     }
 }
 
@@ -335,12 +370,12 @@ $dynamicQrisString = QrisGenerator::generateDynamic($order['amount']);
             </h2>
             <div class="mb-6 inline-block">
                 <div class="bg-white p-4 rounded-2xl shadow-[0_0_30px_rgba(59,130,246,0.4)]">
-                    <img src="<?= generateQRSVG($dynamicQrisString) ?>&t=<?= time() ?>" alt="QRIS Pembayaran Dinamis" class="w-64 h-64 object-contain">
+                    <img src="<?= APP_URL ?>/assets/img/qrisupdate.jpg" alt="QRIS <?= APP_NAME ?>" class="w-64 h-64 object-contain">
                 </div>
             </div>
             
             <div class="mb-6">
-                <!-- Link untuk force download QRIS Dinamis ini -->
+                <!-- Link untuk force download QRIS -->
                 <a href="download_qris.php?order=<?= urlencode($order['order_number']) ?>" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.4)]">
                     <i class="fas fa-download"></i> Simpan Kode QRIS
                 </a>
@@ -386,24 +421,88 @@ $dynamicQrisString = QrisGenerator::generateDynamic($order['amount']);
             <div class="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
             <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
-            <div class="relative z-10 text-center mb-6">
-                <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 mb-4">
-                    <i class="fas fa-check-double text-2xl"></i>
-                </div>
-                <h2 class="font-outfit text-xl font-bold text-slate-100">Sudah Melakukan Pembayaran?</h2>
-                <p class="text-sm text-slate-400 mt-1">Tekan tombol di bawah setelah scan & bayar QRIS berhasil</p>
-            </div>
-
             <div class="relative z-10">
-                <button id="confirmPaymentBtn" onclick="confirmQrisPayment()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-extrabold py-5 px-6 rounded-2xl shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/30 transition-all duration-300 text-lg flex items-center justify-center gap-3 group active:scale-[0.98] font-outfit">
-                    <i class="fas fa-check-circle text-xl"></i>
-                    Saya Sudah Bayar
-                    <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
-                </button>
-                <p class="text-center text-xs text-slate-500 mt-3">
-                    <i class="fas fa-shield-alt mr-1"></i>
-                    Pesanan otomatis masuk ke dapur setelah konfirmasi
-                </p>
+                <!-- UPLOAD PROOF OF PAYMENT - Only if no proof yet -->
+                <?php if (empty($order['proof_of_payment'])): ?>
+                <div class="mb-6">
+                    <h3 class="font-outfit text-lg font-bold text-slate-100 mb-4 flex items-center gap-2">
+                        <i class="fas fa-image text-blue-400"></i> Upload Bukti Pembayaran
+                        <span class="text-xs bg-red-500/20 text-red-300 px-2.5 py-0.5 rounded-full font-bold uppercase">WAJIB</span>
+                    </h3>
+                    
+                    <form id="uploadForm" method="POST" enctype="multipart/form-data" class="relative" style="touch-action: auto;">
+                        <input 
+                            type="file" 
+                            id="paymentProof" 
+                            name="payment_proof" 
+                            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                            required
+                            class="hidden"
+                            onchange="handleProofUpload()"
+                            style="pointer-events: none;"
+                        >
+                        
+                        <label for="paymentProof" class="block p-6 border-2 border-dashed border-slate-600 rounded-2xl hover:border-emerald-500 cursor-pointer transition-colors bg-slate-900/50 text-center group active:bg-emerald-900/30 active:border-emerald-500" style="touch-action: auto; user-select: none; -webkit-user-select: none; pointer-events: auto;">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-slate-500 group-hover:text-emerald-400 group-active:text-emerald-400 transition-colors mb-3"></i>
+                                <p class="text-slate-300 font-bold mb-1">Klik untuk upload</p>
+                                <p class="text-xs text-slate-500 hidden sm:block">atau drag & drop</p>
+                                <p class="text-xs text-slate-500">JPG, PNG (Max 5MB)</p>
+                                <p class="text-xs text-emerald-400 mt-2 font-semibold">💡 Bisa ambil dari galeri atau kamera</p>
+                            </div>
+                        </label>
+                        
+                        <div id="proofPreview" class="hidden mt-3 p-3 bg-slate-800/50 rounded-xl border border-emerald-500/30">
+                            <div class="flex items-center gap-2 text-emerald-400 text-sm font-bold">
+                                <i class="fas fa-check-circle"></i>
+                                <span id="proofFileName">File dipilih</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- CONFIRM BUTTON (DISABLED UNTIL PROOF UPLOADED) -->
+                <div class="text-center">
+                    <button type="submit" form="uploadForm" id="confirmPaymentBtn" disabled class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 disabled:from-slate-600 disabled:to-slate-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none text-white font-extrabold py-5 px-6 rounded-2xl shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/30 transition-all duration-300 text-lg flex items-center justify-center gap-3 group active:scale-[0.98] font-outfit">
+                        <i class="fas fa-check-circle text-xl"></i>
+                        Kirim Bukti & Lanjutkan
+                        <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                    <p class="text-center text-xs text-slate-500 mt-3">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Admin akan memverifikasi pembayaran Anda dalam waktu singkat
+                    </p>
+                </div>
+                
+                <?php else: ?>
+                <!-- WAITING FOR VERIFICATION STATE - Already uploaded -->
+                <div class="bg-gradient-to-br from-amber-900/30 to-orange-900/30 backdrop-blur-md rounded-2xl border border-amber-500/30 p-6 text-center">
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-amber-900/50 text-amber-400 rounded-full mb-4 animate-pulse">
+                        <i class="fas fa-hourglass-half text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-extrabold text-amber-300 font-outfit mb-2">Menunggu Verifikasi Admin</h3>
+                    <p class="text-slate-300 text-sm mb-4">Bukti pembayaran Anda sudah diterima. Admin akan memverifikasinya dalam waktu singkat.</p>
+                    
+                    <div class="bg-slate-800/50 rounded-xl p-4 mb-4 text-left">
+                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Status:</p>
+                        <div class="flex items-center gap-2">
+                            <span class="px-3 py-1.5 bg-amber-900/50 text-amber-300 rounded-lg text-xs font-bold uppercase tracking-wide flex items-center gap-1.5">
+                                <i class="fas fa-clock animate-spin"></i> Menunggu Verifikasi
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2">Jangan menutup halaman ini. Halaman akan otomatis refresh ketika ada keputusan dari admin.</p>
+                    </div>
+                    
+                    <button onclick="manualCheckPaymentStatus()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md mb-3">
+                        <i class="fas fa-refresh mr-2"></i> Cek Status Sekarang
+                    </button>
+                    
+                    <p class="text-xs text-slate-400 flex items-center justify-center gap-1">
+                        <i class="fas fa-lock mr-1"></i>
+                        Upload sudah dikunci. Tunggu keputusan admin.
+                    </p>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -440,117 +539,314 @@ $dynamicQrisString = QrisGenerator::generateDynamic($order['amount']);
     </div>
 
     <script>
-        function confirmQrisPayment() {
+        // Detect mobile device
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        function handleProofUpload() {
+            const fileInput = document.getElementById('paymentProof');
+            const preview = document.getElementById('proofPreview');
+            const fileName = document.getElementById('proofFileName');
+            const confirmBtn = document.getElementById('confirmPaymentBtn');
+            
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                
+                // Validate file size (5MB max)
+                const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+                if (file.size > maxSize) {
+                    alert('File terlalu besar. Maksimal 5MB. File Anda: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB');
+                    fileInput.value = '';
+                    preview.classList.add('hidden');
+                    confirmBtn.disabled = true;
+                    return;
+                }
+                
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Format file tidak didukung. Gunakan: JPG, PNG, GIF, atau WebP');
+                    fileInput.value = '';
+                    preview.classList.add('hidden');
+                    confirmBtn.disabled = true;
+                    return;
+                }
+                
+                fileName.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + 'KB)';
+                preview.classList.remove('hidden');
+                confirmBtn.disabled = false;
+                console.log('✅ File selected:', file.name, 'Size:', (file.size / 1024).toFixed(1) + 'KB', 'Type:', file.type);
+            } else {
+                preview.classList.add('hidden');
+                confirmBtn.disabled = true;
+            }
+        }
+
+        // Make label clickable on mobile for better UX
+        document.addEventListener('DOMContentLoaded', function() {
+            const label = document.querySelector('label[for="paymentProof"]');
+            const fileInput = document.getElementById('paymentProof');
+            
+            if (label && fileInput) {
+                // Ensure label is clickable on all devices
+                label.style.userSelect = 'none';
+                label.style.webkitUserSelect = 'none';
+                label.style.pointerEvents = 'auto'; // Ensure pointer events enabled
+                
+                // Explicit click handler for all devices (especially mobile)
+                label.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fileInput.click();
+                });
+                
+                // Add touch feedback
+                label.addEventListener('touchstart', function() {
+                    this.style.opacity = '0.8';
+                });
+                label.addEventListener('touchend', function() {
+                    this.style.opacity = '1';
+                });
+            }
+            
+            // Enable button if proof was already uploaded
+            const proofUploadedBefore = <?= !empty($order['proof_of_payment']) ? 'true' : 'false' ?>;
+            if (proofUploadedBefore) {
+                document.getElementById('confirmPaymentBtn').disabled = false;
+            }
+        });
+
+        // Handle form submit dengan loading animation
+        let isSubmitting = false;
+        document.getElementById('uploadForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Prevent double submission
+            if (isSubmitting) {
+                console.warn('Already submitting, please wait...');
+                return;
+            }
+            isSubmitting = true;
+            
+            const fileInput = document.getElementById('paymentProof');
             const btn = document.getElementById('confirmPaymentBtn');
             const overlay = document.getElementById('paymentLoadingOverlay');
             const progressBar = document.getElementById('paymentProgressBar');
             const loadingMsg = document.getElementById('paymentLoadingMsg');
-
-            // Disable button to prevent double submit
-            btn.disabled = true;
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
-
-            // Show overlay
+            
+            if (!fileInput.files.length) {
+                alert('Pilih file terlebih dahulu');
+                isSubmitting = false;
+                return;
+            }
+            
+            // Show loading overlay
             overlay.classList.remove('hidden');
-
-            // Animate progress bar over 3 seconds
+            btn.disabled = true;
+            
+            // Animate progress bar
             const messages = [
-                'Menghubungkan ke server...',
-                'Memverifikasi transaksi QRIS...',
-                'Mengkonfirmasi pesanan ke dapur...',
+                'Mengupload bukti pembayaran...',
+                'Memverifikasi file...',
+                'Mengirim ke server...',
                 'Hampir selesai...'
             ];
             let progress = 0;
             let msgIdx = 0;
-
+            
             const progressInterval = setInterval(() => {
-                progress = Math.min(progress + 1.5, 90); // cap at 90, jump to 100 on success
+                progress = Math.min(progress + 1.5, 90);
                 progressBar.style.width = progress + '%';
                 if (progress > 20 && msgIdx === 0) { msgIdx = 1; loadingMsg.textContent = messages[1]; }
                 if (progress > 50 && msgIdx === 1) { msgIdx = 2; loadingMsg.textContent = messages[2]; }
                 if (progress > 75 && msgIdx === 2) { msgIdx = 3; loadingMsg.textContent = messages[3]; }
             }, 50);
-
-            // After 3 seconds, send confirm request
-            setTimeout(() => {
-                const formData = new FormData();
-                formData.append('order', '<?= htmlspecialchars($orderNumber) ?>');
-
-                fetch('confirm_qris.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(r => r.json())
-                .then(data => {
-                    clearInterval(progressInterval);
-                    if (data.success) {
-                        progressBar.style.width = '100%';
-                        loadingMsg.textContent = 'Pembayaran berhasil!';
-                        // Redirect to order success page after short delay
-                        setTimeout(() => {
-                            window.location.href = 'order_success.php?order=<?= htmlspecialchars($orderNumber) ?>';
-                        }, 600);
-                    } else {
-                        overlay.classList.add('hidden');
-                        btn.disabled = false;
-                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                        alert('Gagal: ' + data.message + '\nSilahkan coba lagi.');
-                    }
-                })
-                .catch(err => {
+            
+            // Submit form via FormData
+            const formData = new FormData(this);
+            
+            fetch('payment_qris.php?order=<?= htmlspecialchars($orderNumber) ?>', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('Upload response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Upload response data:', data);
+                clearInterval(progressInterval);
+                
+                if (data.success) {
+                    progressBar.style.width = '100%';
+                    loadingMsg.textContent = 'Bukti pembayaran berhasil dikirim!';
+                    
+                    setTimeout(() => {
+                        // Hide upload form and show uploaded file info
+                        const uploadForm = document.getElementById('uploadForm');
+                        const fileInput = document.getElementById('paymentProof');
+                        
+                        if (uploadForm) {
+                            uploadForm.innerHTML = `
+                                <div class="bg-emerald-900/30 border border-emerald-500/50 rounded-2xl p-6 text-center">
+                                    <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full mb-3">
+                                        <i class="fas fa-check-circle text-3xl"></i>
+                                    </div>
+                                    <h4 class="text-emerald-300 font-bold mb-1">Gambar Berhasil Diupload</h4>
+                                    <p class="text-emerald-200 text-sm mb-3">${fileInput.files[0].name}</p>
+                                    <p class="text-xs text-slate-400">Menunggu verifikasi dari admin. Jangan tutup halaman ini.</p>
+                                </div>
+                            `;
+                        }
+                        
+                        location.reload();
+                    }, 1500);
+                } else {
                     clearInterval(progressInterval);
                     overlay.classList.add('hidden');
                     btn.disabled = false;
-                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    alert('Terjadi kesalahan koneksi. Silahkan coba lagi.');
-                });
-            }, 3000);
-        }
+                    isSubmitting = false;
+                    alert('Gagal mengupload: ' + (data.message || 'Unknown error'));
+                    console.error('Upload failed:', data);
+                }
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                overlay.classList.add('hidden');
+                btn.disabled = false;
+                isSubmitting = false;
+                alert('Error: ' + error.message);
+                console.error('Upload error:', error);
+            });
+        });
 
+        // Support drag & drop for file upload (only on desktop)
+        const uploadLabel = document.querySelector('label[for="paymentProof"]');
+        if (uploadLabel && !isMobileDevice()) {
+            uploadLabel.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadLabel.classList.add('border-emerald-500', 'bg-emerald-900/20');
+            });
+            uploadLabel.addEventListener('dragleave', () => {
+                uploadLabel.classList.remove('border-emerald-500', 'bg-emerald-900/20');
+            });
+            uploadLabel.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadLabel.classList.remove('border-emerald-500', 'bg-emerald-900/20');
+                
+                const fileInput = document.getElementById('paymentProof');
+                fileInput.files = e.dataTransfer.files;
+                handleProofUpload();
+            });
+        }
+        
         <?php if (!$isVerified && !$isRejected): ?>
-        // Real-time polling for payment verification status (check every 1 second)
+        // Real-time polling for payment verification status
+        // Start at 2 seconds, gradually increase to avoid lag
         let statusCheckCount = 0;
-        const maxStatusChecks = 300; // 5 minutes max polling
+        let pollingInterval = 2000; // Start at 2 seconds
+        let pollingTimeout = null;
         
         function checkPaymentStatusRealTime() {
-            statusCheckCount++;
-            
-            if (statusCheckCount > maxStatusChecks) {
-                console.log('Status check timeout');
+            if (statusCheckCount >= 150) { // 150 checks max (5 mins at adaptive rate)
+                console.log('Status check timeout - stopped polling');
                 return;
             }
-
-            fetch('check_payment_status.php?order=<?= htmlspecialchars($orderNumber) ?>&t=' + Date.now())
-                .then(r => r.json())
+            
+            statusCheckCount++;
+            
+            fetch('check_payment_status.php?order=<?= htmlspecialchars($orderNumber) ?>&t=' + Date.now(), {
+                signal: AbortSignal.timeout(5000) // 5 second timeout per request
+            })
+                .then(r => {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
                 .then(data => {
-                    console.log('Payment status:', data);
+                    console.log('✓ Status check #' + statusCheckCount + ':', data.verification_status);
                     
-                    // Auto-reload if verified or rejected
-                    if (data.verified === true) {
-                        console.log('Payment verified! Reloading...');
-                        setTimeout(() => location.reload(), 500);
+                    // Auto-reload if verified
+                    if (data.verified === true || data.verification_status === 'verified') {
+                        console.log('✓ Payment verified! Reloading...');
+                        clearTimeout(pollingTimeout);
+                        setTimeout(() => location.reload(), 300);
+                        return;
+                    }
+                    
+                    // Auto-reload if rejected
+                    if (data.verification_status === 'rejected' || data.rejected === true) {
+                        console.log('✗ Payment rejected! Reloading...');
+                        clearTimeout(pollingTimeout);
+                        setTimeout(() => location.reload(), 300);
                         return;
                     }
                     
                     // Continue polling if still pending
-                    if (data.status === 'pending' || data.verified === false) {
-                        setTimeout(checkPaymentStatusRealTime, 1000);
+                    if (data.status === 'pending' || data.verification_status === 'pending') {
+                        // Gradually increase polling interval (up to 5 seconds max)
+                        pollingInterval = Math.min(pollingInterval + 500, 5000);
+                        console.log('→ Still pending, next check in ' + (pollingInterval / 1000) + 's');
+                        pollingTimeout = setTimeout(checkPaymentStatusRealTime, pollingInterval);
                     } else {
-                        // Unknown status, reload page
-                        setTimeout(() => location.reload(), 500);
+                        // Unknown status, reload
+                        console.log('? Unknown status:', data.status, ', reloading...');
+                        clearTimeout(pollingTimeout);
+                        setTimeout(() => location.reload(), 300);
                     }
                 })
                 .catch(e => {
-                    console.log('Status check error:', e);
-                    // Retry on error
-                    if (statusCheckCount < maxStatusChecks) {
-                        setTimeout(checkPaymentStatusRealTime, 2000);
+                    console.warn('✗ Status check error:', e.message);
+                    // Retry on error with longer interval
+                    if (statusCheckCount < 150) {
+                        pollingInterval = Math.min(pollingInterval + 1000, 5000);
+                        console.log('→ Error, retry in ' + (pollingInterval / 1000) + 's');
+                        pollingTimeout = setTimeout(checkPaymentStatusRealTime, pollingInterval);
                     }
                 });
         }
 
-        // Start polling immediately when page loads
-        checkPaymentStatusRealTime();
+        // Start polling when page loads
+        console.log('Starting payment status polling...');
+        pollingTimeout = setTimeout(checkPaymentStatusRealTime, 2000);
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            clearTimeout(pollingTimeout);
+            console.log('Polling stopped - page unloading');
+        });
+        
+        // Manual check function for customer
+        function manualCheckPaymentStatus() {
+            const btn = event.target.closest('button');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i> Mengecek...';
+            }
+            
+            fetch('check_payment_status.php?order=<?= htmlspecialchars($orderNumber) ?>&t=' + Date.now())
+                .then(r => r.json())
+                .then(data => {
+                    if (data.verification_status === 'verified') {
+                        location.reload();
+                    } else if (data.verification_status === 'rejected') {
+                        location.reload();
+                    } else {
+                        alert('Status masih menunggu verifikasi. Coba lagi dalam beberapa saat.');
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fas fa-refresh mr-2"></i> Cek Status Sekarang';
+                        }
+                    }
+                })
+                .catch(e => {
+                    alert('Error checking status: ' + e.message);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-refresh mr-2"></i> Cek Status Sekarang';
+                    }
+                });
+        }
         <?php endif; ?>
     </script>
 </body>
