@@ -1,0 +1,111 @@
+<!-- 
+  CHAT BUTTON SNIPPETS
+  Copy and paste these HTML snippets into any admin page to add chat functionality
+-->
+
+<!-- OPTION 1: Simple Link Button (Minimal) -->
+<a href="start_chat.php" class="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition">
+  💬 Chat Tim
+</a>
+
+
+<!-- OPTION 2: Button with Icon (Standard) -->
+<button onclick="window.location.href='start_chat.php'" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-2 transition">
+  <i class="fas fa-comments"></i>
+  Chat Tim Baru
+</button>
+
+
+<!-- OPTION 3: Floating Action Button (Modern) -->
+<a href="start_chat.php" class="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition transform hover:scale-110" title="Start Chat">
+  <i class="fas fa-comments text-xl"></i>
+</a>
+
+
+<!-- OPTION 4: Chat Button in Header/Toolbar -->
+<div class="flex items-center gap-2 p-4 bg-white rounded-lg border border-slate-200">
+  <span class="font-bold text-slate-800">Chat dengan Tim?</span>
+  <a href="start_chat.php" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm">
+    Mulai Chat
+  </a>
+</div>
+
+
+<!-- OPTION 5: Card Style Button -->
+<div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white cursor-pointer hover:shadow-lg transition"
+     onclick="window.location.href='start_chat.php'">
+  <div class="flex items-center justify-between">
+    <div>
+      <h3 class="text-lg font-bold mb-1">💬 Chat Tim</h3>
+      <p class="text-sm opacity-90">Berbicara dengan tim Anda secara real-time</p>
+    </div>
+    <i class="fas fa-arrow-right text-2xl opacity-60"></i>
+  </div>
+</div>
+
+
+<!-- OPTION 6: Chat Dropdown (For selecting specific staff) -->
+<div class="relative inline-block">
+  <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-2" 
+          onclick="toggleChatMenu()" id="chatMenuBtn">
+    <i class="fas fa-comments"></i>
+    Chat Baru
+    <i class="fas fa-chevron-down text-sm"></i>
+  </button>
+  
+  <div id="chatMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50">
+    <div class="p-2">
+      <a href="start_chat.php" class="block px-4 py-2 hover:bg-blue-50 rounded text-slate-800 font-bold">
+        <i class="fas fa-comments mr-2"></i> Mulai Chat Baru
+      </a>
+      <a href="staff_chat.php" class="block px-4 py-2 hover:bg-blue-50 rounded text-slate-800">
+        <i class="fas fa-list mr-2"></i> Chat Sebelumnya
+      </a>
+      <div class="border-t border-slate-200 my-2"></div>
+      <a href="staff_chat.php?user_id=2" class="block px-4 py-2 hover:bg-blue-50 rounded text-slate-800 text-sm">
+        👨 Chat dengan Dapur
+      </a>
+      <a href="staff_chat.php?user_id=3" class="block px-4 py-2 hover:bg-blue-50 rounded text-slate-800 text-sm">
+        👨 Chat dengan Kasir
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleChatMenu() {
+  const menu = document.getElementById('chatMenu');
+  menu.classList.toggle('hidden');
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', function(e) {
+  const btn = document.getElementById('chatMenuBtn');
+  const menu = document.getElementById('chatMenu');
+  if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
+    menu.classList.add('hidden');
+  }
+});
+</script>
+
+
+<!-- USAGE INSTRUCTIONS -->
+<!--
+1. Choose one of the options above
+2. Copy the HTML/CSS/JavaScript
+3. Paste it into your page where you want the button
+4. Customize:
+   - Colors: Change bg-blue-600 to bg-green-600, bg-red-600, etc.
+   - Text: Change "Chat Tim" to your preferred label
+   - Icons: Change fa-comments to other FontAwesome icons
+   - Size: Adjust px-4 py-2 for larger/smaller button
+
+EXAMPLE: Add to admin/index.php
+  - In the dashboard, add Option 4 card above
+  - Or add Option 5 floating button
+
+EXAMPLE: Add to admin/orders.php
+  - In order list or detail, add Option 2 button
+  - Or add Option 6 dropdown for quick access
+
+-->

@@ -12,6 +12,7 @@ $navItems = [
     ['url' => 'revenue', 'icon' => 'fa-chart-line', 'label' => 'Pendapatan', 'color' => 'text-teal-400', 'roles' => ['owner', 'admin', 'kasir']],
     ['url' => 'kitchen', 'icon' => 'fa-fire', 'label' => 'Dapur', 'color' => 'text-orange-400', 'roles' => ['owner', 'admin', 'pelayan']],
     ['url' => 'orders', 'icon' => 'fa-receipt', 'label' => 'Pesanan', 'color' => 'text-indigo-400', 'roles' => ['owner', 'admin', 'kasir', 'pelayan']],
+    ['url' => 'staff_chat', 'icon' => 'fa-comments', 'label' => 'Chat Tim', 'color' => 'text-purple-400', 'roles' => ['owner', 'admin', 'kasir', 'dapur', 'pelayan']],
     ['url' => 'menu', 'icon' => 'fa-utensils', 'label' => 'Menu', 'color' => 'text-rose-400', 'roles' => ['owner']],
     ['url' => 'stock', 'icon' => 'fa-boxes', 'label' => 'Stok Bahan', 'color' => 'text-amber-400', 'roles' => ['owner']],
     ['url' => 'recipes', 'icon' => 'fa-clipboard-list', 'label' => 'Resep', 'color' => 'text-lime-400', 'roles' => ['owner']],

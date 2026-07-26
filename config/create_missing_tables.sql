@@ -135,3 +135,60 @@ ALTER TABLE `orders` ADD COLUMN IF NOT EXISTS `customer_phone` varchar(20) DEFAU
 ALTER TABLE `orders` ADD COLUMN IF NOT EXISTS `delivery_fee` decimal(10,2) DEFAULT 0;
 ALTER TABLE `ingredients` ADD COLUMN IF NOT EXISTS `stock_quantity` decimal(10,2) DEFAULT 0;
 ALTER TABLE `menu_recipes` ADD COLUMN IF NOT EXISTS `amount_required` decimal(10,2) DEFAULT 0;
+
+-- Chat and messaging tables
+CREATE TABLE IF NOT EXISTS `chat_messages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_id` int(11) NOT NULL,
+  `sender_id` int(11) NOT NULL,
+  `sender_type` enum('staff','customer') NOT NULL,
+  `message` text NOT NULL,
+  `message_type` enum('text','tag','status_update') DEFAULT 'text',
+  `tagged_user_id` int(11) DEFAULT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_order_id` (`order_id`),
+  KEY `idx_sender_id` (`sender_id`),
+  KEY `idx_is_read` (`is_read`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `order_tags` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_id` int(11) NOT NULL,
+  `tagged_by_id` int(11) NOT NULL,
+  `tag_name` varchar(50) NOT NULL,
+  `description` text,
+  `color` varchar(20) DEFAULT '#3b82f6',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_order_id` (`order_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Staff-to-Staff Chat
+CREATE TABLE IF NOT EXISTS `staff_messages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sender_id` int(11) NOT NULL,
+  `recipient_id` int(11) NOT NULL,
+  `message` text,
+  `message_type` enum('text','image','sticker') DEFAULT 'text',
+  `media_url` varchar(255) DEFAULT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_sender_recipient` (`sender_id`, `recipient_id`),
+  KEY `idx_is_read` (`is_read`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Customer Support Chat
+CREATE TABLE IF NOT EXISTS `customer_support_messages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `session_id` varchar(100) NOT NULL,
+  `sender_type` enum('customer','admin') NOT NULL,
+  `staff_id` int(11) DEFAULT NULL,
+  `message` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_session_id` (`session_id`),
+  KEY `idx_sender_type` (`sender_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
