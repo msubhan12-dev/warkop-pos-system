@@ -8,15 +8,25 @@ $month = date('m');
 $year = date('Y');
 $bulan = date('F Y');
 
-// Get Revenue (Pendapatan) for current month - grouped per day with order count (same status filter as revenue.php)
+// Get Revenue (Pendapatan) for current month - grouped per day with order count
+// ONLY count orders with verified/successful payment (SAME AS UI)
 $stmt_rev = $db->prepare("
     SELECT 
-        DATE(created_at) as date, 
-        COUNT(*) as order_count,
-        SUM(total) as amount 
-    FROM orders 
-    WHERE status IN ('confirmed', 'cooking', 'ready', 'served', 'completed') AND MONTH(created_at) = ? AND YEAR(created_at) = ?
-    GROUP BY DATE(created_at)
+        DATE(o.created_at) as date, 
+        COUNT(o.id) as order_count,
+        SUM(o.total) as amount 
+    FROM orders o
+    LEFT JOIN payments p ON o.id = p.order_id
+    WHERE o.status IN ('confirmed', 'cooking', 'ready', 'served', 'completed') 
+    AND o.status != 'cancelled'
+    AND MONTH(o.created_at) = ? 
+    AND YEAR(o.created_at) = ?
+    AND (
+        (p.payment_method = 'qris' AND p.verification_status = 'verified')
+        OR (p.payment_method = 'cash' AND p.status = 'success')
+        OR (p.payment_method = 'transfer' AND p.status = 'success')
+    )
+    GROUP BY DATE(o.created_at)
     ORDER BY date ASC
 ");
 $stmt_rev->execute([$month, $year]);

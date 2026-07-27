@@ -39,16 +39,24 @@ switch ($filter) {
 }
 
 // === REVENUE FROM ORDERS ===
+// ONLY count orders with verified/successful payment
 $stmt = $db->prepare("
     SELECT 
         COUNT(o.id) as total_orders,
         SUM(o.total) as total_revenue,
-        SUM(CASE WHEN p.payment_method = 'qris' THEN o.total ELSE 0 END) as qris_revenue,
-        SUM(CASE WHEN p.payment_method = 'cash' THEN o.total ELSE 0 END) as cash_revenue,
-        SUM(CASE WHEN p.payment_method = 'transfer' THEN o.total ELSE 0 END) as transfer_revenue
+        SUM(CASE WHEN p.payment_method = 'qris' AND p.verification_status = 'verified' THEN o.total ELSE 0 END) as qris_revenue,
+        SUM(CASE WHEN p.payment_method = 'cash' AND p.status = 'success' THEN o.total ELSE 0 END) as cash_revenue,
+        SUM(CASE WHEN p.payment_method = 'transfer' AND p.status = 'success' THEN o.total ELSE 0 END) as transfer_revenue
     FROM orders o
     LEFT JOIN payments p ON o.id = p.order_id
-    WHERE DATE(o.created_at) >= ? AND DATE(o.created_at) <= ? AND o.status IN ('confirmed', 'cooking', 'ready', 'served', 'completed')
+    WHERE DATE(o.created_at) >= ? AND DATE(o.created_at) <= ? 
+    AND o.status IN ('confirmed', 'cooking', 'ready', 'served', 'completed')
+    AND o.status != 'cancelled'
+    AND (
+        (p.payment_method = 'qris' AND p.verification_status = 'verified')
+        OR (p.payment_method = 'cash' AND p.status = 'success')
+        OR (p.payment_method = 'transfer' AND p.status = 'success')
+    )
 ");
 $stmt->execute([$startDate, $endDate]);
 $revenueData = $stmt->fetch();
@@ -65,16 +73,24 @@ $stmt->execute([$startDate, $endDate]);
 $expensesData = $stmt->fetch();
 
 // === DAILY BREAKDOWN ===
+// ONLY count orders with verified/successful payment
 $stmt = $db->prepare("
     SELECT 
         DATE(o.created_at) as date,
         COUNT(o.id) as total_orders,
         SUM(o.total) as daily_revenue,
-        SUM(CASE WHEN p.payment_method = 'qris' THEN o.total ELSE 0 END) as qris_revenue,
-        SUM(CASE WHEN p.payment_method = 'cash' THEN o.total ELSE 0 END) as cash_revenue
+        SUM(CASE WHEN p.payment_method = 'qris' AND p.verification_status = 'verified' THEN o.total ELSE 0 END) as qris_revenue,
+        SUM(CASE WHEN p.payment_method = 'cash' AND p.status = 'success' THEN o.total ELSE 0 END) as cash_revenue
     FROM orders o
     LEFT JOIN payments p ON o.id = p.order_id
-    WHERE DATE(o.created_at) >= ? AND DATE(o.created_at) <= ? AND o.status IN ('confirmed', 'cooking', 'ready', 'served', 'completed')
+    WHERE DATE(o.created_at) >= ? AND DATE(o.created_at) <= ? 
+    AND o.status IN ('confirmed', 'cooking', 'ready', 'served', 'completed')
+    AND o.status != 'cancelled'
+    AND (
+        (p.payment_method = 'qris' AND p.verification_status = 'verified')
+        OR (p.payment_method = 'cash' AND p.status = 'success')
+        OR (p.payment_method = 'transfer' AND p.status = 'success')
+    )
     GROUP BY DATE(o.created_at)
     ORDER BY DATE(o.created_at) DESC
 ");
@@ -91,7 +107,7 @@ $stmt->execute([$startDate, $endDate]);
 $expensesList = $stmt->fetchAll();
 
 // === LOW STOCK ITEMS ===
-$stmt = $db->query("SELECT * FROM ingredients WHERE quantity <= 10 ORDER BY quantity ASC");
+$stmt = $db->query("SELECT * FROM ingredients WHERE stock_quantity <= 10 ORDER BY stock_quantity ASC");
 $lowStockItems = $stmt->fetchAll();
 
 // === TOP PRODUCTS ===

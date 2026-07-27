@@ -49,11 +49,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Create order with explicit timestamp
             $currentTimestamp = date('Y-m-d H:i:s');
+            
+            // Track if logged in user is a staff member
+            $createdBy = null;
+            if (isset($_SESSION['user_id']) && in_array($_SESSION['user_role'] ?? '', ['owner', 'admin', 'kasir'])) {
+                $createdBy = $_SESSION['user_id'];
+            }
+
             $stmt = $db->prepare("
                 INSERT INTO orders (
                     order_number, table_id, customer_name, customer_phone, delivery_address,
-                    order_type, status, subtotal, tax, total, notes, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
+                    order_type, status, subtotal, tax, total, notes, created_at, created_by
+                ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $orderNumber,
@@ -66,7 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $tax,
                 $total,
                 $notes,
-                $currentTimestamp
+                $currentTimestamp,
+                $createdBy
             ]);
             
             $orderId = $db->lastInsertId();
@@ -93,14 +101,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
             }
             
-            // Create payment record
-            $paymentStatus = ($paymentMethod === 'qris') ? 'pending' : 'success';
+            // Create payment record (starts as pending for customer checkouts)
+            $paymentStatus = 'pending';
+            $verifiedBy = ($paymentMethod === 'cash' && $createdBy) ? $createdBy : null;
+            $verifiedAt = ($paymentMethod === 'cash' && $createdBy) ? $currentTimestamp : null;
+            
             $stmt = $db->prepare("
                 INSERT INTO payments (
-                    order_id, payment_method, amount, paid_amount, status, verification_status
-                ) VALUES (?, ?, ?, 0, ?, ?)
+                    order_id, payment_method, amount, paid_amount, status, verification_status, created_by, verified_by, verified_at
+                ) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?)
             ");
-            $stmt->execute([$orderId, $paymentMethod, $total, $paymentStatus, 'pending']);
+            $stmt->execute([
+                $orderId, 
+                $paymentMethod, 
+                $total, 
+                $paymentStatus, 
+                'pending', 
+                $createdBy, 
+                $verifiedBy, 
+                $verifiedAt
+            ]);
             
             // For QRIS: set order status to pending payment verification
             if ($paymentMethod === 'qris') {
@@ -282,9 +302,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             placeholder="08xxxxxxxxxx"
                         >
                     </div>
-                    
-                        <input type="hidden" name="order_type" value="dine_in">
-                    
+                    <div>
+                        <label for="order_type" class="block text-sm font-bold text-slate-300 mb-2">
+                            Tipe Pesanan <span class="text-red-400">*</span>
+                        </label>
+                        <select 
+                            id="order_type" 
+                            name="order_type" 
+                            required
+                            class="w-full px-5 py-3.5 bg-slate-900/50 border border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-slate-800 font-medium transition-all duration-300 text-slate-200"
+                        >
+                            <option value="dine_in" selected>Makan di Tempat (Dine In)</option>
+                            <option value="take_away">Bawa Pulang (Take Away)</option>
+                        </select>
+                    </div>
                     <div>
                         <label for="notes" class="block text-sm font-bold text-slate-300 mb-2">
                             Catatan Tambahan

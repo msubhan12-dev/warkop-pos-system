@@ -7,16 +7,26 @@ $basePath = '';
 $userRole = $user['role'] ?? 'pelayan'; 
 
 $navItems = [
+    // OWNER - Akses penuh ke semua menu
     ['url' => 'index', 'icon' => 'fa-chart-pie', 'label' => 'Dashboard', 'color' => 'text-emerald-400', 'roles' => ['owner']],
-    ['url' => 'pos', 'icon' => 'fa-cash-register', 'label' => 'POS Kasir', 'color' => 'text-blue-400', 'roles' => ['owner', 'admin', 'kasir']],
-    ['url' => 'revenue', 'icon' => 'fa-chart-line', 'label' => 'Pendapatan', 'color' => 'text-teal-400', 'roles' => ['owner', 'admin', 'kasir']],
-    ['url' => 'kitchen', 'icon' => 'fa-fire', 'label' => 'Dapur', 'color' => 'text-orange-400', 'roles' => ['owner', 'admin', 'pelayan']],
-    ['url' => 'orders', 'icon' => 'fa-receipt', 'label' => 'Pesanan', 'color' => 'text-indigo-400', 'roles' => ['owner', 'admin', 'kasir', 'pelayan']],
-    ['url' => 'staff_chat', 'icon' => 'fa-comments', 'label' => 'Chat Tim', 'color' => 'text-purple-400', 'roles' => ['owner', 'admin', 'kasir', 'dapur', 'pelayan']],
+    
+    // KASIR - Menu: POS, Pesanan, Revenue, Ganti Sandi, Logout
+    ['url' => 'pos', 'icon' => 'fa-cash-register', 'label' => 'POS Kasir', 'color' => 'text-blue-400', 'roles' => ['owner', 'kasir']],
+    ['url' => 'orders', 'icon' => 'fa-receipt', 'label' => 'Pesanan', 'color' => 'text-indigo-400', 'roles' => ['owner', 'kasir', 'pelayan']],
+    ['url' => 'revenue', 'icon' => 'fa-chart-line', 'label' => 'Pendapatan', 'color' => 'text-teal-400', 'roles' => ['owner', 'kasir']],
+    
+    // PELAYAN - Menu: Pesanan saja (untuk tracking)
+    // (sudah termasuk di orders di atas)
+    
+    // DAPUR - Menu: Dapur dan Chat Tim
+    ['url' => 'kitchen', 'icon' => 'fa-fire', 'label' => 'Dapur', 'color' => 'text-orange-400', 'roles' => ['owner', 'pelayan']],
+    ['url' => 'staff_chat', 'icon' => 'fa-comments', 'label' => 'Chat Tim', 'color' => 'text-purple-400', 'roles' => ['owner', 'kasir', 'pelayan']],
+    
+    // OWNER-ONLY MENUS
     ['url' => 'menu', 'icon' => 'fa-utensils', 'label' => 'Menu', 'color' => 'text-rose-400', 'roles' => ['owner']],
     ['url' => 'stock', 'icon' => 'fa-boxes', 'label' => 'Stok Bahan', 'color' => 'text-amber-400', 'roles' => ['owner']],
     ['url' => 'recipes', 'icon' => 'fa-clipboard-list', 'label' => 'Resep', 'color' => 'text-lime-400', 'roles' => ['owner']],
-    ['url' => 'tables', 'icon' => 'fa-chair', 'label' => 'Meja', 'color' => 'text-purple-400', 'roles' => ['owner', 'admin', 'kasir']],
+    ['url' => 'tables', 'icon' => 'fa-chair', 'label' => 'Meja', 'color' => 'text-purple-400', 'roles' => ['owner']],
     ['url' => 'promos', 'icon' => 'fa-tags', 'label' => 'Promo', 'color' => 'text-pink-400', 'roles' => ['owner']],
     ['url' => 'reels', 'icon' => 'fa-video', 'label' => 'Reels', 'color' => 'text-fuchsia-400', 'roles' => ['owner']],
     ['url' => 'reports', 'icon' => 'fa-file-invoice-dollar', 'label' => 'Laporan', 'color' => 'text-teal-400', 'roles' => ['owner']],

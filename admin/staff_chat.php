@@ -52,6 +52,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Chat Tim</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; width: 100%; overflow: hidden; }
@@ -320,7 +321,7 @@ try {
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2>Chats</h2>
-                <button class="btn-new" onclick="openModal()"><i class="fas fa-pen"></i></button>
+                <button class="btn-new" id="btnNew"><i class="fas fa-pen"></i></button>
             </div>
             
             <div class="search-box">
@@ -332,7 +333,7 @@ try {
                 <div class="empty-chats"><i class="fas fa-inbox"></i><p>Belum ada chat</p></div>
                 <?php else: ?>
                 <?php foreach ($conversations as $c): ?>
-                <div class="chat-item" onclick="openChat(<?= $c['id'] ?>, '<?= addslashes($c['full_name']) ?>')">
+                <div class="chat-item" data-user-id="<?= $c['id'] ?>" data-user-name="<?= htmlspecialchars($c['full_name']) ?>" style="cursor: pointer;">
                     <div class="avatar"><?= substr($c['full_name'], 0, 1) ?></div>
                     <div class="chat-info">
                         <div class="chat-name"><?= htmlspecialchars($c['full_name']) ?></div>
@@ -376,8 +377,8 @@ try {
                 <?php endforeach; ?>
             </select>
             <div class="modal-buttons">
-                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Batal</button>
-                <button class="modal-btn modal-btn-ok" onclick="startChat()">OK</button>
+                <button class="modal-btn modal-btn-cancel">Batal</button>
+                <button class="modal-btn modal-btn-ok">OK</button>
             </div>
         </div>
     </div>
@@ -404,13 +405,154 @@ try {
 
 <script>
 let userId = 0, pollTimer;
+const VAPID_PUBLIC_KEY = '<?= VAPID_PUBLIC_KEY ?>';
+
+// Initialize Push Notifications
+async function initPushNotifications() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.log('[Push] Browser does not support push notifications');
+        return;
+    }
+    
+    try {
+        console.log('[Push] Registering Service Worker...');
+        const registration = await navigator.serviceWorker.register('/service-worker.js', {
+            scope: '/'
+        });
+        
+        console.log('[Push] Service Worker registered:', registration);
+        
+        // Wait for service worker to be active
+        await navigator.serviceWorker.ready;
+        console.log('[Push] Service Worker is ready');
+        
+        // Get the registration again to ensure we have the ready one
+        const reg = await navigator.serviceWorker.ready;
+        
+        if (!reg.pushManager) {
+            console.log('[Push] Push manager not available on this browser');
+            return;
+        }
+        
+        // Try to subscribe to push
+        const subscription = await reg.pushManager.getSubscription();
+        
+        if (subscription) {
+            console.log('[Push] Already subscribed');
+            // Send subscription to server
+            sendSubscriptionToServer(subscription, 'subscribe');
+        } else {
+            // Request permission and subscribe
+            console.log('[Push] Requesting notification permission...');
+            const permission = await Notification.requestPermission();
+            
+            if (permission === 'granted') {
+                console.log('[Push] Permission granted, subscribing...');
+                
+                // Subscribe to push
+                const newSubscription = await reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                });
+                
+                console.log('[Push] Subscribed:', newSubscription);
+                sendSubscriptionToServer(newSubscription, 'subscribe');
+            } else {
+                console.log('[Push] Notification permission denied or dismissed');
+            }
+        }
+    } catch (error) {
+        console.error('[Push] Error initializing push notifications:', error);
+    }
+}
+
+// Convert VAPID key to Uint8Array
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+    
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    
+    return outputArray;
+}
+
+// Send subscription to server
+function sendSubscriptionToServer(subscription, action) {
+    const data = {
+        action: action,
+        endpoint: subscription.endpoint
+    };
+    
+    if (subscription.getKey) {
+        const authKey = subscription.getKey('auth');
+        const p256dhKey = subscription.getKey('p256dh');
+        
+        if (authKey) {
+            data.auth_key = btoa(String.fromCharCode.apply(null, new Uint8Array(authKey)));
+        }
+        if (p256dhKey) {
+            data.p256dh_key = btoa(String.fromCharCode.apply(null, new Uint8Array(p256dhKey)));
+        }
+    }
+    
+    fetch('/admin/api_push_notification.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams(data)
+    })
+    .then(r => r.json())
+    .then(d => {
+        console.log('[Push] Server response:', d);
+    })
+    .catch(err => {
+        console.error('[Push] Error sending subscription:', err);
+    });
+}
 
 function loadConversations() {
-    fetch('api_staff_chat.php?action=get_conversations')
-        .then(r => r.json())
-        .then(d => {
-            if (d.success && d.conversations) {
-                updateConversationsList(d.conversations);
+    console.log('loadConversations called');
+    fetch('api_staff_chat.php?action=get_conversations', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+        .then(r => {
+            console.log('Response status:', r.status);
+            if (!r.ok) {
+                console.error('HTTP error:', r.status);
+                return null;
+            }
+            return r.text();
+        })
+        .then(text => {
+            console.log('Response text:', text.substring(0, 200));
+            if (!text) return;
+            try {
+                const d = JSON.parse(text);
+                console.log('Conversations loaded:', d);
+                if (d.success && d.conversations && d.conversations.length > 0) {
+                    updateConversationsList(d.conversations);
+                } else if (d.success && (!d.conversations || d.conversations.length === 0)) {
+                    const list = document.getElementById('list');
+                    if (!list.querySelector('.empty-chats')) {
+                        list.innerHTML = '<div class="empty-chats"><i class="fas fa-inbox"></i><p>Belum ada chat</p></div>';
+                    }
+                } else {
+                    console.warn('Unexpected response:', d);
+                }
+            } catch (e) {
+                console.error('JSON parse error in loadConversations:', e);
+                console.error('Response was:', text.substring(0, 500));
             }
         })
         .catch(err => console.error('Load conv error:', err));
@@ -418,17 +560,26 @@ function loadConversations() {
 
 function updateConversationsList(convs) {
     const list = document.getElementById('list');
+    
+    console.log('updateConversationsList called with:', convs);
+    
     if (!convs || convs.length === 0) {
-        if (list.querySelector('.empty-chats')) return;
-        list.innerHTML = '<div class="empty-chats"><i class="fas fa-inbox"></i><p>Belum ada chat</p></div>';
+        console.log('No conversations, showing empty state');
+        if (!list.querySelector('.empty-chats')) {
+            list.innerHTML = '<div class="empty-chats"><i class="fas fa-inbox"></i><p>Belum ada chat</p></div>';
+        }
         return;
     }
     
+    console.log('Rendering ' + convs.length + ' conversations');
     list.innerHTML = '';
-    convs.forEach(c => {
+    convs.forEach((c, idx) => {
+        console.log('Rendering conversation ' + idx + ':', c);
         const item = document.createElement('div');
         item.className = 'chat-item';
-        item.onclick = () => openChat(c.id, c.full_name);
+        item.dataset.userId = c.id;
+        item.dataset.userName = c.full_name;
+        item.style.cursor = 'pointer';
         
         item.innerHTML = `
             <div class="avatar">${c.full_name.charAt(0)}</div>
@@ -441,14 +592,90 @@ function updateConversationsList(convs) {
         
         list.appendChild(item);
     });
+    
+    attachConversationListeners();
+}
+
+function attachConversationListeners() {
+    console.log('Attaching conversation listeners...');
+    const items = document.querySelectorAll('.chat-item');
+    console.log('Found ' + items.length + ' chat items');
+    
+    items.forEach(item => {
+        item.removeEventListener('click', handleChatItemClick);
+        item.addEventListener('click', handleChatItemClick);
+    });
+}
+
+function checkUnreadMessages() {
+    // Check each conversation for unread messages
+    document.querySelectorAll('.chat-item').forEach(item => {
+        const userId = parseInt(item.dataset.userId);
+        const badge = document.getElementById(`badge-${userId}`);
+        
+        if (badge && userId !== window.currentOpenUserId) {
+            // Show badge jika ada chat yang belum dibuka
+            fetch(`/admin/api_staff_chat.php?action=get_messages&user_id=${userId}`)
+                .then(r => r.json())
+                .then(d => {
+                    if (d.messages && d.messages.length > 0) {
+                        // Ada pesan yang belum dibaca
+                        const unread = d.messages.filter(m => !m.is_read && m.recipient_id == <?= $current_user_id ?>).length;
+                        if (unread > 0) {
+                            badge.textContent = unread > 9 ? '9+' : unread;
+                            badge.style.display = 'flex';
+                            
+                            // Play sound untuk notifikasi
+                            playNotificationSound();
+                            
+                            // Show browser notification via Service Worker
+                            const lastMsg = d.messages[d.messages.length - 1];
+                            const sender = d.messages[d.messages.length - 1].full_name || 'Tim';
+                            const msgPreview = lastMsg.message ? lastMsg.message.substring(0, 50) : '[Foto/Sticker]';
+                            
+                            if ('serviceWorker' in navigator) {
+                                navigator.serviceWorker.ready.then(reg => {
+                                    if (reg.controller) {
+                                        reg.controller.postMessage({
+                                            type: 'show_notification',
+                                            title: sender,
+                                            message: msgPreview,
+                                            url: '/admin/staff_chat.php',
+                                            sender_id: lastMsg.sender_id,
+                                            recipient_id: lastMsg.recipient_id
+                                        });
+                                    }
+                                });
+                            }
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(err => console.error('Unread check error:', err));
+        }
+    });
+}
+
+function handleChatItemClick(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    const uid = parseInt(this.dataset.userId);
+    const uname = this.dataset.userName;
+    console.log('Chat item clicked - userId:', uid, 'userName:', uname);
+    if (uid && uname) {
+        openChat(uid, uname);
+    } else {
+        console.error('Invalid user data:', uid, uname);
+    }
 }
 
 function openChat(id, name) {
+    console.log('openChat called with:', id, name);
     userId = id;
+    window.currentOpenUserId = id; // Track which chat is open
+    
     document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
-    if (event.target.closest('.chat-item')) {
-        event.target.closest('.chat-item').classList.add('active');
-    }
     
     document.getElementById('title').textContent = name;
     document.getElementById('main').classList.add('show');
@@ -461,23 +688,47 @@ function openChat(id, name) {
     
     document.getElementById('msg').focus();
     loadMessages();
+    // Enable polling - ultra fast for instant real-time (100ms)
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = setInterval(() => {
         loadMessages();
-        loadConversations();
-    }, 1000);
+    }, 100);
 }
 
 function loadMessages() {
     if (!userId) return;
-    fetch(`api_staff_chat.php?action=get_messages&user_id=${userId}`)
-        .then(r => r.json())
-        .then(d => {
-            if (d.success && d.messages) {
-                renderMessages(d.messages);
-                // Hide badge saat chat terbuka
-                const badge = document.getElementById(`badge-${userId}`);
-                if (badge) badge.style.display = 'none';
+    
+    console.log('loadMessages called with userId:', userId);
+    fetch(`api_staff_chat.php?action=get_messages&user_id=${userId}`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+        .then(r => {
+            console.log('Messages response status:', r.status);
+            if (!r.ok) {
+                console.error('HTTP error:', r.status);
+                return null;
+            }
+            return r.text();
+        })
+        .then(text => {
+            if (!text) return;
+            try {
+                const d = JSON.parse(text);
+                console.log('Messages loaded, count:', d.messages ? d.messages.length : 0);
+                if (d.success && d.messages) {
+                    renderMessages(d.messages);
+                    // Hide badge saat chat terbuka
+                    const badge = document.getElementById(`badge-${userId}`);
+                    if (badge) badge.style.display = 'none';
+                } else {
+                    console.warn('API response not success:', d);
+                }
+            } catch (e) {
+                console.error('JSON parse error:', e);
+                console.error('Response was:', text.substring(0, 500));
             }
         })
         .catch(err => console.error('Load error:', err));
@@ -485,14 +736,41 @@ function loadMessages() {
 
 function renderMessages(msgs) {
     const box = document.getElementById('messages');
-    const oldCount = box.children.length;
     
-    box.innerHTML = '';
+    // If messages empty, clear and return
+    if (!msgs || msgs.length === 0) {
+        return;
+    }
     
-    msgs.forEach((m, idx) => {
+    // Get current message IDs yang sudah ditampilkan
+    const existingIds = new Set();
+    box.querySelectorAll('[data-msg-id]').forEach(el => {
+        const id = parseInt(el.dataset.msgId);
+        if (!isNaN(id)) {
+            existingIds.add(id);
+        }
+    });
+    
+    // Track how many new messages added
+    let newMessagesAdded = 0;
+    
+    // Only add NEW messages
+    msgs.forEach((m) => {
+        // Validate message has ID
+        if (!m.id) {
+            console.warn('Message without ID:', m);
+            return;
+        }
+        
+        const msgId = parseInt(m.id);
+        if (isNaN(msgId) || existingIds.has(msgId)) {
+            return; // Skip if already rendered
+        }
+        
         const sent = m.sender_id == <?= $current_user_id ?>;
         const item = document.createElement('div');
         item.className = 'msg-item ' + (sent ? 'sent' : 'received');
+        item.dataset.msgId = msgId;
         
         const content = document.createElement('div');
         content.className = 'msg-content';
@@ -500,12 +778,18 @@ function renderMessages(msgs) {
         const bubble = document.createElement('div');
         bubble.className = 'bubble';
         
-        let isNewMsg = false;
+        let hasContent = false;
         
         if (m.message_type === 'image' && m.media_url) {
             const container = document.createElement('div');
             const img = document.createElement('img');
-            img.src = m.media_url;
+            
+            let imgUrl = m.media_url;
+            if (typeof imgUrl === 'object') {
+                imgUrl = imgUrl.path ? UPLOADS_URL + '/' + imgUrl.path : '';
+            }
+            
+            img.src = imgUrl;
             img.className = 'image-preview';
             img.onerror = () => img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="16" fill="%23999"%3EImage not found%3C/text%3E%3C/svg%3E';
             container.appendChild(img);
@@ -517,19 +801,22 @@ function renderMessages(msgs) {
                 container.appendChild(caption);
             }
             bubble.appendChild(container);
-            isNewMsg = !sent && idx >= oldCount;
-        } else if (m.message_type === 'sticker' && m.media_url) {
+            hasContent = true;
+        } else if (m.message_type === 'sticker' && (m.media_url || m.message)) {
             bubble.style.background = 'transparent';
             bubble.style.boxShadow = 'none';
             bubble.style.fontSize = '48px';
             bubble.style.padding = '8px';
-            bubble.textContent = m.media_url;
-            isNewMsg = !sent && idx >= oldCount;
+            // Use media_url if available, otherwise use message (emoji)
+            bubble.textContent = m.media_url || m.message;
+            hasContent = true;
         } else if (m.message) {
             bubble.textContent = m.message;
-            isNewMsg = !sent && idx >= oldCount;
-        } else {
-            continue;
+            hasContent = true;
+        }
+        
+        if (!hasContent) {
+            return; // Skip empty messages
         }
         
         const time = new Date(m.created_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
@@ -542,40 +829,23 @@ function renderMessages(msgs) {
         item.appendChild(content);
         box.appendChild(item);
         
-        if (isNewMsg) {
+        newMessagesAdded++;
+        
+        // Notify for new messages
+        if (!sent) {
             playNotificationSound();
-            const notifMsg = m.message_type === 'image' ? '📷 Foto dikirim' : (m.message_type === 'sticker' ? '😊 Sticker dikirim' : m.message);
-            showBrowserNotification(notifMsg);
         }
     });
     
-    box.scrollTop = box.scrollHeight;
+    // Auto-scroll to bottom if new messages added
+    if (newMessagesAdded > 0) {
+        setTimeout(() => box.scrollTop = box.scrollHeight, 100);
+    }
 }
 
 function playNotificationSound() {
     const audio = new Audio('data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==');
     audio.play().catch(err => console.log('Audio play failed:', err));
-}
-
-function showBrowserNotification(message) {
-    if (!('Notification' in window)) return;
-    
-    if (Notification.permission === 'granted') {
-        new Notification('Pesan Chat Baru', {
-            body: message.substring(0, 100),
-            icon: 'https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0',
-            badge: 'https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0'
-        });
-    } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission().then(perm => {
-            if (perm === 'granted') {
-                new Notification('Pesan Chat Baru', {
-                    body: message.substring(0, 100),
-                    icon: 'https://mms.img.susercontent.com/85fa98256609ae0a681bf062317895b0'
-                });
-            }
-        });
-    }
 }
 
 function sendMsg() {
@@ -606,6 +876,7 @@ function sendMsg() {
 
 function closeChat() {
     userId = 0;
+    window.currentOpenUserId = 0;
     document.getElementById('main').classList.remove('show');
     document.getElementById('input').classList.remove('show');
     document.getElementById('sidebar').style.display = '';
@@ -707,9 +978,90 @@ function sendSticker(sticker) {
         });
 }
 
-// Initial load conversations
-loadConversations();
-setInterval(loadConversations, 3000);
+// Setup button event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded fired - setting up listeners');
+    
+    // Initialize push notifications
+    console.log('[Push] Starting push notification initialization...');
+    initPushNotifications().catch(err => {
+        console.error('[Push] Initialization error:', err);
+    });
+    
+    // Attach listeners to initial conversation items (from PHP)
+    attachConversationListeners();
+    
+    // Pen icon - new chat button
+    const btnNew = document.querySelector('.btn-new');
+    console.log('btnNew element:', btnNew);
+    if (btnNew) {
+        btnNew.addEventListener('click', (e) => {
+            console.log('Pen button clicked');
+            e.preventDefault();
+            e.stopPropagation();
+            openModal();
+        });
+    }
+    
+    // Modal buttons
+    const modalBtnOk = document.querySelector('.modal-btn-ok');
+    console.log('modalBtnOk element:', modalBtnOk);
+    if (modalBtnOk) {
+        modalBtnOk.addEventListener('click', (e) => {
+            console.log('OK button clicked');
+            e.preventDefault();
+            startChat();
+        });
+    }
+    
+    const modalBtnCancel = document.querySelector('.modal-btn-cancel');
+    console.log('modalBtnCancel element:', modalBtnCancel);
+    if (modalBtnCancel) {
+        modalBtnCancel.addEventListener('click', (e) => {
+            console.log('Cancel button clicked');
+            e.preventDefault();
+            closeModal();
+        });
+    }
+    
+    // Close modal on background click
+    const modal = document.getElementById('modal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    }
+    
+    const stickerModal = document.getElementById('stickerModal');
+    if (stickerModal) {
+        stickerModal.addEventListener('click', (e) => {
+            if (e.target === stickerModal) {
+                stickerModal.classList.remove('show');
+            }
+        });
+    }
+    
+    console.log('Initial load conversations...');
+    // Initial load
+    loadConversations();
+    // Enable interval - refresh conversation list every 5 seconds
+    setInterval(loadConversations, 5000);
+});
+
+// Fallback if DOMContentLoaded doesn't fire
+setTimeout(() => {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        console.log('Fallback load conversations');
+        loadConversations();
+        // Disabled interval for now
+        // if (!window.convInterval) {
+        //     window.convInterval = setInterval(loadConversations, 3000);
+        // }
+    }
+}, 100);
+
 </script>
 </body>
 </html>

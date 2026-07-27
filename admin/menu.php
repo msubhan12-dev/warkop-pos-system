@@ -5,10 +5,52 @@ $pageTitle = 'Kelola Menu';
 $user = getCurrentUser();
 $db = getDB();
 
-// Handle delete
-if (isset($_GET['delete'])) {
-    $id = (int)$_GET['delete'];
-    $stmt = $db->prepare("UPDATE menus SET is_available = 0 WHERE id = ?");
+function generateUniqueMenuSlug($name, $db, $excludeId = null) {
+    $baseSlug = strtolower(str_replace(' ', '-', $name));
+    $baseSlug = preg_replace('/[^a-z0-9\-]/', '-', $baseSlug);
+    $baseSlug = preg_replace('/-+/', '-', $baseSlug);
+    $baseSlug = trim($baseSlug, '-');
+    if (empty($baseSlug)) {
+        $baseSlug = 'menu';
+    }
+    
+    $slug = $baseSlug;
+    $counter = 1;
+    
+    while (true) {
+        if ($excludeId) {
+            $stmt = $db->prepare("SELECT COUNT(*) FROM menus WHERE slug = ? AND id != ?");
+            $stmt->execute([$slug, $excludeId]);
+        } else {
+            $stmt = $db->prepare("SELECT COUNT(*) FROM menus WHERE slug = ?");
+            $stmt->execute([$slug]);
+        }
+        
+        if ($stmt->fetchColumn() == 0) {
+            break;
+        }
+        
+        $slug = $baseSlug . '-' . $counter;
+        $counter++;
+    }
+    
+    return $slug;
+}
+
+// Handle status toggle (Non-aktif / Aktif)
+if (isset($_GET['toggle_status'])) {
+    $id = (int)$_GET['toggle_status'];
+    // Toggle between 1 and 0
+    $stmt = $db->prepare("UPDATE menus SET is_available = 1 - is_available WHERE id = ?");
+    $stmt->execute([$id]);
+    header('Location: menu.php');
+    exit;
+}
+
+// Handle permanent delete
+if (isset($_GET['delete_permanent'])) {
+    $id = (int)$_GET['delete_permanent'];
+    $stmt = $db->prepare("DELETE FROM menus WHERE id = ?");
     $stmt->execute([$id]);
     header('Location: menu.php');
     exit;
@@ -41,13 +83,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $image = $existing['image'];
         }
         
-        $stmt = $db->prepare("UPDATE menus SET name=?, category_id=?, price=?, description=?, is_available=?, image=? WHERE id=?");
-        $stmt->execute([$name, $category_id, $price, $description, $is_available, $image, $id]);
+        $slug = generateUniqueMenuSlug($name, $db, $id);
+        $stmt = $db->prepare("UPDATE menus SET name=?, slug=?, category_id=?, price=?, description=?, is_available=?, image=? WHERE id=?");
+        $stmt->execute([$name, $slug, $category_id, $price, $description, $is_available, $image, $id]);
     } else {
-        $slug = strtolower(str_replace(' ', '-', $name));
+        $slug = generateUniqueMenuSlug($name, $db);
         $stmt = $db->prepare("INSERT INTO menus (name, slug, category_id, price, description, is_available, image) VALUES (?,?,?,?,?,?,?)");
         $stmt->execute([$name, $slug, $category_id, $price, $description, $is_available, $image]);
     }
+
+    if (isset($_POST['is_ajax'])) {
+        sendJSON(['success' => true]);
+    }
+    
     header('Location: menu.php');
     exit;
 }
@@ -221,10 +269,24 @@ include '../includes/header.php';
                         </span>
 
                         <div class="flex items-center gap-1.5">
+                            <!-- Toggle Active/Inactive Status -->
+                            <?php if ($menu['is_available']): ?>
+                            <a href="?toggle_status=<?= $menu['id'] ?>" title="Nonaktifkan Menu" class="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center transition-colors">
+                                <i class="fas fa-eye-slash text-xs"></i>
+                            </a>
+                            <?php else: ?>
+                            <a href="?toggle_status=<?= $menu['id'] ?>" title="Aktifkan Menu" class="w-8 h-8 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 flex items-center justify-center transition-colors">
+                                <i class="fas fa-eye text-xs"></i>
+                            </a>
+                            <?php endif; ?>
+
+                            <!-- Edit Menu -->
                             <button onclick='editMenu(<?= json_encode($menu) ?>)' title="Edit Menu" class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition-colors">
                                 <i class="fas fa-edit text-xs"></i>
                             </button>
-                            <a href="?delete=<?= $menu['id'] ?>" onclick="return confirm('Yakin matikan/hapus menu ini?')" title="Sembunyikan Menu" class="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-colors">
+
+                            <!-- Permanent Delete -->
+                            <a href="?delete_permanent=<?= $menu['id'] ?>" onclick="return confirm('Peringatan: Menghapus menu secara permanen akan menghapus riwayat pesanan produk ini. Yakin ingin menghapus permanen?')" title="Hapus Permanen" class="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-colors">
                                 <i class="fas fa-trash text-xs"></i>
                             </a>
                         </div>
@@ -249,8 +311,17 @@ include '../includes/header.php';
             </button>
         </div>
 
-        <form method="POST" enctype="multipart/form-data">
+        <form id="menuForm" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="id" id="menuId">
+            <div id="modalErrorAlert" class="hidden mb-4 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs font-medium flex flex-col gap-2">
+                <div class="flex items-start gap-2">
+                    <i class="fas fa-exclamation-circle text-rose-500 text-sm mt-0.5"></i>
+                    <span id="modalErrorText">Menu dengan nama tersebut sudah ada!</span>
+                </div>
+                <button type="button" id="showExistingBtn" class="hidden text-left text-emerald-600 hover:text-emerald-700 font-bold underline cursor-pointer mt-1">
+                    Tunjukkan produk ini di daftar menu
+                </button>
+            </div>
             <div class="space-y-4">
                 <!-- Image Upload Zone -->
                 <div>
@@ -378,6 +449,7 @@ function clearImage() {
 }
 
 function showAddModal() {
+    document.getElementById('modalErrorAlert').classList.add('hidden');
     document.getElementById('modalTitle').textContent = 'Tambah Menu Baru';
     document.getElementById('menuId').value = '';
     document.getElementById('menuName').value = '';
@@ -390,6 +462,7 @@ function showAddModal() {
 }
 
 function editMenu(menu) {
+    document.getElementById('modalErrorAlert').classList.add('hidden');
     document.getElementById('modalTitle').textContent = 'Edit Menu';
     document.getElementById('menuId').value = menu.id;
     document.getElementById('menuName').value = menu.name;
@@ -410,8 +483,90 @@ function editMenu(menu) {
 }
 
 function closeModal() {
+    document.getElementById('modalErrorAlert').classList.add('hidden');
     document.getElementById('menuModal').classList.add('hidden');
 }
+
+// AJAX Form Submission
+document.getElementById('menuForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const errorAlert = document.getElementById('modalErrorAlert');
+    const errorText = document.getElementById('modalErrorText');
+    const showExistingBtn = document.getElementById('showExistingBtn');
+    
+    errorAlert.classList.add('hidden');
+    showExistingBtn.classList.add('hidden');
+    
+    const formData = new FormData(this);
+    formData.append('is_ajax', '1');
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...';
+    
+    fetch('menu.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+            
+            errorText.textContent = data.message;
+            errorAlert.classList.remove('hidden');
+            
+            if (data.existing) {
+                showExistingBtn.classList.remove('hidden');
+                showExistingBtn.onclick = function() {
+                    closeModal();
+                    
+                    const searchInput = document.getElementById('searchInput');
+                    searchInput.value = data.existing.name;
+                    
+                    document.getElementById('statusFilter').value = 'all';
+                    selectedCategory = 'all';
+                    document.querySelectorAll('.cat-pill').forEach(btn => {
+                        btn.classList.remove('bg-emerald-600', 'text-white', 'shadow-sm');
+                        btn.classList.add('bg-slate-100', 'text-slate-600');
+                    });
+                    const allCatPill = document.querySelector('.cat-pill');
+                    if (allCatPill) {
+                        allCatPill.classList.remove('bg-slate-100', 'text-slate-600');
+                        allCatPill.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
+                    }
+                    filterMenu();
+                    
+                    setTimeout(() => {
+                        const cards = document.querySelectorAll('.menu-card');
+                        cards.forEach(card => {
+                            const name = card.getAttribute('data-name');
+                            if (name === data.existing.name.toLowerCase()) {
+                                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                card.classList.add('ring-4', 'ring-emerald-500', 'scale-105');
+                                setTimeout(() => {
+                                    card.classList.remove('ring-4', 'ring-emerald-500', 'scale-105');
+                                }, 3000);
+                            }
+                        });
+                    }, 500);
+                };
+            }
+        }
+    })
+    .catch(err => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+        errorText.textContent = 'Terjadi kesalahan sistem. Silakan coba lagi.';
+        errorAlert.classList.remove('hidden');
+        console.error(err);
+    });
+});
 
 // Filtering Functionality
 function filterMenu() {

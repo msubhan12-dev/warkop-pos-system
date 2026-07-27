@@ -12,7 +12,7 @@ $user = getCurrentUser();
 $db = getDB();
 
 // Check if viewing cleansing page (owner only)
-$tab = $_GET['tab'] ?? 'orders'; // 'orders', 'unpaid', or 'cleansing'
+$tab = $_GET['tab'] ?? 'orders'; // 'orders', 'unpaid', 'rejected', or 'cleansing'
 if ($tab === 'cleansing' && $user['role'] !== 'owner') {
     $tab = 'orders'; // Force back to orders if not owner
 }
@@ -142,6 +142,11 @@ if ($tab === 'unpaid') {
         }
         $processedOrderIds[] = $orderId;
         
+        // Skip if order is cancelled
+        if ($row['status'] === 'cancelled') {
+            continue;
+        }
+        
         $paymentId = $row['payment_id'];
         $paymentMethod = $row['payment_method'];
         $paymentStatus = $row['payment_status'];
@@ -172,6 +177,33 @@ if ($tab === 'unpaid') {
     
     // Paginate
     $unpaidOrders = array_slice($unpaidOrdersList, $unpaidOffset, $unpaidLimit);
+}
+
+// Rejected orders tab data - QRIS orders that were rejected
+$rejectedOrders = [];
+$rejectedPage = max(1, intval($_GET['rpage'] ?? 1));
+$rejectedLimit = 10;
+$rejectedOffset = ($rejectedPage - 1) * $rejectedLimit;
+$totalRejectedOrders = 0;
+$totalRejectedPages = 0;
+
+if ($tab === 'rejected') {
+    // Get all orders with cancelled status or rejected QRIS payments
+    $stmt = $db->query("
+        SELECT o.*, t.table_number, p.payment_method, p.status as payment_status, p.verification_status, p.verification_notes, p.verified_at, p.verified_by, p.id as payment_id
+        FROM orders o
+        LEFT JOIN tables t ON o.table_id = t.id
+        LEFT JOIN payments p ON o.id = p.order_id
+        WHERE o.status = 'cancelled' OR (p.payment_method = 'qris' AND p.verification_status = 'rejected')
+        ORDER BY o.created_at DESC, p.verified_at DESC
+    ");
+    $rejectedOrdersList = $stmt->fetchAll();
+    
+    $totalRejectedOrders = count($rejectedOrdersList);
+    $totalRejectedPages = ceil($totalRejectedOrders / $rejectedLimit);
+    
+    // Paginate
+    $rejectedOrders = array_slice($rejectedOrdersList, $rejectedOffset, $rejectedLimit);
 }
 
 // Calculate statistics for current query
@@ -209,7 +241,7 @@ include '../includes/header.php';
             <?php 
             // Calculate actual unpaid count using the same logic as in unpaid tab
             $countStmt = $db->query("
-                SELECT o.id, o.id as order_id, p.payment_method, p.status as payment_status, p.verification_status, p.id as payment_id
+                SELECT o.id, o.id as order_id, o.status, p.payment_method, p.status as payment_status, p.verification_status, p.id as payment_id
                 FROM orders o
                 LEFT JOIN tables t ON o.table_id = t.id
                 LEFT JOIN payments p ON o.id = p.order_id
@@ -224,6 +256,9 @@ include '../includes/header.php';
                 $orderId = $row['order_id'];
                 if (in_array($orderId, $processedForBadge)) continue;
                 $processedForBadge[] = $orderId;
+                
+                // Skip if order is cancelled
+                if ($row['status'] === 'cancelled') continue;
                 
                 $paymentId = $row['payment_id'];
                 $paymentMethod = $row['payment_method'];
@@ -249,6 +284,26 @@ include '../includes/header.php';
             if ($unpaidCountBadge > 0): 
             ?>
             <span class="ml-2 bg-amber-100 text-amber-700 text-xs font-extrabold px-2 py-0.5 rounded-full"><?= $unpaidCountBadge ?></span>
+            <?php endif; ?>
+        </a>
+        <a href="?tab=rejected" class="px-4 py-3 font-bold text-sm border-b-2 transition-colors <?= $tab === 'rejected' ? 'border-red-600 text-red-600' : 'border-transparent text-slate-500 hover:text-slate-700' ?> inline-flex items-center">
+            <i class="fas fa-times-circle mr-2"></i>Dibatalkan/Ditolak
+            <?php 
+            // Calculate rejected + cancelled count
+            $countStmt = $db->query("
+                SELECT COUNT(*) as rejected_count
+                FROM payments p
+                WHERE p.payment_method = 'qris' AND p.verification_status = 'rejected'
+                UNION ALL
+                SELECT COUNT(*) as rejected_count
+                FROM orders o
+                WHERE o.status = 'cancelled'
+            ");
+            $counts = $countStmt->fetchAll();
+            $rejectedCount = ($counts[0]['rejected_count'] ?? 0) + ($counts[1]['rejected_count'] ?? 0);
+            if ($rejectedCount > 0): 
+            ?>
+            <span class="ml-2 bg-red-100 text-red-700 text-xs font-extrabold px-2 py-0.5 rounded-full"><?= $rejectedCount ?></span>
             <?php endif; ?>
         </a>
         <?php if ($user['role'] === 'owner'): ?>
@@ -374,7 +429,17 @@ include '../includes/header.php';
                         </td>
                         <td class="p-4 sm:p-5 whitespace-nowrap">
                             <p class="font-bold text-slate-700"><?= htmlspecialchars($order['customer_name']) ?></p>
-                            <p class="text-xs text-slate-500 mt-1"><i class="fas fa-chair mr-1"></i>Meja <?= $order['table_number'] ?? 'TA' ?></p>
+                            <p class="text-[11px] mt-1">
+                                <?php if (($order['order_type'] ?? 'dine_in') === 'dine_in'): ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wide">
+                                        <i class="fas fa-chair mr-1"></i> Dine In (Meja <?= $order['table_number'] ?? '-' ?>)
+                                    </span>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide">
+                                        <i class="fas fa-shopping-bag mr-1"></i> Take Away
+                                    </span>
+                                <?php endif; ?>
+                            </p>
                         </td>
                         <td class="p-4 sm:p-5 whitespace-nowrap text-sm font-medium text-slate-500">
                             <?= formatDateTime($order['created_at']) ?>
@@ -412,12 +477,12 @@ include '../includes/header.php';
                                 <?php if ($isCashPayment && $paymentId): ?>
                                     <!-- Cash Payment Action Buttons -->
                                     <?php if ($cashStatus === 'pending'): ?>
-                                    <button onclick="setCashPaymentStatus(<?= $paymentId ?>, 'success')" class="inline-flex items-center justify-center bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 font-bold text-xs px-2.5 py-1.5 rounded-lg transition-all duration-300 shadow-sm hover:-translate-y-0.5 whitespace-nowrap" title="Tandai Sudah Dibayar - Pindah ke tab Pesanan">
-                                        <i class="fas fa-check-circle mr-1"></i> ✓ Sudah Dibayar
+                                    <button onclick="setCashPaymentStatus(<?= $paymentId ?>, 'success')" class="inline-flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 font-bold text-xs px-2.5 py-1.5 rounded-lg transition-all duration-300 shadow-sm hover:-translate-y-0.5 whitespace-nowrap" title="Klik untuk mengonfirmasi pembayaran tunai">
+                                        <i class="fas fa-exclamation-circle mr-1"></i> Belum Bayar (Tandai Lunas)
                                     </button>
                                     <?php else: ?>
                                     <span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200">
-                                        <i class="fas fa-check-circle mr-1"></i> ✓ Sudah Dibayar
+                                        <i class="fas fa-check-circle mr-1"></i> ✓ Lunas
                                     </span>
                                     <?php endif; ?>
                                 <?php endif; ?>
@@ -544,7 +609,17 @@ include '../includes/header.php';
                         </td>
                         <td class="p-4 sm:p-5 whitespace-nowrap">
                             <p class="font-bold text-slate-700"><?= htmlspecialchars($order['customer_name']) ?></p>
-                            <p class="text-xs text-slate-500 mt-1"><i class="fas fa-chair mr-1"></i>Meja <?= $order['table_number'] ?? 'TA' ?></p>
+                            <p class="text-[11px] mt-1">
+                                <?php if (($order['order_type'] ?? 'dine_in') === 'dine_in'): ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wide">
+                                        <i class="fas fa-chair mr-1"></i> Dine In (Meja <?= $order['table_number'] ?? '-' ?>)
+                                    </span>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide">
+                                        <i class="fas fa-shopping-bag mr-1"></i> Take Away
+                                    </span>
+                                <?php endif; ?>
+                            </p>
                         </td>
                         <td class="p-4 sm:p-5 whitespace-nowrap text-sm font-medium text-slate-500">
                             <?= formatDateTime($order['created_at']) ?>
@@ -582,8 +657,8 @@ include '../includes/header.php';
                                     </span>
                                 <?php elseif ($isCashPending): ?>
                                     <!-- Cash payment waiting - show mark as paid button -->
-                                    <button onclick="setCashPaymentStatus(<?= $paymentId ?>, 'success')" class="inline-flex items-center justify-center bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-300 font-bold text-xs px-2.5 py-1.5 rounded-lg transition-all duration-300 shadow-sm hover:-translate-y-0.5 whitespace-nowrap" title="Tandai Sudah Dibayar - Order akan keluar dari tab ini">
-                                        <i class="fas fa-check-circle mr-1"></i> ✓ Sudah Dibayar
+                                    <button onclick="setCashPaymentStatus(<?= $paymentId ?>, 'success')" class="inline-flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 font-bold text-xs px-2.5 py-1.5 rounded-lg transition-all duration-300 shadow-sm hover:-translate-y-0.5 whitespace-nowrap" title="Klik untuk mengonfirmasi pembayaran tunai">
+                                        <i class="fas fa-exclamation-circle mr-1"></i> Belum Bayar (Tandai Lunas)
                                     </button>
                                 <?php elseif ($isQRISPending): ?>
                                     <!-- QRIS payment waiting for verification -->
@@ -635,6 +710,163 @@ include '../includes/header.php';
         <?php endif; ?>
     </div>
     <?php endif; ?> <!-- End of Unpaid Tab -->
+
+    <!-- Rejected Orders Tab -->
+    <?php if ($tab === 'rejected'): ?>
+    <div class="bg-red-50 border border-red-200 rounded-2xl p-6 mb-6">
+        <div class="flex items-start gap-3">
+            <div class="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center shrink-0 font-bold text-lg">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-red-900 mb-1">Pesanan Dibatalkan & QRIS Ditolak</h3>
+                <p class="text-sm text-red-800">Daftar pesanan yang dibatalkan atau pembayaran QRIS yang ditolak. Untuk pembayaran QRIS, pelanggan dapat mengirimkan ulang bukti atau menggunakan metode lain.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Quick Filter Bar for Rejected -->
+    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm mb-6 flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="rejectedSearchInput" onkeyup="filterRejectedTable()" placeholder="Cari nomor pesanan, nama pemesan, atau meja..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all">
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-100 text-slate-400 text-[11px] uppercase tracking-wider font-extrabold">
+                        <th class="p-4 sm:p-5">Order ID</th>
+                        <th class="p-4 sm:p-5">Pelanggan</th>
+                        <th class="p-4 sm:p-5">Waktu</th>
+                        <th class="p-4 sm:p-5">Status</th>
+                        <th class="p-4 sm:p-5 text-right">Total</th>
+                        <th class="p-4 sm:p-5">Alasan/Catatan</th>
+                        <th class="p-4 sm:p-5 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="rejectedTableBody" class="divide-y divide-slate-100">
+                    <?php if (empty($rejectedOrders)): ?>
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400 font-medium">
+                            <i class="fas fa-check-circle text-3xl mb-3 text-emerald-300 block"></i>
+                            Tidak ada pesanan yang ditolak! 🎉
+                        </td>
+                    </tr>
+                    <?php else: ?>
+                    <?php foreach ($rejectedOrders as $order): 
+                        $onum = $order['order_number'];
+                        $formattedNum = substr($onum, 0, 3) . '-' . substr($onum, 3, 8) . '-' . substr($onum, 11);
+                    ?>
+                    <tr class="rejected-row hover:bg-red-50/30 transition-colors duration-200"
+                        data-ordernum="<?= htmlspecialchars(strtolower($order['order_number'])) ?>"
+                        data-customer="<?= htmlspecialchars(strtolower($order['customer_name'])) ?>"
+                        data-table="<?= htmlspecialchars(strtolower($order['table_number'] ?? 'ta')) ?>">
+                        <td class="p-4 sm:p-5 whitespace-nowrap">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center font-bold text-sm bg-red-100 text-red-600">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                                <span class="font-bold text-slate-800 font-outfit tracking-wide"><?= $formattedNum ?></span>
+                            </div>
+                        </td>
+                        <td class="p-4 sm:p-5 whitespace-nowrap">
+                            <p class="font-bold text-slate-700"><?= htmlspecialchars($order['customer_name']) ?></p>
+                            <p class="text-[11px] mt-1">
+                                <?php if (($order['order_type'] ?? 'dine_in') === 'dine_in'): ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wide">
+                                        <i class="fas fa-chair mr-1"></i> Dine In (Meja <?= $order['table_number'] ?? '-' ?>)
+                                    </span>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide">
+                                        <i class="fas fa-shopping-bag mr-1"></i> Take Away
+                                    </span>
+                                <?php endif; ?>
+                            </p>
+                        </td>
+                        <td class="p-4 sm:p-5 whitespace-nowrap text-sm font-medium text-slate-500">
+                            <?= formatDateTime($order['created_at']) ?>
+                        </td>
+                        <td class="p-4 sm:p-5 whitespace-nowrap">
+                            <?php 
+                            // Determine status type: cancelled or rejected QRIS
+                            $isCancelled = $order['status'] === 'cancelled';
+                            $isRejected = $order['verification_status'] === 'rejected';
+                            ?>
+                            <?php if ($isCancelled): ?>
+                            <span class="px-3 py-1.5 text-xs font-extrabold rounded-lg bg-orange-100 text-orange-700 border border-orange-300 inline-flex items-center">
+                                <i class="fas fa-ban mr-1.5"></i> Dibatalkan
+                            </span>
+                            <?php elseif ($isRejected): ?>
+                            <span class="px-3 py-1.5 text-xs font-extrabold rounded-lg bg-red-100 text-red-700 border border-red-300 inline-flex items-center">
+                                <i class="fas fa-times-circle mr-1.5"></i> Ditolak QRIS
+                            </span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="p-4 sm:p-5 whitespace-nowrap text-right">
+                            <span class="font-extrabold text-slate-800 text-lg font-outfit"><?= formatRupiah($order['total']) ?></span>
+                        </td>
+                        <td class="p-4 sm:p-5">
+                            <div class="max-w-xs">
+                                <?php if ($isCancelled): ?>
+                                <div class="bg-orange-50 border border-orange-200 rounded-lg p-2 text-xs text-orange-700 font-medium">
+                                    <p class="line-clamp-2">Pesanan dibatalkan</p>
+                                </div>
+                                <?php else: ?>
+                                <div class="bg-red-50 border border-red-200 rounded-lg p-2 text-xs text-red-700 font-medium">
+                                    <p class="line-clamp-2"><?= htmlspecialchars($order['verification_notes'] ?? 'Tidak ada alasan') ?></p>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                        <td class="p-4 sm:p-5 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="printReceipt(<?= $order['id'] ?>)" class="inline-flex items-center justify-center bg-stone-100 hover:bg-stone-200 text-stone-600 border border-stone-300 font-bold w-9 h-9 rounded-xl transition-all duration-300 shadow-sm hover:-translate-y-0.5" title="Print Struk">
+                                    <i class="fas fa-print text-sm"></i>
+                                </button>
+                                <a href="?tab=rejected&detail=<?= $order['id'] ?>&filter=<?= $filter ?>&t=<?= time() ?>" class="inline-flex items-center justify-center bg-slate-800 hover:bg-slate-900 text-white font-bold w-9 h-9 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5" title="Lihat Detail">
+                                    <i class="fas fa-eye text-sm"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Rejected Pagination UI -->
+        <?php if ($totalRejectedPages > 1): ?>
+        <div class="px-6 py-4 bg-white border-t border-slate-200 flex items-center justify-between sm:flex-row flex-col gap-4">
+            <div class="text-sm font-semibold text-slate-500">
+                Menampilkan <span class="text-slate-800"><?= $rejectedOffset + 1 ?></span> sampai <span class="text-slate-800"><?= min($rejectedOffset + $rejectedLimit, $totalRejectedOrders) ?></span> dari <span class="text-slate-800"><?= $totalRejectedOrders ?></span> pesanan ditolak
+            </div>
+            <div class="flex items-center gap-1">
+                <?php if ($rejectedPage > 1): ?>
+                <a href="?tab=rejected&filter=<?= $filter ?>&rpage=<?= $rejectedPage - 1 ?>" class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-red-600 transition-colors shadow-sm">
+                    <i class="fas fa-chevron-left text-sm"></i>
+                </a>
+                <?php endif; ?>
+                
+                <?php for ($i = max(1, $rejectedPage - 2); $i <= min($totalRejectedPages, $rejectedPage + 2); $i++): ?>
+                <a href="?tab=rejected&filter=<?= $filter ?>&rpage=<?= $i ?>" class="w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-colors shadow-sm <?= $i === $rejectedPage ? 'bg-red-600 text-white border-none' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-red-600' ?>">
+                    <?= $i ?>
+                </a>
+                <?php endfor; ?>
+                
+                <?php if ($rejectedPage < $totalRejectedPages): ?>
+                <a href="?tab=rejected&filter=<?= $filter ?>&rpage=<?= $rejectedPage + 1 ?>" class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-red-600 transition-colors shadow-sm">
+                    <i class="fas fa-chevron-right text-sm"></i>
+                </a>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?> <!-- End of Rejected Tab -->
 
     <!-- Cleansing Tab -->
     <?php if ($tab === 'cleansing' && $user['role'] === 'owner'): ?>
@@ -836,14 +1068,20 @@ include '../includes/header.php';
                                 <?php endif; ?>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">Detail Layanan</p>
-                                <p class="font-bold text-stone-800 flex items-start mt-1">
+                                <p class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1">Tipe Pesanan / Layanan</p>
+                                <p class="mt-1">
                                     <?php if ($orderDetail['order_type'] === 'dine_in'): ?>
-                                        <i class="fas fa-chair text-stone-400 text-sm mr-2 mt-0.5"></i> Meja <?= $orderDetail['table_number'] ?>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-extrabold bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider">
+                                            <i class="fas fa-chair mr-1.5"></i> Makan di Tempat (Meja <?= $orderDetail['table_number'] ?>)
+                                        </span>
                                     <?php elseif ($orderDetail['order_type'] === 'delivery'): ?>
-                                        <i class="fas fa-motorcycle text-emerald-500 text-sm mr-2 mt-0.5"></i> Delivery
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+                                            <i class="fas fa-motorcycle mr-1.5"></i> Delivery
+                                        </span>
                                     <?php else: ?>
-                                        <i class="fas fa-shopping-bag text-stone-400 text-sm mr-2 mt-0.5"></i> Take Away
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-extrabold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">
+                                            <i class="fas fa-shopping-bag mr-1.5"></i> Bawa Pulang (Take Away)
+                                        </span>
                                     <?php endif; ?>
                                 </p>
                                 
@@ -854,7 +1092,15 @@ include '../includes/header.php';
                                     </div>
                                 <?php endif; ?>
                                 
-                                <p class="text-sm text-stone-500 font-medium mt-2"><i class="fas fa-user-tag text-xs mr-1 text-stone-300"></i> Kasir: <?= htmlspecialchars($orderDetail['kasir_name'] ?? '-') ?></p>
+                                <?php 
+                                    $kasirName = '-';
+                                    if (!empty($orderDetail['kasir_name'])) {
+                                        $kasirName = $orderDetail['kasir_name'];
+                                    } elseif (!empty($paymentDetail['verified_by_name'])) {
+                                        $kasirName = $paymentDetail['verified_by_name'];
+                                    }
+                                ?>
+                                <p class="text-sm text-stone-500 font-medium mt-2"><i class="fas fa-user-tag text-xs mr-1 text-stone-300"></i> Kasir: <?= htmlspecialchars($kasirName) ?></p>
                             </div>
                         </div>
                     </div>
@@ -1003,6 +1249,37 @@ include '../includes/header.php';
                     <?php endif; ?>
                 </div>
                 
+                <!-- Status Update Buttons (For Pelayan) -->
+                <?php 
+                $currentStatus = $orderDetail['status'];
+                $nextStatusOptions = [];
+                
+                // Define allowed transitions
+                if ($currentStatus === 'pending') {
+                    $nextStatusOptions = ['cooking' => 'Sedang Dimasak'];
+                } elseif ($currentStatus === 'cooking') {
+                    $nextStatusOptions = ['ready' => 'Siap Disajikan'];
+                } elseif ($currentStatus === 'ready') {
+                    $nextStatusOptions = ['served' => 'Disajikan'];
+                } elseif ($currentStatus === 'served') {
+                    $nextStatusOptions = ['completed' => 'Selesai'];
+                }
+                
+                // Show status update buttons for pelayan and kasir (not for completed/cancelled)
+                if (!in_array($currentStatus, ['completed', 'cancelled']) && count($nextStatusOptions) > 0): 
+                ?>
+                <div class="mt-6 pt-4 border-t border-dashed border-stone-300">
+                    <p class="text-xs font-bold text-stone-500 uppercase tracking-wider mb-3"><i class="fas fa-arrow-right mr-1.5"></i> Update Status Pesanan</p>
+                    <div class="grid gap-3">
+                        <?php foreach ($nextStatusOptions as $status => $label): ?>
+                        <button onclick="updateOrderStatus(<?= $orderDetail['id'] ?>, '<?= $status ?>')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center">
+                            <i class="fas fa-check-circle mr-2"></i> Ubah Menjadi: <?= $label ?>
+                        </button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
                 <!-- Extra Action Buttons (Cancel Order) -->
                 <?php if ($orderDetail['status'] !== 'cancelled'): ?>
                 <div class="mt-6 pt-4 border-t border-dashed border-stone-300">
@@ -1083,6 +1360,41 @@ function closeRejectDialog() {
     rejectPaymentId = null;
     document.getElementById('rejectReason').value = '';
     document.getElementById('rejectModal').classList.add('hidden');
+}
+
+function updateOrderStatus(orderId, newStatus) {
+    const statusLabels = {
+        'pending': 'Menunggu',
+        'cooking': 'Sedang Dimasak',
+        'ready': 'Siap Disajikan',
+        'served': 'Disajikan',
+        'completed': 'Selesai',
+        'cancelled': 'Dibatalkan'
+    };
+    
+    if (!confirm(`Ubah status pesanan menjadi "${statusLabels[newStatus]}"?`)) return;
+    
+    const formData = new FormData();
+    formData.append('order_id', orderId);
+    formData.append('status', newStatus);
+    
+    fetch('update_order_status.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            setTimeout(() => window.location.reload(), 500);
+        } else {
+            alert('Error: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(e => {
+        console.error('Update status error:', e);
+        alert('Error: ' + e.message);
+    });
 }
 
 function approvePayment(paymentId) {
@@ -1250,6 +1562,26 @@ function filterUnpaidTable() {
         const matchesMethod = (methodVal === 'all') || (method === methodVal);
 
         if (matchesSearch && matchesMethod) {
+            row.classList.remove('hidden');
+        } else {
+            row.classList.add('hidden');
+        }
+    });
+}
+
+// Filter rejected orders table
+function filterRejectedTable() {
+    const searchVal = document.getElementById('rejectedSearchInput').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('.rejected-row');
+
+    rows.forEach(row => {
+        const ordernum = row.getAttribute('data-ordernum');
+        const customer = row.getAttribute('data-customer');
+        const table = row.getAttribute('data-table');
+
+        const matchesSearch = ordernum.includes(searchVal) || customer.includes(searchVal) || table.includes(searchVal);
+
+        if (matchesSearch) {
             row.classList.remove('hidden');
         } else {
             row.classList.add('hidden');
@@ -1431,7 +1763,9 @@ function bulkDeleteCleansing() {
     
     const message = `⚠️ PERHATIAN!\n\nAnda akan menghapus SEMUA pesanan dari ${checkboxes.length} pelanggan:\n\n${customerNames.join(', ')}\n\nAksi ini TIDAK DAPAT DIBATALKAN!`;
     
-    showConfirmModal('Hapus Semua Pesanan Customer?', message, 'confirmBulkDeleteCleansing');
+    showConfirmModal('Hapus Semua Pesanan Customer?', message, () => {
+        confirmBulkDeleteCleansing();
+    });
 }
 
 function confirmBulkDeleteCleansing() {

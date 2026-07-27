@@ -1,0 +1,31 @@
+{
+  "name": "WARKOP Chat Tim",
+  "short_name": "Chat Tim",
+  "description": "Sistem chat real-time untuk tim WARKOP",
+  "start_url": "/admin/staff_chat.php",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#128C7E",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/assets/img/warkop_banner.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/img/warkop_banner.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/assets/img/warkop_banner.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    }
+  ]
+}

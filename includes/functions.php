@@ -319,17 +319,29 @@ function getTodayStats() {
     
     $stats = [];
     
-    // Total orders today
+    // Total orders today (not cancelled)
     $stmt = $db->query("
         SELECT COUNT(*) as count FROM orders 
         WHERE DATE(created_at) = CURDATE() AND status != 'cancelled'
     ");
     $stats['orders'] = $stmt->fetch()['count'];
     
-    // Total revenue today - count confirmed or completed orders
+    // Total revenue today - ONLY orders with verified payment or successful cash payment
+    // For QRIS: must have verification_status = 'verified'
+    // For Cash: must have payment status = 'success'
+    // For no payment: exclude from revenue
     $stmt = $db->query("
-        SELECT COALESCE(SUM(total), 0) as total FROM orders 
-        WHERE DATE(created_at) = CURDATE() AND status IN ('confirmed', 'cooking', 'ready', 'served', 'completed')
+        SELECT COALESCE(SUM(o.total), 0) as total 
+        FROM orders o
+        LEFT JOIN payments p ON o.id = p.order_id
+        WHERE DATE(o.created_at) = CURDATE() 
+        AND o.status IN ('confirmed', 'cooking', 'ready', 'served', 'completed')
+        AND o.status != 'cancelled'
+        AND (
+            (p.payment_method = 'qris' AND p.verification_status = 'verified')
+            OR (p.payment_method = 'cash' AND p.status = 'success')
+            OR (p.payment_method = 'transfer' AND p.status = 'success')
+        )
     ");
     $stats['revenue'] = $stmt->fetch()['total'];
     
